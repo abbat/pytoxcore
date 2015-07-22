@@ -1,0 +1,10 @@
+Initially was cloned from PyTox project (https://github.com/aitjcize/PyTox)
+Developers: AZ Huang <aitjcize@gmail.com>, Alexander van der Meij <alexandervdm@gliese.me>
+Contributors: Alexandre Viau <reazem@reazem.net>, Jman012 <jman012guy@gmail.com>
+
+Applied newapi PR #45 from (https://github.com/aitjcize/PyTox/pull/45)
+Developers: yatsen1
+
+Delete ToxAV and some obsolete code.
+Rewrite sources for more accuracy errors checking and type conversions.
+Developers: Anton Batenev <antonbatenev@yandex.ru>
