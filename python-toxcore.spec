@@ -15,7 +15,7 @@ raise exception instead of returning error code.
 
 
 %prep
-%setup -q -n %{name}
+%setup -q -n pytoxcore
 
 
 %build

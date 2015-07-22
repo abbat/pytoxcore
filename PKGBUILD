@@ -1,5 +1,6 @@
 # Maintainer: Anton Batenev <antonbatenev@yandex.ru>
 
+_pkgname=pytoxcore
 pkgname=python-toxcore
 pkgver=0.0.1
 pkgrel=1
@@ -13,12 +14,12 @@ source=("https://build.opensuse.org/source/home:antonbatenev:tox/${pkgname}/${pk
 sha512sums=('SKIP')
 
 build() {
-    cd "${pkgname}"
+    cd "${_pkgname}"
     python2 setup.py build
 }
 
 package() {
-    cd "${pkgname}"
+    cd "${_pkgname}"
 
     python2 setup.py install --root=${pkgdir}/ --optimize=1
 
