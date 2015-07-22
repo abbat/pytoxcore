@@ -1,0 +1,7 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: pytoxcore
+Source: https://github.com/abbat/pytoxcore
+
+Files: *
+Copyright: 2015 Anton Batenev <antonbatenev@yandex.ru>
+License: GPL-3

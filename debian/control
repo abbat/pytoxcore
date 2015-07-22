@@ -1,0 +1,14 @@
+Source: python-toxcore
+Section: python
+Priority: optional
+Build-Depends: debhelper (>= 8.0.0), dpkg-dev (>= 1.16.1), python-dev, python-setuptools, tox-libtoxcore-dev, tox-libsodium-dev
+Maintainer: Anton Batenev <antonbatenev@yandex.ru>
+Standards-Version: 3.9.4
+Homepage: https://github.com/aitjcize/PyTox
+
+Package: python-toxcore
+Depends: ${python:Depends}, ${misc:Depends}, ${shlibs:Depends}
+Architecture: any
+Description: Python binding for ToxCore
+ PyToxCore provides a Pythonic binding, i.e Object-oriented instead of C style,
+ raise exception instead of returning error code.

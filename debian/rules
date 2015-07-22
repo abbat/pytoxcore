@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+
+WITH_PYTHON2 = $(shell test -f /usr/bin/dh_python2 && echo "--with python2")
+
+override_dh_python2:
+	dh_python2 --no-guessing-versions
+
+override_dh_auto_build:
+	python setup.py build
+
+override_dh_auto_install:
+	python setup.py install --install-layout=deb --prefix=debian/tmp/usr
+
+%:
+	dh $@ ${WITH_PYTHON2}
