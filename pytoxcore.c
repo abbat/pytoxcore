@@ -903,9 +903,8 @@ static PyObject* ToxCore_tox_file_get_file_id(ToxCore* self, PyObject* args)
     uint32_t friend_number;
     uint32_t file_number;
 
-    if (PyArg_ParseTuple(args, "II", &friend_number, &file_number)) {
+    if (PyArg_ParseTuple(args, "II", &friend_number, &file_number) == false)
         return NULL;
-    }
 
     uint8_t file_id[TOX_FILE_ID_LENGTH];
 
