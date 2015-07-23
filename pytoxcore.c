@@ -708,12 +708,24 @@ static PyObject* ToxCore_tox_file_send(ToxCore* self, PyObject* args)
     uint32_t   friend_number;
     uint32_t   kind;
     uint64_t   file_size;
-    uint8_t*   file_id;
+    uint8_t*   file_id_hex;
+    Py_ssize_t file_id_hex_len;
     uint8_t*   filename;
     Py_ssize_t filename_len;
 
-    if (PyArg_ParseTuple(args, "IIKss#", &friend_number, &kind, &file_size, &file_id, &filename, &filename_len) == false)
+    if (PyArg_ParseTuple(args, "IIKz#s#", &friend_number, &kind, &file_size, &file_id_hex, &file_id_hex_len, &filename, &filename_len) == false)
         return NULL;
+
+    uint8_t  file_id_buf[TOX_FILE_ID_LENGTH];
+    uint8_t* file_id = file_id_buf;
+
+    if (file_id_hex == NULL || file_id_hex_len == 0)
+        file_id = NULL;
+    else if (file_id_hex_len != TOX_FILE_ID_LENGTH * 2) {
+        PyErr_SetString(ToxCoreException, "Invalid file_id length");
+        return NULL;
+    } else
+        hex_string_to_bytes(file_id_hex, TOX_FILE_ID_LENGTH, file_id_buf);
 
     TOX_ERR_FILE_SEND error;
     uint32_t file_number = tox_file_send(self->tox, friend_number, kind, file_size, file_id, filename, filename_len, &error);

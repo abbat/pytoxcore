@@ -1,5 +1,11 @@
+python-toxcore (0.0.2) unstable; urgency=low
+
+  * Fix file_id check and conversion in tox_file_send.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Fri, 24 Jul 2015 02:19:00 +0300
+
 python-toxcore (0.0.1) unstable; urgency=low
 
   * Initial
 
- -- Anton Batenev <antonbatenev@yandex.ru>  Thu, 23 Jul 2015 02:30:41 +0300
+ -- Anton Batenev <antonbatenev@yandex.ru>  Thu, 23 Jul 2015 02:30:00 +0300
