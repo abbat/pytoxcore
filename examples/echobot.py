@@ -212,6 +212,7 @@ class EchoBotFile(object):
         self.path     = ""
         self.name     = ""
         self.id       = ""
+        self.kind     = ToxCore.TOX_FILE_KIND_DATA
 
 
 class EchoBot(ToxCore):
@@ -349,6 +350,7 @@ class EchoBot(ToxCore):
 
         f = EchoBotFile()
 
+        f.kind = ToxCore.TOX_FILE_KIND_AVATAR
         f.size = os.path.getsize(self.options.avatar)
         f.read = True
         f.path = self.options.avatar
@@ -389,6 +391,7 @@ class EchoBot(ToxCore):
 
         f = EchoBotFile()
 
+        f.kind = ToxCore.TOX_FILE_KIND_DATA
         f.size = os.path.getsize(path)
         f.read = True
         f.path = path
@@ -586,12 +589,18 @@ class EchoBot(ToxCore):
         if self.can_accept_file(friend_number, file_number, kind, file_size, filename):
             f = EchoBotFile()
 
+            f.kind  = kind
             f.size  = file_size
             f.write = True
             f.name  = filename
             f.id    = file_id
-            f.path  = self.options.files_path + "/" + f.id
-            f.fd    = open(f.path, "wb")
+
+            if f.kind == ToxCore.TOX_FILE_KIND_DATA:
+                f.path = self.options.files_path + "/" + f.id
+            elif f.kind == ToxCore.TOX_FILE_KIND_AVATAR:
+                f.path = self.options.avatars_path + "/" + f.id
+
+            f.fd = open(f.path, "wb")
 
             if friend_number not in self.files:
                 self.files[friend_number] = {}
@@ -665,7 +674,8 @@ class EchoBot(ToxCore):
             f.fd.close()
             del self.files[friend_number][file_number]
 
-            self.send_file(friend_number, f.path, f.name)
+            if f.kind == ToxCore.TOX_FILE_KIND_DATA:
+                self.send_file(friend_number, f.path, f.name)
         else:
             self.files[friend_number][file_number] = f
 
