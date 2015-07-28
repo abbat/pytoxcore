@@ -1,3 +1,9 @@
+python-toxcore (0.0.3) unstable; urgency=low
+
+  * Remove strange copy/paste (fix SIGTRAP).
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Wed, 29 Jul 2015 01:56:11 +0300
+
 python-toxcore (0.0.2) unstable; urgency=low
 
   * Fix file_id check and conversion in tox_file_send.
@@ -6,6 +12,6 @@ python-toxcore (0.0.2) unstable; urgency=low
 
 python-toxcore (0.0.1) unstable; urgency=low
 
-  * Initial
+  * Initial.
 
  -- Anton Batenev <antonbatenev@yandex.ru>  Thu, 23 Jul 2015 02:30:41 +0300

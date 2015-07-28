@@ -120,25 +120,25 @@ static void callback_friend_request(Tox* tox, const uint8_t* public_key, const u
 
     bytes_to_hex_string(public_key, TOX_PUBLIC_KEY_SIZE, buf);
 
-    PyObject_CallMethod((PyObject*)self, "tox_friend_request_cb", "ss#", buf, message, length - (message[length - 1] == 0));
+    PyObject_CallMethod((PyObject*)self, "tox_friend_request_cb", "ss#", buf, message, length);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_message(Tox* tox, uint32_t friend_number, TOX_MESSAGE_TYPE type, const uint8_t* message, size_t length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_friend_message_cb", "is#", friend_number, message, length - (message[length - 1] == 0));
+    PyObject_CallMethod((PyObject*)self, "tox_friend_message_cb", "is#", friend_number, message, length);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_name(Tox* tox, uint32_t friend_number, const uint8_t* name, size_t length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_friend_name_cb", "is#", friend_number, name, length - (name[length - 1] == 0));
+    PyObject_CallMethod((PyObject*)self, "tox_friend_name_cb", "is#", friend_number, name, length);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_status_message(Tox* tox, uint32_t friend_number, const uint8_t* message, size_t length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_friend_status_message_cb", "is#", friend_number, message, length - (message[length - 1] == 0));
+    PyObject_CallMethod((PyObject*)self, "tox_friend_status_message_cb", "is#", friend_number, message, length);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -168,7 +168,7 @@ static void callback_file_chunk_request(Tox* tox, uint32_t friend_number, uint32
 
 static void callback_file_recv(Tox* tox, uint32_t friend_number, uint32_t file_number, uint32_t kind, uint64_t file_size, const uint8_t* filename, size_t filename_length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_file_recv_cb", "iiiKs#", friend_number, file_number, kind, file_size, filename, filename_length - (filename[filename_length - 1] == 0));
+    PyObject_CallMethod((PyObject*)self, "tox_file_recv_cb", "iiiKs#", friend_number, file_number, kind, file_size, filename, filename_length);
 }
 //----------------------------------------------------------------------------------------------
 
