@@ -190,6 +190,45 @@ static PyObject* ToxCore_callback_stub(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_version_major(ToxCore* self, PyObject* args)
+{
+    uint32_t result = tox_version_major();
+
+    return PyLong_FromUnsignedLong(result);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_version_minor(ToxCore* self, PyObject* args)
+{
+    uint32_t result = tox_version_minor();
+
+    return PyLong_FromUnsignedLong(result);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_version_patch(ToxCore* self, PyObject* args)
+{
+    uint32_t result = tox_version_patch();
+
+    return PyLong_FromUnsignedLong(result);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_version_is_compatible(ToxCore* self, PyObject* args)
+{
+    uint32_t major;
+    uint32_t minor;
+    uint32_t patch;
+
+    if (PyArg_ParseTuple(args, "III", &major, &minor, &patch) == false)
+        return NULL;
+
+    bool result = tox_version_is_compatible(major, minor, patch);
+
+    return PyBool_FromLong(result);
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_tox_self_get_address(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
@@ -204,6 +243,106 @@ static PyObject* ToxCore_tox_self_get_address(ToxCore* self, PyObject* args)
     bytes_to_hex_string(address, TOX_ADDRESS_SIZE, address_hex);
 
     return PYSTRING_FromString((const char*)address_hex);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_kill(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    tox_kill(self->tox);
+
+    self->tox = NULL;
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_get_savedata_size(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    size_t size = tox_get_savedata_size(self->tox);
+
+    return PyLong_FromSize_t(size);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_get_savedata(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    size_t size = tox_get_savedata_size(self->tox);
+
+    uint8_t* savedata = (uint8_t*)malloc(size);
+    if (savedata == NULL)
+        return NULL;
+
+    tox_get_savedata(self->tox, savedata);
+
+    PyObject* result = PYBYTES_FromStringAndSize((const char*)savedata, size);
+
+    free(savedata);
+
+    return result;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_bootstrap(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    char*      address;
+    Py_ssize_t address_len;
+    uint16_t   port;
+    uint8_t*   public_key_hex;
+    Py_ssize_t public_key_hex_len;
+
+    if (PyArg_ParseTuple(args, "s#Hs#", &address, &address_len, &port, &public_key_hex, &public_key_hex_len) == false)
+        return NULL;
+
+    uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
+
+    hex_string_to_bytes(public_key_hex, TOX_PUBLIC_KEY_SIZE, public_key);
+
+    TOX_ERR_BOOTSTRAP error;
+    bool result = tox_bootstrap(self->tox, address, port, public_key, &error);
+
+    return parse_TOX_ERR_BOOTSTRAP(result, error);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_add_tcp_relay(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    char*      address;
+    Py_ssize_t address_len;
+    uint16_t   port;
+    uint8_t*   public_key_hex;
+    Py_ssize_t public_key_hex_len;
+
+    if (PyArg_ParseTuple(args, "s#Hs#", &address, &address_len, &port, &public_key_hex, &public_key_hex_len) == false)
+        return NULL;
+
+    uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
+
+    hex_string_to_bytes(public_key_hex, TOX_PUBLIC_KEY_SIZE, public_key);
+
+    TOX_ERR_BOOTSTRAP error;
+    bool result = tox_add_tcp_relay(self->tox, address, port, public_key, &error);
+
+    return parse_TOX_ERR_BOOTSTRAP(result, error);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_self_get_connection_status(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    TOX_CONNECTION connection_status = tox_self_get_connection_status(self->tox);
+
+    return PyLong_FromUnsignedLong(connection_status);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -1004,76 +1143,6 @@ static PyObject* parse_TOX_ERR_BOOTSTRAP(bool result, TOX_ERR_BOOTSTRAP error)
 }
 //----------------------------------------------------------------------------------------------
 
-static PyObject* ToxCore_tox_bootstrap(ToxCore* self, PyObject* args)
-{
-    CHECK_TOX(self);
-
-    char*      address;
-    Py_ssize_t address_len;
-    uint16_t   port;
-    uint8_t*   public_key_hex;
-    Py_ssize_t public_key_hex_len;
-
-    if (PyArg_ParseTuple(args, "s#Hs#", &address, &address_len, &port, &public_key_hex, &public_key_hex_len) == false)
-        return NULL;
-
-    uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
-
-    hex_string_to_bytes(public_key_hex, TOX_PUBLIC_KEY_SIZE, public_key);
-
-    TOX_ERR_BOOTSTRAP error;
-    bool result = tox_bootstrap(self->tox, address, port, public_key, &error);
-
-    return parse_TOX_ERR_BOOTSTRAP(result, error);
-}
-//----------------------------------------------------------------------------------------------
-
-static PyObject* ToxCore_tox_add_tcp_relay(ToxCore* self, PyObject* args)
-{
-    CHECK_TOX(self);
-
-    char*      address;
-    Py_ssize_t address_len;
-    uint16_t   port;
-    uint8_t*   public_key_hex;
-    Py_ssize_t public_key_hex_len;
-
-    if (PyArg_ParseTuple(args, "s#Hs#", &address, &address_len, &port, &public_key_hex, &public_key_hex_len) == false)
-        return NULL;
-
-    uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
-
-    hex_string_to_bytes(public_key_hex, TOX_PUBLIC_KEY_SIZE, public_key);
-
-    TOX_ERR_BOOTSTRAP error;
-    bool result = tox_add_tcp_relay(self->tox, address, port, public_key, &error);
-
-    return parse_TOX_ERR_BOOTSTRAP(result, error);
-}
-//----------------------------------------------------------------------------------------------
-
-static PyObject* ToxCore_tox_self_get_connection_status(ToxCore* self, PyObject* args)
-{
-    CHECK_TOX(self);
-
-    TOX_CONNECTION connection_status = tox_self_get_connection_status(self->tox);
-
-    return PyLong_FromUnsignedLong(connection_status);
-}
-//----------------------------------------------------------------------------------------------
-
-static PyObject* ToxCore_tox_kill(ToxCore* self, PyObject* args)
-{
-    CHECK_TOX(self);
-
-    tox_kill(self->tox);
-
-    self->tox = NULL;
-
-    Py_RETURN_NONE;
-}
-//----------------------------------------------------------------------------------------------
-
 static PyObject* ToxCore_tox_iteration_interval(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
@@ -1096,37 +1165,6 @@ static PyObject* ToxCore_tox_iterate(ToxCore* self, PyObject* args)
     Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
-
-static PyObject* ToxCore_tox_get_savedata_size(ToxCore* self, PyObject* args)
-{
-    CHECK_TOX(self);
-
-    size_t size = tox_get_savedata_size(self->tox);
-
-    return PyLong_FromSize_t(size);
-}
-//----------------------------------------------------------------------------------------------
-
-static PyObject* ToxCore_tox_get_savedata(ToxCore* self, PyObject* args)
-{
-    CHECK_TOX(self);
-
-    size_t size = tox_get_savedata_size(self->tox);
-
-    uint8_t* savedata = (uint8_t*)malloc(size);
-    if (savedata == NULL)
-        return NULL;
-
-    tox_get_savedata(self->tox, savedata);
-
-    PyObject* result = PYBYTES_FromStringAndSize((const char*)savedata, size);
-
-    free(savedata);
-
-    return result;
-}
-//----------------------------------------------------------------------------------------------
-
 
 #if PY_MAJOR_VERSION >= 3
 struct PyModuleDef moduledef = {
@@ -1209,6 +1247,60 @@ PyMethodDef Tox_methods[] = {
     // methods
     //
 
+    {
+        "tox_version_major", (PyCFunction)ToxCore_tox_version_major, METH_NOARGS | METH_STATIC,
+        "tox_version_major()\n"
+        "Return the major version number of the library. Can be used to display the Tox library version or to check whether "
+        "the client is compatible with the dynamically linked version of Tox."
+    },
+    {
+        "tox_version_minor", (PyCFunction)ToxCore_tox_version_minor, METH_NOARGS | METH_STATIC,
+        "tox_version_minor()\n"
+        "Return the minor version number of the library."
+    },
+    {
+        "tox_version_patch", (PyCFunction)ToxCore_tox_version_patch, METH_NOARGS | METH_STATIC,
+        "tox_version_patch()\n"
+        "Return the patch number of the library."
+    },
+    {
+        "tox_version_is_compatible", (PyCFunction)ToxCore_tox_version_is_compatible, METH_VARARGS | METH_STATIC,
+        "tox_version_is_compatible(major, minor, patch)\n"
+        "Return whether the compiled library version is compatible with the passed version numbers."
+    },
+    {
+        "tox_kill", (PyCFunction)ToxCore_tox_kill, METH_NOARGS,
+        "tox_kill()\n"
+        "Releases all resources associated with the Tox instance and disconnects from the network.\n"
+        "After calling this function, the Tox pointer becomes invalid. No other functions can be called, and the pointer value can no longer be read."
+    },
+    {
+        "tox_get_savedata_size", (PyCFunction)ToxCore_tox_get_savedata_size, METH_NOARGS,
+        "tox_get_savedata_size()\n"
+        "Calculates the number of bytes required to store the tox instance with tox_get_savedata. This function cannot fail. The result is always greater than 0."
+    },
+    {
+        "tox_get_savedata", (PyCFunction)ToxCore_tox_get_savedata, METH_NOARGS,
+        "tox_get_savedata()\n"
+        "Return all information associated with the tox instance."
+    },
+    {
+        "tox_bootstrap", (PyCFunction)ToxCore_tox_bootstrap, METH_VARARGS,
+        "tox_bootstrap(address, port, public_key)\n"
+        "Sends a \"get nodes\" request to the given bootstrap node with IP, port, and public key to setup connections.\n"
+        "This function will attempt to connect to the node using UDP. You must use this function even if Tox_Options.udp_enabled was set to false."
+    },
+    {
+        "tox_add_tcp_relay", (PyCFunction)ToxCore_tox_add_tcp_relay, METH_VARARGS,
+        "tox_add_tcp_relay(address, port, public_key)\n"
+        "Adds additional host:port pair as TCP relay.\n"
+        "This function can be used to initiate TCP connections to different ports on the same bootstrap node, or to add TCP relays without using them as bootstrap nodes."
+    },
+    {
+        "tox_self_get_connection_status", (PyCFunction)ToxCore_tox_self_get_connection_status, METH_NOARGS,
+        "tox_self_get_connection_status()\n"
+        "Return whether we are connected to the DHT. The return value is equal to the last value received through the self_connection_status callback."
+    },
     {
         "tox_self_get_address", (PyCFunction)ToxCore_tox_self_get_address, METH_NOARGS,
         "tox_self_get_address()\n"
@@ -1369,29 +1461,6 @@ PyMethodDef Tox_methods[] = {
         "This function may be used by clients for any purpose, but is provided primarily for validating cached avatars. This use is highly recommended to avoid unnecessary avatar updates."
     },
     {
-        "tox_bootstrap", (PyCFunction)ToxCore_tox_bootstrap, METH_VARARGS,
-        "tox_bootstrap(address, port, public_key)\n"
-        "Sends a \"get nodes\" request to the given bootstrap node with IP, port, and public key to setup connections.\n"
-        "This function will attempt to connect to the node using UDP. You must use this function even if Tox_Options.udp_enabled was set to false."
-    },
-    {
-        "tox_add_tcp_relay", (PyCFunction)ToxCore_tox_add_tcp_relay, METH_VARARGS,
-        "tox_add_tcp_relay(address, port, public_key)\n"
-        "Adds additional host:port pair as TCP relay.\n"
-        "This function can be used to initiate TCP connections to different ports on the same bootstrap node, or to add TCP relays without using them as bootstrap nodes."
-    },
-    {
-        "tox_self_get_connection_status", (PyCFunction)ToxCore_tox_self_get_connection_status, METH_NOARGS,
-        "tox_self_get_connection_status()\n"
-        "Return whether we are connected to the DHT. The return value is equal to the last value received through the self_connection_status callback."
-    },
-    {
-        "tox_kill", (PyCFunction)ToxCore_tox_kill, METH_NOARGS,
-        "tox_kill()\n"
-        "Releases all resources associated with the Tox instance and disconnects from the network.\n"
-        "After calling this function, the Tox pointer becomes invalid. No other functions can be called, and the pointer value can no longer be read."
-    },
-    {
         "tox_iteration_interval", (PyCFunction)ToxCore_tox_iteration_interval, METH_NOARGS,
         "tox_iteration_interval()\n"
         "Return the time in milliseconds before tox_iterate() should be called again for optimal performance."
@@ -1400,16 +1469,6 @@ PyMethodDef Tox_methods[] = {
         "tox_iterate", (PyCFunction)ToxCore_tox_iterate, METH_NOARGS,
         "tox_iterate()\n"
         "The main loop that needs to be run in intervals of tox_iteration_interval() milliseconds."
-    },
-    {
-        "tox_get_savedata_size", (PyCFunction)ToxCore_tox_get_savedata_size, METH_NOARGS,
-        "tox_get_savedata_size()\n"
-        "Calculates the number of bytes required to store the tox instance with tox_get_savedata. This function cannot fail. The result is always greater than 0."
-    },
-    {
-        "tox_get_savedata", (PyCFunction)ToxCore_tox_get_savedata, METH_NOARGS,
-        "tox_get_savedata()\n"
-        "Return all information associated with the tox instance."
     },
     {
         NULL
