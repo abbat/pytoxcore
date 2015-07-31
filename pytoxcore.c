@@ -113,6 +113,12 @@ void PyStringUnicode_AsStringAndSize(PyObject* object, char** str, Py_ssize_t* l
 }
 //----------------------------------------------------------------------------------------------
 
+static void callback_self_connection_status(Tox* tox, TOX_CONNECTION connection_status, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_self_connection_status_cb", "i", connection_status);
+}
+//----------------------------------------------------------------------------------------------
+
 static void callback_friend_request(Tox* tox, const uint8_t* public_key, const uint8_t* message, size_t length, void* self)
 {
     uint8_t buf[TOX_PUBLIC_KEY_SIZE * 2 + 1];
@@ -229,6 +235,59 @@ static PyObject* ToxCore_tox_version_is_compatible(ToxCore* self, PyObject* args
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_options_default(ToxCore* self, PyObject* args)
+{
+    struct Tox_Options options;
+    tox_options_default(&options);
+
+    PyObject* dict = PyDict_New();
+    if (dict == NULL)
+        return NULL;
+
+    PyObject* obj_ipv6_enabled = PyBool_FromLong(options.ipv6_enabled);
+    PyDict_SetItemString(dict, "ipv6_enabled", obj_ipv6_enabled);
+    Py_DECREF(obj_ipv6_enabled);
+
+    PyObject* obj_udp_enabled = PyBool_FromLong(options.udp_enabled);
+    PyDict_SetItemString(dict, "udp_enabled", obj_udp_enabled);
+    Py_DECREF(obj_udp_enabled);
+
+    PyObject* obj_proxy_type = PyLong_FromUnsignedLong(options.proxy_type);
+    PyDict_SetItemString(dict, "proxy_type", obj_proxy_type);
+    Py_DECREF(obj_proxy_type);
+
+    PyObject* obj_proxy_host = (options.proxy_host == NULL ? Py_None : PYSTRING_FromString(options.proxy_host));
+    PyDict_SetItemString(dict, "proxy_host", obj_proxy_host);
+    Py_DECREF(obj_proxy_host);
+
+    PyObject* obj_proxy_port = PyLong_FromUnsignedLong(options.proxy_port);
+    PyDict_SetItemString(dict, "proxy_port", obj_proxy_port);
+    Py_DECREF(obj_proxy_port);
+
+    PyObject* obj_start_port = PyLong_FromUnsignedLong(options.start_port);
+    PyDict_SetItemString(dict, "start_port", obj_start_port);
+    Py_DECREF(obj_start_port);
+
+    PyObject* obj_end_port = PyLong_FromUnsignedLong(options.end_port);
+    PyDict_SetItemString(dict, "end_port", obj_end_port);
+    Py_DECREF(obj_end_port);
+
+    PyObject* obj_tcp_port = PyLong_FromUnsignedLong(options.tcp_port);
+    PyDict_SetItemString(dict, "tcp_port", obj_tcp_port);
+    Py_DECREF(obj_tcp_port);
+
+    PyObject* obj_savedata_type = PyLong_FromLong(options.savedata_type);
+    PyDict_SetItemString(dict, "savedata_type", obj_savedata_type);
+    Py_DECREF(obj_savedata_type);
+
+    PyObject* obj_savedata_data = (options.savedata_data == NULL ? Py_None : PYBYTES_FromStringAndSize((const char*)options.savedata_data, options.savedata_length));
+    PyDict_SetItemString(dict, "savedata_data", obj_savedata_data);
+    Py_DECREF(obj_savedata_data);
+
+    return dict;
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_tox_self_get_address(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
@@ -285,6 +344,31 @@ static PyObject* ToxCore_tox_get_savedata(ToxCore* self, PyObject* args)
     free(savedata);
 
     return result;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* parse_TOX_ERR_BOOTSTRAP(bool result, TOX_ERR_BOOTSTRAP error)
+{
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_BOOTSTRAP_OK:
+            success = true;
+            break;
+        case TOX_ERR_BOOTSTRAP_NULL:
+            PyErr_SetString(ToxCoreException, "One of the arguments to the function was NULL when it was not expected.");
+            break;
+        case TOX_ERR_BOOTSTRAP_BAD_HOST:
+            PyErr_SetString(ToxCoreException, "The address could not be resolved to an IP address, or the IP address passed was invalid.");
+            break;
+        case TOX_ERR_BOOTSTRAP_BAD_PORT:
+            PyErr_SetString(ToxCoreException, "The port passed was invalid. The valid port range is (1, 65535).");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
@@ -1118,31 +1202,6 @@ static PyObject* ToxCore_tox_hash(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
-static PyObject* parse_TOX_ERR_BOOTSTRAP(bool result, TOX_ERR_BOOTSTRAP error)
-{
-    bool success = false;
-    switch (error) {
-        case TOX_ERR_BOOTSTRAP_OK:
-            success = true;
-            break;
-        case TOX_ERR_BOOTSTRAP_NULL:
-            PyErr_SetString(ToxCoreException, "One of the arguments to the function was NULL when it was not expected.");
-            break;
-        case TOX_ERR_BOOTSTRAP_BAD_HOST:
-            PyErr_SetString(ToxCoreException, "The address could not be resolved to an IP address, or the IP address passed was invalid.");
-            break;
-        case TOX_ERR_BOOTSTRAP_BAD_PORT:
-            PyErr_SetString(ToxCoreException, "The port passed was invalid. The valid port range is (1, 65535).");
-            break;
-    }
-
-    if (result == false || success == false)
-        return NULL;
-
-    Py_RETURN_NONE;
-}
-//----------------------------------------------------------------------------------------------
-
 static PyObject* ToxCore_tox_iteration_interval(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
@@ -1186,6 +1245,13 @@ PyMethodDef Tox_methods[] = {
     // callbacks
     //
 
+    {
+        "tox_self_connection_status_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_self_connection_status_cb(connection_status)\n"
+        "This event is triggered whenever there is a change in the DHT connection state. When disconnected, a client may choose to call "
+        "tox_bootstrap again, to reconnect to the DHT. Note that this state may frequently change for short amounts of time. Clients should "
+        "therefore not immediately bootstrap on receiving a disconnect."
+    },
     {
         "tox_friend_request_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
         "tox_friend_request_cb(public_key, message)\n"
@@ -1267,6 +1333,11 @@ PyMethodDef Tox_methods[] = {
         "tox_version_is_compatible", (PyCFunction)ToxCore_tox_version_is_compatible, METH_VARARGS | METH_STATIC,
         "tox_version_is_compatible(major, minor, patch)\n"
         "Return whether the compiled library version is compatible with the passed version numbers."
+    },
+    {
+        "tox_options_default", (PyCFunction)ToxCore_tox_options_default, METH_VARARGS | METH_STATIC,
+        "tox_options_default()\n"
+        "Return Tox_Options object with the default options."
     },
     {
         "tox_kill", (PyCFunction)ToxCore_tox_kill, METH_NOARGS,
@@ -1557,6 +1628,7 @@ static int init_helper(ToxCore* self, PyObject* args)
         return -1;
     }
 
+    tox_callback_self_connection_status(tox, callback_self_connection_status, self);
     tox_callback_friend_request(tox, callback_friend_request, self);
     tox_callback_friend_message(tox, callback_friend_message, self);
     tox_callback_friend_name(tox, callback_friend_name, self);
@@ -1665,6 +1737,8 @@ static void ToxCore_install_dict(void)
     Py_DECREF(obj_##name);
 
     PyObject* dict = PyDict_New();
+    if (dict == NULL)
+        return;
 
     // #define TOX_VERSION_MAJOR
     SET(TOX_VERSION_MAJOR)

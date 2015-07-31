@@ -44,23 +44,15 @@ else:
         return d.items()
 
 
-class ToxOptions:
+class Tox_Options:
     """
     struct Tox_Options
     https://libtoxcore.so/api/structTox__Options.html
     """
     def __init__(self):
-        self.ipv6_enabled    = True
-        self.udp_enabled     = True
-        self.proxy_type      = ToxCore.TOX_PROXY_TYPE_NONE
-        self.proxy_host      = ""
-        self.proxy_port      = 0
-        self.start_port      = 0
-        self.end_port        = 0
-        self.tcp_port        = 0
-        self.savedata_type   = ToxCore.TOX_SAVEDATA_TYPE_NONE
-        self.savedata_data   = b''
-        self.savedata_length = 0
+        opts = ToxCore.tox_options_default()
+        for key, value in iteritems(opts):
+            self.__dict__[key] = value
 
 
 class EchoBotOptions(object):
@@ -98,6 +90,9 @@ class EchoBotOptions(object):
 
         self.proxy_host = str(options["proxy_host"])
         self.proxy_port = int(options["proxy_port"])
+        self.start_port = int(options["start_port"])
+        self.end_port   = int(options["end_port"])
+        self.tcp_port   = int(options["tcp_port"])
 
         self.accept_avatars  = self._bool(options["accept_avatars"])
         self.max_avatar_size = int(options["max_avatar_size"])
@@ -141,6 +136,8 @@ class EchoBotOptions(object):
         Результат (dict):
             Словарь опций по умолчанию
         """
+        tox_opts = Tox_Options()
+
         options = {
             "debug"           : "yes",
             "verbose"         : "yes",
@@ -150,14 +147,17 @@ class EchoBotOptions(object):
             "save_file"       : "echobot.data",
             "save_tmp_file"   : "echobot.data.tmp",
             "save_interval"   : "300",
-            "bootstrap_host"  : "",
-            "bootstrap_port"  : "",
-            "bootstrap_key"   : "",
-            "ipv6_enabled"    : "yes",
-            "udp_enabled"     : "yes",
+            "bootstrap_host"  : "178.62.250.138",   # https://wiki.tox.chat/users/nodes
+            "bootstrap_port"  : "33445",
+            "bootstrap_key"   : "788236D34978D1D5BD822F0A5BEBD2C53C64CC31CD3149350EE27D4D9A2F9B6B",
+            "ipv6_enabled"    : "yes" if tox_opts.ipv6_enabled else "no",
+            "udp_enabled"     : "yes" if tox_opts.udp_enabled  else "no",
             "proxy_type"      : "",
-            "proxy_host"      : "",
-            "proxy_port"      : "0",
+            "proxy_host"      : "" if tox_opts.proxy_host == None else tox_opts.proxy_host,
+            "proxy_port"      : str(tox_opts.proxy_port),
+            "start_port"      : str(tox_opts.start_port),
+            "end_port"        : str(tox_opts.end_port),
+            "tcp_port"        : str(tox_opts.tcp_port),
             "accept_avatars"  : "no",
             "max_avatar_size" : "0",
             "avatars_path"    : "",
@@ -165,6 +165,11 @@ class EchoBotOptions(object):
             "max_file_size"   : "0",
             "files_path"      : "",
         }
+
+        if tox_opts.proxy_type == ToxCore.TOX_PROXY_TYPE_SOCKS5:
+            options["proxy_type"] = "socks"
+        elif tox_opts.proxy_type == ToxCore.TOX_PROXY_TYPE_HTTP:
+            options["proxy_type"] = "http"
 
         return options
 
@@ -226,24 +231,26 @@ class EchoBot(ToxCore):
         """
         self.options = options
 
-        tox_options = ToxOptions()
+        tox_opts = Tox_Options()
 
-        tox_options.ipv6_enabled = self.options.ipv6_enabled
-        tox_options.udp_enabled  = self.options.udp_enabled
-        tox_options.proxy_type   = self.options.proxy_type
-        tox_options.proxy_host   = self.options.proxy_host
-        tox_options.proxy_port   = self.options.proxy_port
+        tox_opts.ipv6_enabled = self.options.ipv6_enabled
+        tox_opts.udp_enabled  = self.options.udp_enabled
+        tox_opts.proxy_type   = self.options.proxy_type
+        tox_opts.proxy_host   = self.options.proxy_host
+        tox_opts.proxy_port   = self.options.proxy_port
+        tox_opts.start_port   = self.options.start_port
+        tox_opts.end_port     = self.options.end_port
+        tox_opts.tcp_port     = self.options.tcp_port
 
         if os.path.isfile(self.options.save_file):
             self.debug("Load data from file: {0}".format(self.options.save_file))
 
+            tox_opts.savedata_type = ToxCore.TOX_SAVEDATA_TYPE_TOX_SAVE
+
             with open(self.options.save_file, "rb") as f:
-                tox_options.savedata_data = f.read()
+                tox_opts.savedata_data = f.read()
 
-            tox_options.savedata_type   = ToxCore.TOX_SAVEDATA_TYPE_TOX_SAVE
-            tox_options.savedata_length = len(tox_options.savedata_data)
-
-        super(EchoBot, self).__init__(tox_options)
+        super(EchoBot, self).__init__(tox_opts)
 
         self.debug("Set self name: {0}".format(self.options.name))
         self.tox_self_set_name(self.options.name)
@@ -295,16 +302,9 @@ class EchoBot(ToxCore):
             status = self.tox_self_get_connection_status()
 
             if not checked and status != ToxCore.TOX_CONNECTION_NONE:
-                if status == ToxCore.TOX_CONNECTION_TCP:
-                    self.debug("Connected to DHT via TCP")
-                elif status == ToxCore.TOX_CONNECTION_UDP:
-                    self.debug("Connected to DHT via UDP")
-                else:
-                    self.debug("Connected to DHT via unknown")
                 checked = True
 
             if checked and status == ToxCore.TOX_CONNECTION_NONE:
-                self.debug("Disconnected from DHT")
                 self.debug("Connecting to: {0} {1} {2}".format(self.options.bootstrap_host, self.options.bootstrap_port, self.options.bootstrap_key))
                 self.tox_bootstrap(self.options.bootstrap_host, self.options.bootstrap_port, self.options.bootstrap_key)
                 self.debug("Connected to: {0} {1} {2}".format(self.options.bootstrap_host, self.options.bootstrap_port, self.options.bootstrap_key))
@@ -409,6 +409,22 @@ class EchoBot(ToxCore):
             self.files[friend_number] = {}
 
         self.files[friend_number][file_number] = f
+
+    def tox_self_connection_status_cb(self, connection_status):
+        """
+        Изменение состояния соединения
+
+        Аргументы:
+            connection_status (int) -- Статус
+        """
+        if connection_status == ToxCore.TOX_CONNECTION_NONE:
+            self.debug("Disconnected from DHT")
+        elif connection_status == ToxCore.TOX_CONNECTION_TCP:
+            self.debug("Connected to DHT via TCP")
+        elif connection_status == ToxCore.TOX_CONNECTION_UDP:
+            self.debug("Connected to DHT via UDP")
+        else:
+            self.debug("Unknown connection status")
 
 
     def tox_friend_request_cb(self, public_key, message):
