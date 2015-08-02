@@ -977,6 +977,37 @@ static PyObject* ToxCore_tox_friend_get_typing(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_self_set_typing(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t friend_number;
+    bool     typing;
+
+    if (PyArg_ParseTuple(args, "II", &friend_number, &typing) == false)
+        return NULL;
+
+    TOX_ERR_SET_TYPING error;
+    bool result = tox_self_set_typing(self->tox, friend_number, typing, &error);
+
+    bool success = false;
+
+    switch (error) {
+        case TOX_ERR_SET_TYPING_OK:
+            success = true;
+            break;
+        case TOX_ERR_SET_TYPING_FRIEND_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The friend number did not designate a valid friend.");
+            break;
+    }
+
+    if (success == false || result == false)
+        return NULL;
+
+    return PyBool_FromLong(result);
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_tox_self_get_status(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
@@ -1446,9 +1477,6 @@ static PyObject* ToxCore_tox_iterate(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
-// TODO: tox_callback_friend_typing
-// TODO: tox_self_set_typing
-
 // TODO: tox_friend_send_lossy_packet
 // TODO: tox_friend_send_lossless_packet
 // TODO: tox_callback_friend_lossy_packet
@@ -1753,6 +1781,12 @@ PyMethodDef Tox_methods[] = {
         "tox_friend_get_typing", (PyCFunction)ToxCore_tox_friend_get_typing, METH_VARARGS,
         "tox_friend_get_typing(friend_number)\n"
         "Check whether a friend is currently typing a message."
+    },
+    {
+        "tox_self_set_typing", (PyCFunction)ToxCore_tox_self_set_typing, METH_VARARGS,
+        "tox_self_set_typing(friend_number, typing)\n"
+        "Set the client's typing status for a friend.\n"
+        "The client is responsible for turning it on or off."
     },
     {
         "tox_self_get_status", (PyCFunction)ToxCore_tox_self_get_status, METH_NOARGS,
