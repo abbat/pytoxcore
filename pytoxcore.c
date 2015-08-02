@@ -681,18 +681,8 @@ static PyObject* ToxCore_tox_friend_by_public_key(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
-static PyObject* ToxCore_tox_friend_get_connection_status(ToxCore* self, PyObject* args)
+static bool parse_TOX_ERR_FRIEND_QUERY(TOX_ERR_FRIEND_QUERY error)
 {
-    CHECK_TOX(self);
-
-    uint32_t friend_number;
-
-    if (PyArg_ParseTuple(args, "I", &friend_number) == false)
-        return NULL;
-
-    TOX_ERR_FRIEND_QUERY error;
-    TOX_CONNECTION connection_status = tox_friend_get_connection_status(self->tox, friend_number, &error);
-
     bool success = false;
     switch (error) {
         case TOX_ERR_FRIEND_QUERY_OK:
@@ -706,6 +696,23 @@ static PyObject* ToxCore_tox_friend_get_connection_status(ToxCore* self, PyObjec
             break;
     }
 
+    return success;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_friend_get_connection_status(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t friend_number;
+
+    if (PyArg_ParseTuple(args, "I", &friend_number) == false)
+        return NULL;
+
+    TOX_ERR_FRIEND_QUERY error;
+    TOX_CONNECTION connection_status = tox_friend_get_connection_status(self->tox, friend_number, &error);
+
+    bool success = parse_TOX_ERR_FRIEND_QUERY(error);
     if (success == false)
         return NULL;
 
@@ -836,18 +843,7 @@ static PyObject* ToxCore_tox_friend_get_name(ToxCore* self, PyObject* args)
     TOX_ERR_FRIEND_QUERY error;
     bool result = tox_friend_get_name(self->tox, friend_number, name, &error);
 
-    bool success = false;
-    switch (error) {
-        case TOX_ERR_FRIEND_QUERY_OK:
-            success = true;
-            break;
-        case TOX_ERR_FRIEND_QUERY_NULL:
-            PyErr_SetString(ToxCoreException, "The pointer parameter for storing the query result (name, message) was NULL. Unlike the _self_ variants of these functions, which have no effect when a parameter is NULL, these functions return an error in that case.");
-            break;
-        case TOX_ERR_FRIEND_QUERY_FRIEND_NOT_FOUND:
-            PyErr_SetString(ToxCoreException, "The friend_number did not designate a valid friend.");
-            break;
-    }
+    bool success = parse_TOX_ERR_FRIEND_QUERY(error);
 
     if (result == false || success == false)
         return NULL;
@@ -919,18 +915,7 @@ static PyObject* ToxCore_tox_friend_get_status_message(ToxCore* self, PyObject* 
     TOX_ERR_FRIEND_QUERY error;
     bool result = tox_friend_get_status_message(self->tox, friend_number, status_message, &error);
 
-    bool success = false;
-    switch (error) {
-        case TOX_ERR_FRIEND_QUERY_OK:
-            success = true;
-            break;
-        case TOX_ERR_FRIEND_QUERY_NULL:
-            PyErr_SetString(ToxCoreException, "The pointer parameter for storing the query result (name, message) was NULL. Unlike the _self_ variants of these functions, which have no effect when a parameter is NULL, these functions return an error in that case.");
-            break;
-        case TOX_ERR_FRIEND_QUERY_FRIEND_NOT_FOUND:
-            PyErr_SetString(ToxCoreException, "The friend_number did not designate a valid friend.");
-            break;
-    }
+    bool success = parse_TOX_ERR_FRIEND_QUERY(error);
 
     if (result == false || success == false)
         return NULL;
@@ -964,23 +949,31 @@ static PyObject* ToxCore_tox_friend_get_status(ToxCore* self, PyObject* args)
     TOX_ERR_FRIEND_QUERY error;
     TOX_USER_STATUS status = tox_friend_get_status(self->tox, friend_number, &error);
 
-    bool success = false;
-    switch (error) {
-        case TOX_ERR_FRIEND_QUERY_OK:
-            success = true;
-            break;
-        case TOX_ERR_FRIEND_QUERY_NULL:
-            PyErr_SetString(ToxCoreException, "The pointer parameter for storing the query result (name, message) was NULL. Unlike the _self_ variants of these functions, which have no effect when a parameter is NULL, these functions return an error in that case.");
-            break;
-        case TOX_ERR_FRIEND_QUERY_FRIEND_NOT_FOUND:
-            PyErr_SetString(ToxCoreException, "The friend_number did not designate a valid friend.");
-            break;
-    }
-
+    bool success = parse_TOX_ERR_FRIEND_QUERY(error);
     if (success == false)
         return NULL;
 
     return PyLong_FromUnsignedLong(status);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_friend_get_typing(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t friend_number;
+
+    if (PyArg_ParseTuple(args, "I", &friend_number) == false)
+        return NULL;
+
+    TOX_ERR_FRIEND_QUERY error;
+    bool result = tox_friend_get_typing(self->tox, friend_number, &error);
+
+    bool success = parse_TOX_ERR_FRIEND_QUERY(error);
+    if (success == false)
+        return NULL;
+
+    return PyBool_FromLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -1453,7 +1446,6 @@ static PyObject* ToxCore_tox_iterate(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
-// TODO: tox_friend_get_typing
 // TODO: tox_callback_friend_typing
 // TODO: tox_self_set_typing
 
@@ -1756,6 +1748,11 @@ PyMethodDef Tox_methods[] = {
         "tox_friend_get_status(friend_number)\n"
         "Return the friend's user status (away/busy/...).\n"
         "The status returned is equal to the last status received through the friend_status callback."
+    },
+    {
+        "tox_friend_get_typing", (PyCFunction)ToxCore_tox_friend_get_typing, METH_VARARGS,
+        "tox_friend_get_typing(friend_number)\n"
+        "Check whether a friend is currently typing a message."
     },
     {
         "tox_self_get_status", (PyCFunction)ToxCore_tox_self_get_status, METH_NOARGS,
