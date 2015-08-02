@@ -316,7 +316,7 @@ static PyObject* ToxCore_tox_self_set_nospam(ToxCore* self, PyObject* args)
         return NULL;
 
     if (nospam_hex_len != sizeof(uint32_t) * 2) {
-        PyErr_SetString(ToxCoreException, "nospam must be 4 bytes long (8 char hex string)");
+        PyErr_SetString(ToxCoreException, "nospam must be hex string of 4 bytes length.");
         return NULL;
     }
 
@@ -456,6 +456,11 @@ static PyObject* ToxCore_tox_bootstrap(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "s#Hs#", &address, &address_len, &port, &public_key_hex, &public_key_hex_len) == false)
         return NULL;
 
+    if (public_key_hex_len != TOX_PUBLIC_KEY_SIZE * 2) {
+        PyErr_SetString(ToxCoreException, "public_key must be hex string of TOX_PUBLIC_KEY_SIZE length.");
+        return NULL;
+    }
+
     uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
 
     hex_string_to_bytes(public_key_hex, TOX_PUBLIC_KEY_SIZE, public_key);
@@ -479,6 +484,11 @@ static PyObject* ToxCore_tox_add_tcp_relay(ToxCore* self, PyObject* args)
 
     if (PyArg_ParseTuple(args, "s#Hs#", &address, &address_len, &port, &public_key_hex, &public_key_hex_len) == false)
         return NULL;
+
+    if (public_key_hex_len != TOX_PUBLIC_KEY_SIZE * 2) {
+        PyErr_SetString(ToxCoreException, "public_key must be hex string of TOX_PUBLIC_KEY_SIZE length.");
+        return NULL;
+    }
 
     uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
 
@@ -553,6 +563,11 @@ static PyObject* ToxCore_tox_friend_add(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "s#s#", &address_hex, &address_hex_len, &message, &message_len) == false)
         return NULL;
 
+    if (address_hex_len != TOX_ADDRESS_SIZE * 2) {
+        PyErr_SetString(ToxCoreException, "address must be hex string of TOX_ADDRESS_SIZE length.");
+        return NULL;
+    }
+
     uint8_t address[TOX_ADDRESS_SIZE];
 
     hex_string_to_bytes(address_hex, TOX_ADDRESS_SIZE, address);
@@ -573,6 +588,11 @@ static PyObject* ToxCore_tox_friend_add_norequest(ToxCore* self, PyObject* args)
 
     if (PyArg_ParseTuple(args, "s#", &public_key_hex, &public_key_hex_len) == false)
         return NULL;
+
+    if (public_key_hex_len != TOX_PUBLIC_KEY_SIZE * 2) {
+        PyErr_SetString(ToxCoreException, "public_key must be hex string of TOX_PUBLIC_KEY_SIZE length.");
+        return NULL;
+    }
 
     uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
 
@@ -611,6 +631,47 @@ static PyObject* ToxCore_tox_friend_delete(ToxCore* self, PyObject* args)
         return NULL;
 
     Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_friend_by_public_key(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint8_t*   public_key_hex;
+    Py_ssize_t public_key_hex_len;
+
+    if (PyArg_ParseTuple(args, "s#", &public_key_hex, &public_key_hex_len) == false)
+        return NULL;
+
+    if (public_key_hex_len != TOX_PUBLIC_KEY_SIZE * 2) {
+        PyErr_SetString(ToxCoreException, "public_key must be hex string of TOX_PUBLIC_KEY_SIZE length.");
+        return NULL;
+    }
+
+    uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
+    hex_string_to_bytes(public_key_hex, TOX_PUBLIC_KEY_SIZE, public_key);
+
+    TOX_ERR_FRIEND_BY_PUBLIC_KEY error;
+    uint32_t result = tox_friend_by_public_key(self->tox, public_key, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_FRIEND_BY_PUBLIC_KEY_OK:
+            success = true;
+            break;
+        case TOX_ERR_FRIEND_BY_PUBLIC_KEY_NULL:
+            PyErr_SetString(ToxCoreException, "One of the arguments to the function was NULL when it was not expected.");
+            break;
+        case TOX_ERR_FRIEND_BY_PUBLIC_KEY_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "No friend with the given Public Key exists on the friend list.");
+            break;
+    }
+
+    if (result == UINT32_MAX || success == false)
+        return NULL;
+
+    PyLong_FromUnsignedLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -1016,7 +1077,7 @@ static PyObject* ToxCore_tox_file_send(ToxCore* self, PyObject* args)
     if (file_id_hex == NULL || file_id_hex_len == 0)
         file_id = NULL;
     else if (file_id_hex_len != TOX_FILE_ID_LENGTH * 2) {
-        PyErr_SetString(ToxCoreException, "Invalid file_id length");
+        PyErr_SetString(ToxCoreException, "file_id must be hex string of TOX_FILE_ID_LENGTH length.");
         return NULL;
     } else
         hex_string_to_bytes(file_id_hex, TOX_FILE_ID_LENGTH, file_id_buf);
@@ -1351,7 +1412,6 @@ static PyObject* ToxCore_tox_iterate(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
-// TODO: tox_friend_by_public_key
 // TODO: tox_friend_get_public_key
 
 // TODO: tox_friend_get_typing
@@ -1581,6 +1641,11 @@ PyMethodDef Tox_methods[] = {
         "Remove a friend from the friend list.\n"
         "This does not notify the friend of their deletion. After calling this function, this client will appear offline "
         "to the friend and no communication can occur between the two."
+    },
+    {
+        "tox_friend_by_public_key", (PyCFunction)ToxCore_tox_friend_by_public_key, METH_VARARGS,
+        "tox_friend_by_public_key(public_key)\n"
+        "Return the friend number associated with that Public Key."
     },
     {
         "tox_friend_get_connection_status", (PyCFunction)ToxCore_tox_friend_get_connection_status, METH_VARARGS,
