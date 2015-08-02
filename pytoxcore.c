@@ -166,6 +166,12 @@ static void callback_friend_connection_status(Tox* tox, uint32_t friend_number, 
 }
 //----------------------------------------------------------------------------------------------
 
+static void callback_friend_typing(Tox* tox, uint32_t friend_number, bool is_typing, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_friend_typing_cb", "ii", friend_number, is_typing);
+}
+//----------------------------------------------------------------------------------------------
+
 static void callback_file_chunk_request(Tox* tox, uint32_t friend_number, uint32_t file_number, uint64_t position, size_t length, void* self)
 {
     PyObject_CallMethod((PyObject*)self, "tox_file_chunk_request_cb", "iiKi", friend_number, file_number, position, length);
@@ -1544,6 +1550,11 @@ PyMethodDef Tox_methods[] = {
         "This callback is not called when adding friends. It is assumed that when adding friends, their connection status is initially offline."
     },
     {
+        "tox_friend_typing_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_friend_typing_cb(friend_number, is_typing)\n"
+        "This event is triggered when a friend starts or stops typing."
+    },
+    {
         "tox_file_chunk_request_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
         "tox_file_chunk_request_cb(friend_number, file_number, position, length)\n"
         "This event is triggered when Core is ready to send more file data."
@@ -1934,6 +1945,7 @@ static int init_helper(ToxCore* self, PyObject* args)
     tox_callback_friend_status(tox, callback_friend_status, self);
     tox_callback_friend_read_receipt(tox, callback_friend_read_receipt, self);
     tox_callback_friend_connection_status(tox, callback_friend_connection_status, self);
+    tox_callback_friend_typing(tox, callback_friend_typing, self);
     tox_callback_file_chunk_request(tox, callback_file_chunk_request, self);
     tox_callback_file_recv_control(tox, callback_file_recv_control, self);
     tox_callback_file_recv(tox, callback_file_recv, self);
