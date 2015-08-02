@@ -305,6 +305,45 @@ static PyObject* ToxCore_tox_self_get_address(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_self_set_nospam(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint8_t*   nospam_hex;
+    Py_ssize_t nospam_hex_len;
+
+    if (PyArg_ParseTuple(args, "s#", &nospam_hex, &nospam_hex_len) == false)
+        return NULL;
+
+    if (nospam_hex_len != sizeof(uint32_t) * 2) {
+        PyErr_SetString(ToxCoreException, "nospam must be 4 bytes long (8 char hex string)");
+        return NULL;
+    }
+
+    uint32_t nospam;
+    hex_string_to_bytes(nospam_hex, sizeof(uint32_t), (uint8_t*)(&nospam));
+
+    tox_self_set_nospam(self->tox, nospam);
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_self_get_nospam(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t result = tox_self_get_nospam(self->tox);
+
+    uint8_t result_hex[sizeof(uint32_t) * 2 + 1];
+    memset(result_hex, 0, sizeof(uint8_t) * (sizeof(uint32_t) * 2 + 1));
+
+    bytes_to_hex_string((const uint8_t*)(&result), sizeof(uint32_t), result_hex);
+
+    return PYSTRING_FromString((const char*)result_hex);
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_tox_kill(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
@@ -1097,7 +1136,7 @@ static PyObject* ToxCore_tox_self_get_dht_id(ToxCore* self, PyObject* args)
 
     bytes_to_hex_string(dht_id, TOX_PUBLIC_KEY_SIZE, dht_id_hex);
 
-    return PYSTRING_FromString(dht_id_hex);
+    return PYSTRING_FromString((const char*)dht_id_hex);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -1127,7 +1166,7 @@ static PyObject* ToxCore_tox_self_get_udp_port(ToxCore* self, PyObject* args)
     TOX_ERR_GET_PORT error;
     uint16_t result = tox_self_get_udp_port(self->tox, &error);
 
-    return parse_TOX_ERR_GET_PORT(result);
+    return parse_TOX_ERR_GET_PORT(result, error);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -1138,7 +1177,7 @@ static PyObject* ToxCore_tox_self_get_tcp_port(ToxCore* self, PyObject* args)
     TOX_ERR_GET_PORT error;
     uint16_t result = tox_self_get_tcp_port(self->tox, &error);
 
-    return parse_TOX_ERR_GET_PORT(result);
+    return parse_TOX_ERR_GET_PORT(result, error);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -1280,8 +1319,6 @@ static PyObject* ToxCore_tox_iterate(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
-// TODO: tox_self_set_nospam
-// TODO: tox_self_get_nospam
 // TODO: tox_self_get_public_key
 // TODO: tox_self_get_secret_key
 // TODO: tox_friend_by_public_key
@@ -1471,6 +1508,14 @@ PyMethodDef Tox_methods[] = {
         "tox_self_get_address", (PyCFunction)ToxCore_tox_self_get_address, METH_NOARGS,
         "tox_self_get_address()\n"
         "Return address to give to others."
+    },
+    {   "tox_self_set_nospam", (PyCFunction)ToxCore_tox_self_set_nospam, METH_VARARGS,
+        "tox_self_set_nospam(nospam)\n"
+        "Set the 4-byte nospam part of the address."
+    },
+    {   "tox_self_get_nospam", (PyCFunction)ToxCore_tox_self_get_nospam, METH_NOARGS,
+        "tox_self_get_nospam()\n"
+        "Get the 4-byte nospam part of the address."
     },
     {
         "tox_friend_add", (PyCFunction)ToxCore_tox_friend_add, METH_VARARGS,
