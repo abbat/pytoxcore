@@ -115,7 +115,7 @@ void PyStringUnicode_AsStringAndSize(PyObject* object, char** str, Py_ssize_t* l
 
 static void callback_self_connection_status(Tox* tox, TOX_CONNECTION connection_status, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_self_connection_status_cb", "i", connection_status);
+    PyObject_CallMethod((PyObject*)self, "tox_self_connection_status_cb", "I", connection_status);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -132,67 +132,67 @@ static void callback_friend_request(Tox* tox, const uint8_t* public_key, const u
 
 static void callback_friend_message(Tox* tox, uint32_t friend_number, TOX_MESSAGE_TYPE type, const uint8_t* message, size_t length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_friend_message_cb", "is#", friend_number, message, length);
+    PyObject_CallMethod((PyObject*)self, "tox_friend_message_cb", "Is#", friend_number, message, length);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_name(Tox* tox, uint32_t friend_number, const uint8_t* name, size_t length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_friend_name_cb", "is#", friend_number, name, length);
+    PyObject_CallMethod((PyObject*)self, "tox_friend_name_cb", "Is#", friend_number, name, length);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_status_message(Tox* tox, uint32_t friend_number, const uint8_t* message, size_t length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_friend_status_message_cb", "is#", friend_number, message, length);
+    PyObject_CallMethod((PyObject*)self, "tox_friend_status_message_cb", "Is#", friend_number, message, length);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_status(Tox* tox, uint32_t friend_number, TOX_USER_STATUS status, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_friend_status_cb", "ii", friend_number, status);
+    PyObject_CallMethod((PyObject*)self, "tox_friend_status_cb", "II", friend_number, status);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_read_receipt(Tox* tox, uint32_t friend_number, uint32_t message_id, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_friend_read_receipt_cb", "ii", friend_number, message_id);
+    PyObject_CallMethod((PyObject*)self, "tox_friend_read_receipt_cb", "II", friend_number, message_id);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_connection_status(Tox* tox, uint32_t friend_number, TOX_CONNECTION connection_status, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_friend_connection_status_cb", "ii", friend_number, connection_status);
+    PyObject_CallMethod((PyObject*)self, "tox_friend_connection_status_cb", "II", friend_number, connection_status);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_typing(Tox* tox, uint32_t friend_number, bool is_typing, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_friend_typing_cb", "ii", friend_number, is_typing);
+    PyObject_CallMethod((PyObject*)self, "tox_friend_typing_cb", "II", friend_number, is_typing);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_file_chunk_request(Tox* tox, uint32_t friend_number, uint32_t file_number, uint64_t position, size_t length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_file_chunk_request_cb", "iiKi", friend_number, file_number, position, length);
+    PyObject_CallMethod((PyObject*)self, "tox_file_chunk_request_cb", "IIKK", friend_number, file_number, position, length);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_file_recv(Tox* tox, uint32_t friend_number, uint32_t file_number, uint32_t kind, uint64_t file_size, const uint8_t* filename, size_t filename_length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_file_recv_cb", "iiiKs#", friend_number, file_number, kind, file_size, filename, filename_length);
+    PyObject_CallMethod((PyObject*)self, "tox_file_recv_cb", "IIIKs#", friend_number, file_number, kind, file_size, filename, filename_length);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_file_recv_control(Tox* tox, uint32_t friend_number, uint32_t file_number, TOX_FILE_CONTROL control, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_file_recv_control_cb", "iii", friend_number, file_number, control);
+    PyObject_CallMethod((PyObject*)self, "tox_file_recv_control_cb", "III", friend_number, file_number, control);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_file_recv_chunk(Tox* tox, uint32_t friend_number, uint32_t file_number, uint64_t position, const uint8_t* data, size_t length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_file_recv_chunk_cb", "iiK" BUF_TC "#", friend_number, file_number, position, data, length);
+    PyObject_CallMethod((PyObject*)self, "tox_file_recv_chunk_cb", "IIK" BUF_TC "#", friend_number, file_number, position, data, length);
 }
 //----------------------------------------------------------------------------------------------
 
