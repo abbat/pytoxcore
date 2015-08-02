@@ -170,6 +170,8 @@ class EchoBotOptions(object):
             options["proxy_type"] = "socks"
         elif tox_opts.proxy_type == ToxCore.TOX_PROXY_TYPE_HTTP:
             options["proxy_type"] = "http"
+        elif tox_opts.proxy_type != ToxCore.TOX_PROXY_TYPE_NONE:
+            raise NotImplementedError("Unknown proxy_type: {0}".format(tox_opts.proxy_type))
 
         return options
 
@@ -410,6 +412,7 @@ class EchoBot(ToxCore):
 
         self.files[friend_number][file_number] = f
 
+
     def tox_self_connection_status_cb(self, connection_status):
         """
         Изменение состояния соединения
@@ -424,7 +427,7 @@ class EchoBot(ToxCore):
         elif connection_status == ToxCore.TOX_CONNECTION_UDP:
             self.debug("Connected to DHT via UDP")
         else:
-            self.debug("Unknown connection status")
+            raise NotImplementedError("Unknown connection_status: {0}".format(connection_status))
 
 
     def tox_friend_request_cb(self, public_key, message):
@@ -461,7 +464,7 @@ class EchoBot(ToxCore):
         elif connection_status == ToxCore.TOX_CONNECTION_UDP:
             self.verbose("Friend {0}/{1} connected via UDP".format(friend_name, friend_number))
         else:
-            self.verbose("Friend {0}/{1} is in unknown connection status {2}".format(friend_name, friend_number, connection_status))
+            raise NotImplementedError("Unknown connection_status: {0}".format(connection_status))
 
         if connection_status == ToxCore.TOX_CONNECTION_TCP or connection_status == ToxCore.TOX_CONNECTION_UDP:
             self.send_avatar(friend_number)
@@ -508,7 +511,7 @@ class EchoBot(ToxCore):
         elif status == ToxCore.TOX_USER_STATUS_BUSY:
             self.verbose("Friend {0}/{1} is busy now".format(friend_name, friend_number))
         else:
-            self.verbose("Unknown friend status {0}/{1}: {3}".format(friend_name, friend_number, status))
+            raise NotImplementedError("Unknown status: {0}".format(status))
 
 
     def tox_friend_message_cb(self, friend_number, message):
@@ -573,6 +576,9 @@ class EchoBot(ToxCore):
                 (self.options.max_avatar_size == 0 or file_size <= self.options.max_avatar_size) and \
                 (os.path.isdir(self.options.avatars_path)))
 
+        else:
+            raise NotImplementedError("Unknown kind: {0}".format(kind))
+
         return False
 
 
@@ -600,7 +606,7 @@ class EchoBot(ToxCore):
             else:
                 self.verbose("No Avatar from {0}/{1}: number = {2}".format(friend_name, friend_number, file_number))
         else:
-            self.verbose("Unknown data from {0}/{1}: number = {2}, kind = {3}, size = {4}, name = {5}".format(friend_name, friend_number, file_number, kind, file_size, filename))
+            raise NotImplementedError("Unknown kind: {0}".format(kind))
 
         if self.can_accept_file(friend_number, file_number, kind, file_size, filename):
             f = EchoBotFile()
@@ -650,7 +656,7 @@ class EchoBot(ToxCore):
                 self.files[friend_number][file_number].fd.close()
                 del self.files[friend_number][file_number]
         else:
-            self.verbose("Unknown file control from {0}/{1}: number = {2}, control = {3}".format(friend_name, friend_number, file_number, control))
+            raise NotImplementedError("Unknown control: {0}".format(control))
 
 
     def tox_file_recv_chunk_cb(self, friend_number, file_number, position, data):
