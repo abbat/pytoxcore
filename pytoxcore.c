@@ -344,6 +344,38 @@ static PyObject* ToxCore_tox_self_get_nospam(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_self_get_public_key(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
+    tox_self_get_public_key(self->tox, public_key);
+
+    uint8_t public_key_hex[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+    memset(public_key_hex, 0, sizeof(uint8_t) * (TOX_PUBLIC_KEY_SIZE * 2 + 1));
+
+    bytes_to_hex_string(public_key, TOX_PUBLIC_KEY_SIZE, public_key_hex);
+
+    return PYSTRING_FromString((const char*)public_key_hex);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_self_get_secret_key(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint8_t secret_key[TOX_SECRET_KEY_SIZE];
+    tox_self_get_secret_key(self->tox, secret_key);
+
+    uint8_t secret_key_hex[TOX_SECRET_KEY_SIZE * 2 + 1];
+    memset(secret_key_hex, 0, sizeof(uint8_t) * (TOX_SECRET_KEY_SIZE * 2 + 1));
+
+    bytes_to_hex_string(secret_key, TOX_SECRET_KEY_SIZE, secret_key_hex);
+
+    return PYSTRING_FromString((const char*)secret_key_hex);
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_tox_kill(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
@@ -1319,8 +1351,6 @@ static PyObject* ToxCore_tox_iterate(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
-// TODO: tox_self_get_public_key
-// TODO: tox_self_get_secret_key
 // TODO: tox_friend_by_public_key
 // TODO: tox_friend_get_public_key
 
@@ -1516,6 +1546,14 @@ PyMethodDef Tox_methods[] = {
     {   "tox_self_get_nospam", (PyCFunction)ToxCore_tox_self_get_nospam, METH_NOARGS,
         "tox_self_get_nospam()\n"
         "Get the 4-byte nospam part of the address."
+    },
+    {   "tox_self_get_public_key", (PyCFunction)ToxCore_tox_self_get_public_key, METH_NOARGS,
+        "tox_self_get_public_key()\n"
+        "Return Tox Public Key (long term) from the Tox object."
+    },
+    {   "tox_self_get_secret_key", (PyCFunction)ToxCore_tox_self_get_secret_key, METH_NOARGS,
+        "tox_self_get_secret_key()\n"
+        "Return the Tox Secret Key from the Tox object."
     },
     {
         "tox_friend_add", (PyCFunction)ToxCore_tox_friend_add, METH_VARARGS,
