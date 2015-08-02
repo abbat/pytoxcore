@@ -1223,6 +1223,50 @@ static PyObject* ToxCore_tox_iterate(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+// TODO: tox_self_set_nospam
+// TODO: tox_self_get_nospam
+// TODO: tox_self_get_public_key
+// TODO: tox_self_get_secret_key
+// TODO: tox_friend_by_public_key
+// TODO: tox_friend_get_public_key
+
+// TODO: tox_friend_get_typing
+// TODO: tox_callback_friend_typing
+// TODO: tox_self_set_typing
+
+// TODO: tox_friend_send_lossy_packet
+// TODO: tox_friend_send_lossless_packet
+// TODO: tox_callback_friend_lossy_packet
+// TODO: tox_callback_friend_lossless_packet
+
+// TODO: tox_self_get_dht_id
+// TODO: tox_self_get_udp_port
+// TODO: tox_self_get_tcp_port
+
+// TODO: tox_callback_group_invite
+// TODO: tox_callback_group_message
+// TODO: tox_callback_group_action
+// TODO: tox_callback_group_title
+// TODO: tox_callback_group_namelist_change
+// TODO: tox_add_groupchat
+// TODO: tox_del_groupchat
+// TODO: tox_group_peername
+// TODO: tox_group_peer_pubkey
+// TODO: tox_invite_friend
+// TODO: tox_join_groupchat
+// TODO: tox_group_message_send
+// TODO: tox_group_action_send
+// TODO: tox_group_set_title
+// TODO: tox_group_get_title
+// TODO: tox_group_peernumber_is_ours
+// TODO: tox_group_number_peers
+// TODO: tox_group_get_names
+// TODO: tox_count_chatlist
+// TODO: tox_get_chatlist
+// TODO: tox_group_get_type
+
+//----------------------------------------------------------------------------------------------
+
 #if PY_MAJOR_VERSION >= 3
 struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
