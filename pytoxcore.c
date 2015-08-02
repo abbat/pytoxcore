@@ -671,7 +671,7 @@ static PyObject* ToxCore_tox_friend_by_public_key(ToxCore* self, PyObject* args)
     if (result == UINT32_MAX || success == false)
         return NULL;
 
-    PyLong_FromUnsignedLong(result);
+    return PyLong_FromUnsignedLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -1056,6 +1056,41 @@ static PyObject* ToxCore_tox_self_get_friend_list(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_friend_get_public_key(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t friend_number;
+
+    if (PyArg_ParseTuple(args, "I", &friend_number) == false)
+        return NULL;
+
+    uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
+    TOX_ERR_FRIEND_GET_PUBLIC_KEY error;
+    bool result = tox_friend_get_public_key(self->tox, friend_number, public_key, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_FRIEND_GET_PUBLIC_KEY_OK:
+            success = true;
+            break;
+        case TOX_ERR_FRIEND_GET_PUBLIC_KEY_FRIEND_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "No friend with the given number exists on the friend list.");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    uint8_t public_key_hex[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+    memset(public_key_hex, 0, sizeof(uint8_t) * (TOX_PUBLIC_KEY_SIZE * 2 + 1));
+
+    bytes_to_hex_string(public_key, TOX_PUBLIC_KEY_SIZE, public_key_hex);
+
+    return PYSTRING_FromString((const char*)public_key_hex);
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_tox_file_send(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
@@ -1412,8 +1447,6 @@ static PyObject* ToxCore_tox_iterate(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
-// TODO: tox_friend_get_public_key
-
 // TODO: tox_friend_get_typing
 // TODO: tox_callback_friend_typing
 // TODO: tox_self_set_typing
@@ -1732,6 +1765,11 @@ PyMethodDef Tox_methods[] = {
         "tox_self_get_friend_list", (PyCFunction)ToxCore_tox_self_get_friend_list, METH_NOARGS,
         "tox_self_get_friend_list()\n"
         "Get a list of valid friend numbers."
+    },
+    {
+        "tox_friend_get_public_key", (PyCFunction)ToxCore_tox_friend_get_public_key, METH_VARARGS,
+        "tox_friend_get_public_key(friend_number)\n"
+        "Return the Public Key associated with a given friend number."
     },
     {
         "tox_file_send", (PyCFunction)ToxCore_tox_file_send, METH_VARARGS,
