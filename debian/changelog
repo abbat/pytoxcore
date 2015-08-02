@@ -1,3 +1,16 @@
+python-toxcore (0.0.5) unstable; urgency=low
+
+  * tox_hash is static;
+  * Add tox_self_get_{dht_id,udp_port,tcp_port};
+  * Add tox_self_{set,get}_nospam;
+  * Add tox_self_get_{public,secret}_key;
+  * Add tox_friend_by_public_key;
+  * Add tox_friend_get_public_key;
+  * Add tox_friend_typing_cb;
+  * Add checks for Tox_Options and some length checks.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sun, 02 Aug 2015 19:17:54 +0300
+
 python-toxcore (0.0.4) unstable; urgency=low
 
   * Add core defines / enums;
