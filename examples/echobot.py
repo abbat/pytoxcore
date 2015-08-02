@@ -359,7 +359,7 @@ class EchoBot(ToxCore):
         data = f.fd.read()
         f.fd.seek(0, 0)
 
-        f.id   = self.tox_hash(data)
+        f.id   = ToxCore.tox_hash(data)
         f.name = f.id
 
         file_number = self.tox_file_send(friend_number, ToxCore.TOX_FILE_KIND_AVATAR, f.size, f.id, f.name)

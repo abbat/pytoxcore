@@ -1177,8 +1177,6 @@ static PyObject* ToxCore_tox_file_get_file_id(ToxCore* self, PyObject* args)
 
 static PyObject* ToxCore_tox_hash(ToxCore* self, PyObject* args)
 {
-    CHECK_TOX(self);
-
     uint8_t*   data;
     Py_ssize_t data_len;
 
@@ -1526,7 +1524,7 @@ PyMethodDef Tox_methods[] = {
         "Return the file id associated to the file transfer."
     },
     {
-        "tox_hash", (PyCFunction)ToxCore_tox_hash, METH_VARARGS,
+        "tox_hash", (PyCFunction)ToxCore_tox_hash, METH_VARARGS | METH_STATIC,
         "tox_hash(data)\n"
         "Generates a cryptographic hash of the given data.\n"
         "This function may be used by clients for any purpose, but is provided primarily for validating cached avatars. This use is highly recommended to avoid unnecessary avatar updates."
