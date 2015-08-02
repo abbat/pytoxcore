@@ -1085,6 +1085,63 @@ static PyObject* ToxCore_tox_file_send_chunk(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_self_get_dht_id(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint8_t dht_id[TOX_PUBLIC_KEY_SIZE];
+    tox_self_get_dht_id(self->tox, dht_id);
+
+    uint8_t dht_id_hex[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+    memset(dht_id_hex, 0, sizeof(uint8_t) * (TOX_PUBLIC_KEY_SIZE * 2 + 1));
+
+    bytes_to_hex_string(dht_id, TOX_PUBLIC_KEY_SIZE, dht_id_hex);
+
+    return PYSTRING_FromString(dht_id_hex);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* parse_TOX_ERR_GET_PORT(uint16_t result, TOX_ERR_GET_PORT error)
+{
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GET_PORT_OK:
+            success = true;
+            break;
+        case TOX_ERR_GET_PORT_NOT_BOUND:
+            PyErr_SetString(ToxCoreException, "The instance was not bound to any port.");
+            break;
+    }
+
+    if (success == false)
+        return NULL;
+
+    return PyLong_FromUnsignedLong(result);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_self_get_udp_port(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    TOX_ERR_GET_PORT error;
+    uint16_t result = tox_self_get_udp_port(self->tox, &error);
+
+    return parse_TOX_ERR_GET_PORT(result);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_self_get_tcp_port(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    TOX_ERR_GET_PORT error;
+    uint16_t result = tox_self_get_tcp_port(self->tox, &error);
+
+    return parse_TOX_ERR_GET_PORT(result);
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_tox_file_seek(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
@@ -1238,10 +1295,6 @@ static PyObject* ToxCore_tox_iterate(ToxCore* self, PyObject* args)
 // TODO: tox_friend_send_lossless_packet
 // TODO: tox_callback_friend_lossy_packet
 // TODO: tox_callback_friend_lossless_packet
-
-// TODO: tox_self_get_dht_id
-// TODO: tox_self_get_udp_port
-// TODO: tox_self_get_tcp_port
 
 // TODO: tox_callback_group_invite
 // TODO: tox_callback_group_message
@@ -1555,6 +1608,23 @@ PyMethodDef Tox_methods[] = {
         "If it is zero, the transfer is assumed complete. For files with known size, Core will know that the transfer is complete after the last byte has been received, "
         "so it is not necessary (though not harmful) to send a zero-length chunk to terminate. For streams, core will know that the transfer is finished if a chunk with "
         "length less than the length requested in the callback is sent."
+    },
+    {
+        "tox_self_get_dht_id", (PyCFunction)ToxCore_tox_self_get_dht_id, METH_NOARGS,
+        "tox_self_get_dht_id()\n"
+        "Return the temporary DHT public key of this instance\n"
+        "This can be used in combination with an externally accessible IP address and the bound port (from tox_self_get_udp_port) to run a temporary bootstrap node.\n"
+        "Be aware that every time a new instance is created, the DHT public key changes, meaning this cannot be used to run a permanent bootstrap node."
+    },
+    {
+        "tox_self_get_udp_port", (PyCFunction)ToxCore_tox_self_get_udp_port, METH_NOARGS,
+        "tox_self_get_udp_port()\n"
+        "Return the UDP port this Tox instance is bound to."
+    },
+    {
+        "tox_self_get_tcp_port", (PyCFunction)ToxCore_tox_self_get_tcp_port, METH_NOARGS,
+        "tox_self_get_tcp_port()\n"
+        "Return the TCP port this Tox instance is bound to. This is only relevant if the instance is acting as a TCP relay."
     },
     {
         "tox_file_seek", (PyCFunction)ToxCore_tox_file_seek, METH_VARARGS,
