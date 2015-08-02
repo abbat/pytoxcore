@@ -1863,47 +1863,51 @@ static void init_options(PyObject* pyopts, struct Tox_Options* tox_opts)
     PyObject*  p   = NULL;
 
     p = PyObject_GetAttrString(pyopts, "savedata_data");
-    PyBytes_AsStringAndSize(p, &buf, &sz);
-    if (sz > 0) {
-        tox_opts->savedata_data = calloc(1, sz);
-        memcpy((void*)tox_opts->savedata_data, buf, sz);
-        tox_opts->savedata_length = sz;
-        tox_opts->savedata_type = TOX_SAVEDATA_TYPE_TOX_SAVE;
+    if (p != Py_None) {
+        PyBytes_AsStringAndSize(p, &buf, &sz);
+        if (sz > 0) {
+            tox_opts->savedata_data = calloc(1, sz);
+            memcpy((void*)tox_opts->savedata_data, buf, sz);
+            tox_opts->savedata_length = sz;
+            tox_opts->savedata_type = TOX_SAVEDATA_TYPE_TOX_SAVE;
+        }
     }
 
     p = PyObject_GetAttrString(pyopts, "proxy_host");
-    PyStringUnicode_AsStringAndSize(p, &buf, &sz);
-    if (sz > 0) {
-        tox_opts->proxy_host = calloc(1, sz);
-        memcpy((void*)tox_opts->proxy_host, buf, sz);
+    if (p != Py_None) {
+        PyStringUnicode_AsStringAndSize(p, &buf, &sz);
+        if (sz > 0) {
+            tox_opts->proxy_host = calloc(1, sz);
+            memcpy((void*)tox_opts->proxy_host, buf, sz);
+        }
     }
 
     p = PyObject_GetAttrString(pyopts, "proxy_port");
-    if (p != NULL)
+    if (p != NULL && p != Py_None)
         tox_opts->proxy_port = PyLong_AsLong(p);
 
     p = PyObject_GetAttrString(pyopts, "proxy_type");
-    if (p != NULL)
+    if (p != NULL && p != Py_None)
         tox_opts->proxy_type = PyLong_AsLong(p);
 
     p = PyObject_GetAttrString(pyopts, "ipv6_enabled");
-    if (p != NULL)
+    if (p != NULL && p != Py_None)
         tox_opts->ipv6_enabled = p == Py_True;
 
     p = PyObject_GetAttrString(pyopts, "udp_enabled");
-    if (p != NULL)
+    if (p != NULL && p != Py_None)
         tox_opts->udp_enabled = p == Py_True;
 
     p = PyObject_GetAttrString(pyopts, "start_port");
-    if (p != NULL)
+    if (p != NULL && p != Py_None)
         tox_opts->start_port = PyLong_AsLong(p);
 
     p = PyObject_GetAttrString(pyopts, "end_port");
-    if (p != NULL)
+    if (p != NULL && p != Py_None)
         tox_opts->end_port = PyLong_AsLong(p);
 
     p = PyObject_GetAttrString(pyopts, "tcp_port");
-    if (p != NULL)
+    if (p != NULL && p != Py_None)
         tox_opts->tcp_port = PyLong_AsLong(p);
 }
 //----------------------------------------------------------------------------------------------
