@@ -1964,13 +1964,45 @@ static int init_helper(ToxCore* self, PyObject* args)
     if (opts != NULL)
         init_options(opts, &options);
 
-    TOX_ERR_NEW err = 0;
-    Tox* tox = tox_new(&options, &err);
+    TOX_ERR_NEW error = 0;
+    Tox* tox = tox_new(&options, &error);
 
-    if (tox == NULL) {
-        PyErr_Format(ToxCoreException, "failed to initialize toxcore: %d", err);
-        return -1;
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_NEW_OK:
+            success = true;
+            break;
+        case TOX_ERR_NEW_NULL:
+            PyErr_SetString(ToxCoreException, "One of the arguments to the function was NULL when it was not expected.");
+            break;
+        case TOX_ERR_NEW_MALLOC:
+            PyErr_SetString(ToxCoreException, "The function was unable to allocate enough memory to store the internal structures for the Tox object.");
+            break;
+        case TOX_ERR_NEW_PORT_ALLOC:
+            PyErr_SetString(ToxCoreException, "The function was unable to bind to a port. This may mean that all ports have already been bound, e.g. by other Tox instances, or it may mean a permission error. You may be able to gather more information from errno.");
+            break;
+        case TOX_ERR_NEW_PROXY_BAD_TYPE:
+            PyErr_SetString(ToxCoreException, "proxy_type was invalid.");
+            break;
+        case TOX_ERR_NEW_PROXY_BAD_HOST:
+            PyErr_SetString(ToxCoreException, "proxy_type was valid but the proxy_host passed had an invalid format or was NULL.");
+            break;
+        case TOX_ERR_NEW_PROXY_BAD_PORT:
+            PyErr_SetString(ToxCoreException, "proxy_type was valid, but the proxy_port was invalid.");
+            break;
+        case TOX_ERR_NEW_PROXY_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The proxy address passed could not be resolved.");
+            break;
+        case TOX_ERR_NEW_LOAD_ENCRYPTED:
+            PyErr_SetString(ToxCoreException, "The byte array to be loaded contained an encrypted save.");
+            break;
+        case TOX_ERR_NEW_LOAD_BAD_FORMAT:
+            PyErr_SetString(ToxCoreException, "The data format was invalid. This can happen when loading data that was saved by an older version of Tox, or when the data has been corrupted. When loading from badly formatted data, some data may have been loaded, and the rest is discarded. Passing an invalid length parameter also causes this error.");
+            break;
     }
+
+    if (tox == NULL || success == false)
+        return -1;
 
     tox_callback_self_connection_status(tox, callback_self_connection_status, self);
     tox_callback_friend_request(tox, callback_friend_request, self);
