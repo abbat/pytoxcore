@@ -1,3 +1,12 @@
+python-toxcore (0.0.6) unstable; urgency=low
+
+  * Add tox_friend_get_typing;
+  * Add tox_self_set_typing;
+  * Add errors check for tox_new;
+  * Add tox_friend_send_{lossy,lossless}_packet and callbacks.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Tue, 04 Aug 2015 00:46:47 +0300
+
 python-toxcore (0.0.5) unstable; urgency=low
 
   * tox_hash is static;
