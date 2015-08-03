@@ -196,6 +196,18 @@ static void callback_file_recv_chunk(Tox* tox, uint32_t friend_number, uint32_t 
 }
 //----------------------------------------------------------------------------------------------
 
+static void callback_friend_lossy_packet(Tox* tox, uint32_t friend_number, const uint8_t* data, size_t length, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_friend_lossy_packet_cb", "I" BUF_TC "#", friend_number, data, length);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_friend_lossless_packet(Tox* tox, uint32_t friend_number, const uint8_t* data, size_t length, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_friend_lossless_packet_cb", "I" BUF_TC "#", friend_number, data, length);
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_callback_stub(ToxCore* self, PyObject* args)
 {
     Py_RETURN_NONE;
@@ -1477,10 +1489,78 @@ static PyObject* ToxCore_tox_iterate(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
-// TODO: tox_friend_send_lossy_packet
-// TODO: tox_friend_send_lossless_packet
-// TODO: tox_callback_friend_lossy_packet
-// TODO: tox_callback_friend_lossless_packet
+static PyObject* parse_TOX_ERR_FRIEND_CUSTOM_PACKET(bool result, TOX_ERR_FRIEND_CUSTOM_PACKET error)
+{
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_FRIEND_CUSTOM_PACKET_OK:
+            success = true;
+            break;
+        case TOX_ERR_FRIEND_CUSTOM_PACKET_NULL:
+            PyErr_SetString(ToxCoreException, "One of the arguments to the function was NULL when it was not expected.");
+            break;
+        case TOX_ERR_FRIEND_CUSTOM_PACKET_FRIEND_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The friend number did not designate a valid friend.");
+            break;
+        case TOX_ERR_FRIEND_CUSTOM_PACKET_FRIEND_NOT_CONNECTED:
+            PyErr_SetString(ToxCoreException, "This client is currently not connected to the friend.");
+            break;
+        case TOX_ERR_FRIEND_CUSTOM_PACKET_INVALID:
+            PyErr_SetString(ToxCoreException, "The first byte of data was not in the specified range for the packet type. This range is 200-254 for lossy, and 160-191 for lossless packets.");
+            break;
+        case TOX_ERR_FRIEND_CUSTOM_PACKET_EMPTY:
+            PyErr_SetString(ToxCoreException, "Attempted to send an empty packet.");
+            break;
+        case TOX_ERR_FRIEND_CUSTOM_PACKET_TOO_LONG:
+            PyErr_SetString(ToxCoreException, "Packet data length exceeded TOX_MAX_CUSTOM_PACKET_SIZE.");
+            break;
+        case TOX_ERR_FRIEND_CUSTOM_PACKET_SENDQ:
+            PyErr_SetString(ToxCoreException, "Packet queue is full.");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_friend_send_lossy_packet(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t   friend_number;
+    uint8_t*   data;
+    Py_ssize_t data_len;
+
+    if (PyArg_ParseTuple(args, "Is#", &friend_number, &data, &data_len) == false)
+        return NULL;
+
+    TOX_ERR_FRIEND_CUSTOM_PACKET error;
+    bool result = tox_friend_send_lossy_packet(self->tox, friend_number, data, data_len, &error);
+
+    return parse_TOX_ERR_FRIEND_CUSTOM_PACKET(result, error);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_friend_send_lossless_packet(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t   friend_number;
+    uint8_t*   data;
+    Py_ssize_t data_len;
+
+    if (PyArg_ParseTuple(args, "Is#", &friend_number, &data, &data_len) == false)
+        return NULL;
+
+    TOX_ERR_FRIEND_CUSTOM_PACKET error;
+    bool result = tox_friend_send_lossless_packet(self->tox, friend_number, data, data_len, &error);
+
+    return parse_TOX_ERR_FRIEND_CUSTOM_PACKET(result, error);
+}
+//----------------------------------------------------------------------------------------------
 
 // TODO: tox_callback_group_invite
 // TODO: tox_callback_group_message
@@ -1593,6 +1673,16 @@ PyMethodDef Tox_methods[] = {
         "tox_file_recv_chunk_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
         "tox_file_recv_chunk_cb(friend_number, file_number, position, data, length)\n"
         "This event is first triggered when a file transfer request is received, and subsequently when a chunk of file data for an accepted request was received."
+    },
+    {
+        "tox_friend_lossy_packet_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_friend_lossy_packet_cb(friend_number, data)\n"
+        "This event is triggered when a friend sends lossy packet."
+    },
+    {
+        "tox_friend_lossless_packet_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_friend_lossless_packet_cb(friend_number, data)\n"
+        "This event is triggered when a friend sends lossless packet."
     },
 
     //
@@ -1882,6 +1972,21 @@ PyMethodDef Tox_methods[] = {
         "The main loop that needs to be run in intervals of tox_iteration_interval() milliseconds."
     },
     {
+        "tox_friend_send_lossy_packet", (PyCFunction)ToxCore_tox_friend_send_lossy_packet, METH_VARARGS,
+        "tox_friend_send_lossy_packet(friend_number, data)\n"
+        "Send a custom lossy packet to a friend.\n"
+        "The first byte of data must be in the range 200-254. Maximum length of a custom packet is TOX_MAX_CUSTOM_PACKET_SIZE.\n"
+        "Lossy packets behave like UDP packets, meaning they might never reach the other side or might arrive more than once (if someone is messing with the connection) or might arrive in the wrong order.\n"
+        "Unless latency is an issue, it is recommended that you use lossless custom packets instead."
+    },
+    {
+        "tox_friend_send_lossless_packet", (PyCFunction)ToxCore_tox_friend_send_lossless_packet, METH_VARARGS,
+        "tox_friend_send_lossless_packet(friend_number, data)\n"
+        "Send a custom lossless packet to a friend.\n"
+        "The first byte of data must be in the range 160-191. Maximum length of a custom packet is TOX_MAX_CUSTOM_PACKET_SIZE.\n"
+        "Lossless packet behaviour is comparable to TCP (reliability, arrive in order) but with packets instead of a stream."
+    },
+    {
         NULL
     }
 };
@@ -2017,6 +2122,8 @@ static int init_helper(ToxCore* self, PyObject* args)
     tox_callback_file_recv_control(tox, callback_file_recv_control, self);
     tox_callback_file_recv(tox, callback_file_recv, self);
     tox_callback_file_recv_chunk(tox, callback_file_recv_chunk, self);
+    tox_callback_friend_lossy_packet(tox, callback_friend_lossy_packet, self);
+    tox_callback_friend_lossless_packet(tox, callback_friend_lossless_packet, self);
 
     self->tox = tox;
 
