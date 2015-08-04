@@ -1562,6 +1562,7 @@ static PyObject* ToxCore_tox_friend_send_lossless_packet(ToxCore* self, PyObject
 }
 //----------------------------------------------------------------------------------------------
 
+// WARNING Group chats will be rewritten so this might change
 // TODO: tox_callback_group_invite
 // TODO: tox_callback_group_message
 // TODO: tox_callback_group_action
