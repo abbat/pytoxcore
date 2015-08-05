@@ -1610,9 +1610,11 @@ PyMethodDef Tox_methods[] = {
     {
         "tox_self_connection_status_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
         "tox_self_connection_status_cb(connection_status)\n"
-        "This event is triggered whenever there is a change in the DHT connection state. When disconnected, a client may choose to call "
-        "tox_bootstrap again, to reconnect to the DHT. Note that this state may frequently change for short amounts of time. Clients should "
-        "therefore not immediately bootstrap on receiving a disconnect."
+        "This event is triggered whenever there is a change in the DHT connection "
+        "state. When disconnected, a client may choose to call tox_bootstrap again, to "
+        "reconnect to the DHT. Note that this state may frequently change for short "
+        "amounts of time. Clients should therefore not immediately bootstrap on "
+        "receiving a disconnect."
     },
     {
         "tox_friend_request_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
@@ -1642,13 +1644,16 @@ PyMethodDef Tox_methods[] = {
     {
         "tox_friend_read_receipt_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
         "tox_friend_read_receipt_cb(friend_number, message_id)\n"
-        "This event is triggered when the friend receives the message sent with tox_friend_send_message with the corresponding message ID."
+        "This event is triggered when the friend receives the message sent with "
+        "tox_friend_send_message with the corresponding message ID."
     },
     {
         "tox_friend_connection_status_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
         "tox_friend_connection_status_cb(friend_number, connection_status)\n"
-        "This event is triggered when a friend goes offline after having been online, or when a friend goes online.\n"
-        "This callback is not called when adding friends. It is assumed that when adding friends, their connection status is initially offline."
+        "This event is triggered when a friend goes offline after having been online, "
+        "or when a friend goes online.\n"
+        "This callback is not called when adding friends. It is assumed that when "
+        "adding friends, their connection status is initially offline."
     },
     {
         "tox_friend_typing_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
@@ -1673,7 +1678,8 @@ PyMethodDef Tox_methods[] = {
     {
         "tox_file_recv_chunk_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
         "tox_file_recv_chunk_cb(friend_number, file_number, position, data, length)\n"
-        "This event is first triggered when a file transfer request is received, and subsequently when a chunk of file data for an accepted request was received."
+        "This event is first triggered when a file transfer request is received, and "
+        "subsequently when a chunk of file data for an accepted request was received."
     },
     {
         "tox_friend_lossy_packet_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
@@ -1693,8 +1699,9 @@ PyMethodDef Tox_methods[] = {
     {
         "tox_version_major", (PyCFunction)ToxCore_tox_version_major, METH_NOARGS | METH_STATIC,
         "tox_version_major()\n"
-        "Return the major version number of the library. Can be used to display the Tox library version or to check whether "
-        "the client is compatible with the dynamically linked version of Tox."
+        "Return the major version number of the library. Can be used to display the "
+        "Tox library version or to check whether the client is compatible with the "
+        "dynamically linked version of Tox."
     },
     {
         "tox_version_minor", (PyCFunction)ToxCore_tox_version_minor, METH_NOARGS | METH_STATIC,
@@ -1709,7 +1716,8 @@ PyMethodDef Tox_methods[] = {
     {
         "tox_version_is_compatible", (PyCFunction)ToxCore_tox_version_is_compatible, METH_VARARGS | METH_STATIC,
         "tox_version_is_compatible(major, minor, patch)\n"
-        "Return whether the compiled library version is compatible with the passed version numbers."
+        "Return whether the compiled library version is compatible with the passed "
+        "version numbers."
     },
     {
         "tox_options_default", (PyCFunction)ToxCore_tox_options_default, METH_VARARGS | METH_STATIC,
@@ -1719,13 +1727,18 @@ PyMethodDef Tox_methods[] = {
     {
         "tox_kill", (PyCFunction)ToxCore_tox_kill, METH_NOARGS,
         "tox_kill()\n"
-        "Releases all resources associated with the Tox instance and disconnects from the network.\n"
-        "After calling this function, the Tox pointer becomes invalid. No other functions can be called, and the pointer value can no longer be read."
+        "Releases all resources associated with the Tox instance and disconnects from "
+        "the network.\n"
+        "After calling this function, the Tox pointer becomes invalid. No other "
+        "functions can be called, and the pointer value can no longer be read."
+
     },
     {
         "tox_get_savedata_size", (PyCFunction)ToxCore_tox_get_savedata_size, METH_NOARGS,
         "tox_get_savedata_size()\n"
-        "Calculates the number of bytes required to store the tox instance with tox_get_savedata. This function cannot fail. The result is always greater than 0."
+        "Calculates the number of bytes required to store the tox instance with "
+        "tox_get_savedata. This function cannot fail. The result is always greater than 0."
+
     },
     {
         "tox_get_savedata", (PyCFunction)ToxCore_tox_get_savedata, METH_NOARGS,
@@ -1735,19 +1748,24 @@ PyMethodDef Tox_methods[] = {
     {
         "tox_bootstrap", (PyCFunction)ToxCore_tox_bootstrap, METH_VARARGS,
         "tox_bootstrap(address, port, public_key)\n"
-        "Sends a \"get nodes\" request to the given bootstrap node with IP, port, and public key to setup connections.\n"
-        "This function will attempt to connect to the node using UDP. You must use this function even if Tox_Options.udp_enabled was set to false."
+        "Sends a \"get nodes\" request to the given bootstrap node with IP, port, and "
+        "public key to setup connections.\n"
+        "This function will attempt to connect to the node using UDP. You must use "
+        "this function even if Tox_Options.udp_enabled was set to false."
     },
     {
         "tox_add_tcp_relay", (PyCFunction)ToxCore_tox_add_tcp_relay, METH_VARARGS,
         "tox_add_tcp_relay(address, port, public_key)\n"
         "Adds additional host:port pair as TCP relay.\n"
-        "This function can be used to initiate TCP connections to different ports on the same bootstrap node, or to add TCP relays without using them as bootstrap nodes."
+        "This function can be used to initiate TCP connections to different ports on "
+        "the same bootstrap node, or to add TCP relays without using them as "
+        "bootstrap nodes."
     },
     {
         "tox_self_get_connection_status", (PyCFunction)ToxCore_tox_self_get_connection_status, METH_NOARGS,
         "tox_self_get_connection_status()\n"
-        "Return whether we are connected to the DHT. The return value is equal to the last value received through the self_connection_status callback."
+        "Return whether we are connected to the DHT. The return value is equal to the "
+        "last value received through the `self_connection_status` callback."
     },
     {
         "tox_self_get_address", (PyCFunction)ToxCore_tox_self_get_address, METH_NOARGS,
@@ -1774,28 +1792,36 @@ PyMethodDef Tox_methods[] = {
         "tox_friend_add", (PyCFunction)ToxCore_tox_friend_add, METH_VARARGS,
         "tox_friend_add(address, message)\n"
         "Add a friend to the friend list and send a friend request.\n"
-        "A friend request message must be at least 1 byte long and at most TOX_MAX_FRIEND_REQUEST_LENGTH.\n"
-        "Friend numbers are unique identifiers used in all functions that operate on friends. Once added, "
-        "a friend number is stable for the lifetime of the Tox object. After saving the state and reloading it, "
-        "the friend numbers may not be the same as before. Deleting a friend creates a gap in the friend number set, "
-        "which is filled by the next adding of a friend. Any pattern in friend numbers should not be relied on.\n"
-        "If more than INT32_MAX friends are added, this function causes undefined behaviour."
+        "A friend request message must be at least 1 byte long and at most "
+        "TOX_MAX_FRIEND_REQUEST_LENGTH.\n"
+        "Friend numbers are unique identifiers used in all functions that operate on "
+        "friends. Once added, a friend number is stable for the lifetime of the Tox "
+        "object. After saving the state and reloading it, the friend numbers may not "
+        "be the same as before. Deleting a friend creates a gap in the friend number "
+        "set, which is filled by the next adding of a friend. Any pattern in friend "
+        "numbers should not be relied on.\n"
+        "If more than INT32_MAX friends are added, this function causes undefined "
+        "behaviour."
     },
     {
         "tox_friend_add_norequest", (PyCFunction)ToxCore_tox_friend_add_norequest, METH_VARARGS,
         "friend_add_norequest(public_key)\n"
         "Add a friend without sending a friend request.\n"
-        "This function is used to add a friend in response to a friend request. If the client receives a friend request, "
-        "it can be reasonably sure that the other client added this client as a friend, eliminating the need for a friend request.\n"
-        "This function is also useful in a situation where both instances are controlled by the same entity, "
-        "so that this entity can perform the mutual friend adding. In this case, there is no need for a friend request, either."
+        "This function is used to add a friend in response to a friend request. If the "
+        "client receives a friend request, it can be reasonably sure that the other "
+        "client added this client as a friend, eliminating the need for a friend "
+        "request.\n"
+        "This function is also useful in a situation where both instances are "
+        "controlled by the same entity, so that this entity can perform the mutual "
+        "friend adding. In this case, there is no need for a friend request, either."
     },
     {
         "tox_friend_delete", (PyCFunction)ToxCore_tox_friend_delete, METH_VARARGS,
         "tox_friend_delete(friend_number)\n"
         "Remove a friend from the friend list.\n"
-        "This does not notify the friend of their deletion. After calling this function, this client will appear offline "
-        "to the friend and no communication can occur between the two."
+        "This does not notify the friend of their deletion. After calling this "
+        "function, this client will appear offline to the friend and no communication "
+        "can occur between the two."
     },
     {
         "tox_friend_by_public_key", (PyCFunction)ToxCore_tox_friend_by_public_key, METH_VARARGS,
@@ -1806,29 +1832,36 @@ PyMethodDef Tox_methods[] = {
         "tox_friend_get_connection_status", (PyCFunction)ToxCore_tox_friend_get_connection_status, METH_VARARGS,
         "tox_friend_get_connection_status(friend_number)\n"
         "Check whether a friend is currently connected to this client.\n"
-        "The result of this function is equal to the last value received by the friend_connection_status callback."
+        "The result of this function is equal to the last value received by the "
+        "friend_connection_status callback."
     },
     {
         "tox_friend_exists", (PyCFunction)ToxCore_tox_friend_exists, METH_VARARGS,
         "tox_friend_exists(friend_number)\n"
-        "Checks if a friend with the given friend number exists and returns true if it does."
+        "Checks if a friend with the given friend number exists and returns true if "
+        "it does."
     },
     {
         "tox_friend_send_message", (PyCFunction)ToxCore_tox_friend_send_message, METH_VARARGS,
         "tox_friend_send_message(friend_number, type, message)\n"
         "Send a text chat message to an online friend.\n"
-        "The message length may not exceed TOX_MAX_MESSAGE_LENGTH. Larger messages must be split by the client and "
-        "sent as separate messages. Other clients can then reassemble the fragments. Messages may not be empty.\n"
-        "The return value of this function is the message ID. If a read receipt is received, the triggered friend_read_receipt "
-        "event will be passed this message ID.\n"
-        "Message IDs are unique per friend. The first message ID is 0. Message IDs are incremented by 1 each time a message is sent. "
-        "If UINT32_MAX messages were sent, the next message ID is 0."
+        "This function creates a chat message packet and pushes it into the send "
+        "queue.\n"
+        "The message length may not exceed TOX_MAX_MESSAGE_LENGTH. Larger messages "
+        "must be split by the client and sent as separate messages. Other clients can "
+        "then reassemble the fragments. Messages may not be empty.\n"
+        "The return value of this function is the message ID. If a read receipt is "
+        "received, the triggered `friend_read_receipt` event will be passed this message ID.\n"
+        "Message IDs are unique per friend. The first message ID is 0. Message IDs are "
+        "incremented by 1 each time a message is sent. If UINT32_MAX messages were "
+        "sent, the next message ID is 0."
     },
     {
         "tox_self_set_name", (PyCFunction)ToxCore_tox_self_set_name, METH_VARARGS,
         "tox_self_set_name(name)\n"
         "Set the nickname for the Tox client.\n"
-        "Nickname length cannot exceed TOX_MAX_NAME_LENGTH. If length is 0, the name parameter is ignored (it can be NULL), and the nickname is set back to empty."
+        "Nickname length cannot exceed TOX_MAX_NAME_LENGTH. If length is 0, the name "
+        "parameter is ignored (it can be NULL), and the nickname is set back to empty."
     },
     {
         "tox_self_get_name", (PyCFunction)ToxCore_tox_self_get_name, METH_NOARGS,
@@ -1845,7 +1878,9 @@ PyMethodDef Tox_methods[] = {
         "tox_self_set_status_message", (PyCFunction)ToxCore_tox_self_set_status_message, METH_VARARGS,
         "tox_self_set_status_message(message)\n"
         "Set the client's status message.\n"
-        "Status message length cannot exceed TOX_MAX_STATUS_MESSAGE_LENGTH. If length is 0, the status parameter is ignored (it can be NULL), and the user status is set back to empty."
+        "Status message length cannot exceed TOX_MAX_STATUS_MESSAGE_LENGTH. If "
+        "length is 0, the status parameter is ignored (it can be NULL), and the "
+        "user status is set back to empty."
     },
     {
         "tox_self_set_status", (PyCFunction)ToxCore_tox_self_set_status, METH_VARARGS,
@@ -1855,7 +1890,8 @@ PyMethodDef Tox_methods[] = {
         "tox_friend_get_status_message", (PyCFunction)ToxCore_tox_friend_get_status_message, METH_VARARGS,
         "tox_friend_get_status_message(friend_number)\n"
         "Get status message of a friend.\n"
-        "The data written to status_message is equal to the data received by the last friend_status_message callback."
+        "The data written to status_message is equal to the data received by the last "
+        "friend_status_message callback."
     },
     {
         "tox_self_get_status_message", (PyCFunction)ToxCore_tox_self_get_status_message, METH_NOARGS,
@@ -1887,7 +1923,8 @@ PyMethodDef Tox_methods[] = {
     {
         "tox_friend_get_last_online", (PyCFunction)ToxCore_tox_friend_get_last_online, METH_VARARGS,
         "tox_friend_get_last_online(friend_number)\n"
-        "Return a unix-time timestamp of the last time the friend associated with a given friend number was seen online. This function will return UINT64_MAX on error."
+        "Return a unix-time timestamp of the last time the friend associated with a given "
+        "friend number was seen online. This function will return UINT64_MAX on error."
     },
     {
         "tox_self_get_friend_list_size", (PyCFunction)ToxCore_tox_self_get_friend_list_size, METH_NOARGS,
@@ -1908,11 +1945,17 @@ PyMethodDef Tox_methods[] = {
         "tox_file_send", (PyCFunction)ToxCore_tox_file_send, METH_VARARGS,
         "tox_file_send(friend_number, kind, file_size, file_id, filename)\n"
         "Send a file transmission request.\n"
-        "Maximum filename length is TOX_MAX_FILENAME_LENGTH bytes. The filename should generally just be a file name, not a path with directory names.\n"
-        "If a non-UINT64_MAX file size is provided, it can be used by both sides to determine the sending progress. File size can be set to UINT64_MAX for streaming data of unknown size.\n"
-        "File transmission occurs in chunks, which are requested through the file_chunk_request event.\n"
-        "When a friend goes offline, all file transfers associated with the friend are purged from core.\n"
-        "If the file contents change during a transfer, the behaviour is unspecified in general. What will actually happen depends on the mode in which the file was modified and how the client determines the file size."
+        "Maximum filename length is TOX_MAX_FILENAME_LENGTH bytes. The filename "
+        "should generally just be a file name, not a path with directory names.\n"
+        "If a non-UINT64_MAX file size is provided, it can be used by both sides to "
+        "determine the sending progress. File size can be set to UINT64_MAX for streaming "
+        "data of unknown size.\n"
+        "File transmission occurs in chunks, which are requested through the "
+        "`file_chunk_request` event.\n"
+        "When a friend goes offline, all file transfers associated with the friend are "
+        "purged from core.\n"
+        "If the file contents change during a transfer, the behaviour is unspecified "
+        "in general."
     },
     {
         "tox_file_control", (PyCFunction)ToxCore_tox_file_control, METH_VARARGS,
@@ -1923,17 +1966,22 @@ PyMethodDef Tox_methods[] = {
         "tox_file_send_chunk", (PyCFunction)ToxCore_tox_file_send_chunk, METH_VARARGS,
         "tox_file_send_chunk(friend_number, file_number, position, data)\n"
         "Send a chunk of file data to a friend.\n"
-        "This function is called in response to the file_chunk_request callback. The length parameter should be equal to the one received though the callback. "
-        "If it is zero, the transfer is assumed complete. For files with known size, Core will know that the transfer is complete after the last byte has been received, "
-        "so it is not necessary (though not harmful) to send a zero-length chunk to terminate. For streams, core will know that the transfer is finished if a chunk with "
-        "length less than the length requested in the callback is sent."
+        "This function is called in response to the `file_chunk_request` callback. The "
+        "length parameter should be equal to the one received though the callback. "
+        "If it is zero, the transfer is assumed complete. For files with known size, "
+        "Core will know that the transfer is complete after the last byte has been "
+        "received, so it is not necessary (though not harmful) to send a zero-length "
+        "chunk to terminate. For streams, core will know that the transfer is finished "
+        "if a chunk with length less than the length requested in the callback is sent."
     },
     {
         "tox_self_get_dht_id", (PyCFunction)ToxCore_tox_self_get_dht_id, METH_NOARGS,
         "tox_self_get_dht_id()\n"
         "Return the temporary DHT public key of this instance\n"
-        "This can be used in combination with an externally accessible IP address and the bound port (from tox_self_get_udp_port) to run a temporary bootstrap node.\n"
-        "Be aware that every time a new instance is created, the DHT public key changes, meaning this cannot be used to run a permanent bootstrap node."
+        "This can be used in combination with an externally accessible IP address and "
+        "the bound port (from tox_self_get_udp_port) to run a temporary bootstrap node.\n"
+        "Be aware that every time a new instance is created, the DHT public key "
+        "changes, meaning this cannot be used to run a permanent bootstrap node."
     },
     {
         "tox_self_get_udp_port", (PyCFunction)ToxCore_tox_self_get_udp_port, METH_NOARGS,
@@ -1943,13 +1991,15 @@ PyMethodDef Tox_methods[] = {
     {
         "tox_self_get_tcp_port", (PyCFunction)ToxCore_tox_self_get_tcp_port, METH_NOARGS,
         "tox_self_get_tcp_port()\n"
-        "Return the TCP port this Tox instance is bound to. This is only relevant if the instance is acting as a TCP relay."
+        "Return the TCP port this Tox instance is bound to. This is only relevant if "
+        "the instance is acting as a TCP relay."
     },
     {
         "tox_file_seek", (PyCFunction)ToxCore_tox_file_seek, METH_VARARGS,
         "tox_file_seek(friend_number, file_number, position)\n"
         "Sends a file seek control command to a friend for a given file transfer.\n"
-        "This function can only be called to resume a file transfer right before TOX_FILE_CONTROL_RESUME is sent."
+        "This function can only be called to resume a file transfer right before "
+        "TOX_FILE_CONTROL_RESUME is sent."
     },
     {
         "tox_file_get_file_id", (PyCFunction)ToxCore_tox_file_get_file_id, METH_VARARGS,
@@ -1960,32 +2010,42 @@ PyMethodDef Tox_methods[] = {
         "tox_hash", (PyCFunction)ToxCore_tox_hash, METH_VARARGS | METH_STATIC,
         "tox_hash(data)\n"
         "Generates a cryptographic hash of the given data.\n"
-        "This function may be used by clients for any purpose, but is provided primarily for validating cached avatars. This use is highly recommended to avoid unnecessary avatar updates."
+        "This function may be used by clients for any purpose, but is provided "
+        "primarily for validating cached avatars. This use is highly recommended to "
+        "avoid unnecessary avatar updates."
     },
     {
         "tox_iteration_interval", (PyCFunction)ToxCore_tox_iteration_interval, METH_NOARGS,
         "tox_iteration_interval()\n"
-        "Return the time in milliseconds before tox_iterate() should be called again for optimal performance."
+        "Return the time in milliseconds before tox_iterate() should be called again "
+        "for optimal performance."
     },
     {
         "tox_iterate", (PyCFunction)ToxCore_tox_iterate, METH_NOARGS,
         "tox_iterate()\n"
-        "The main loop that needs to be run in intervals of tox_iteration_interval() milliseconds."
+        "The main loop that needs to be run in intervals of tox_iteration_interval() "
+        "milliseconds."
     },
     {
         "tox_friend_send_lossy_packet", (PyCFunction)ToxCore_tox_friend_send_lossy_packet, METH_VARARGS,
         "tox_friend_send_lossy_packet(friend_number, data)\n"
         "Send a custom lossy packet to a friend.\n"
-        "The first byte of data must be in the range 200-254. Maximum length of a custom packet is TOX_MAX_CUSTOM_PACKET_SIZE.\n"
-        "Lossy packets behave like UDP packets, meaning they might never reach the other side or might arrive more than once (if someone is messing with the connection) or might arrive in the wrong order.\n"
-        "Unless latency is an issue, it is recommended that you use lossless custom packets instead."
+        "The first byte of data must be in the range 200-254. Maximum length of a "
+        "custom packet is TOX_MAX_CUSTOM_PACKET_SIZE.\n"
+        "Lossy packets behave like UDP packets, meaning they might never reach the "
+        "other side or might arrive more than once (if someone is messing with the "
+        "connection) or might arrive in the wrong order.\n"
+        "Unless latency is an issue, it is recommended that you use lossless custom "
+        "packets instead."
     },
     {
         "tox_friend_send_lossless_packet", (PyCFunction)ToxCore_tox_friend_send_lossless_packet, METH_VARARGS,
         "tox_friend_send_lossless_packet(friend_number, data)\n"
         "Send a custom lossless packet to a friend.\n"
-        "The first byte of data must be in the range 160-191. Maximum length of a custom packet is TOX_MAX_CUSTOM_PACKET_SIZE.\n"
-        "Lossless packet behaviour is comparable to TCP (reliability, arrive in order) but with packets instead of a stream."
+        "The first byte of data must be in the range 160-191. Maximum length of a "
+        "custom packet is TOX_MAX_CUSTOM_PACKET_SIZE.\n"
+        "Lossless packet behaviour is comparable to TCP (reliability, arrive in order) "
+        "but with packets instead of a stream."
     },
     {
         NULL
