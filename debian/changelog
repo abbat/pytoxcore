@@ -1,3 +1,9 @@
+python-toxcore (0.0.10) unstable; urgency=low
+
+  * Fix double free memory corruption.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sat, 08 Aug 2015 21:23:02 +0300
+
 python-toxcore (0.0.9) unstable; urgency=low
 
   * Tox_Options is dict only.

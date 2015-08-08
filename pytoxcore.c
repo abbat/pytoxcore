@@ -2179,13 +2179,10 @@ static int init_helper(ToxCore* self, PyObject* args)
         if (PyDict_Check(pyopts) == true)
             init_options(pyopts, &options);
         else if (pyopts != Py_None) {
-            Py_XDECREF(pyopts);
             PyErr_SetString(ToxCoreException, "You must supply a Tox_Options param as a dict");
             return -1;
         }
     }
-
-    Py_XDECREF(pyopts);
 
     TOX_ERR_NEW error = 0;
     Tox* tox = tox_new(&options, &error);
