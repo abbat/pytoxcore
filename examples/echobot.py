@@ -44,17 +44,6 @@ else:
         return d.items()
 
 
-class Tox_Options:
-    """
-    struct Tox_Options
-    https://libtoxcore.so/api/structTox__Options.html
-    """
-    def __init__(self):
-        opts = ToxCore.tox_options_default()
-        for key, value in iteritems(opts):
-            self.__dict__[key] = value
-
-
 class EchoBotOptions(object):
     """
     Опции приложения
@@ -136,7 +125,7 @@ class EchoBotOptions(object):
         Результат (dict):
             Словарь опций по умолчанию
         """
-        tox_opts = Tox_Options()
+        tox_opts = ToxCore.tox_options_default()
 
         options = {
             "debug"           : "yes",
@@ -150,14 +139,14 @@ class EchoBotOptions(object):
             "bootstrap_host"  : "178.62.250.138",   # https://wiki.tox.chat/users/nodes
             "bootstrap_port"  : "33445",
             "bootstrap_key"   : "788236D34978D1D5BD822F0A5BEBD2C53C64CC31CD3149350EE27D4D9A2F9B6B",
-            "ipv6_enabled"    : "yes" if tox_opts.ipv6_enabled else "no",
-            "udp_enabled"     : "yes" if tox_opts.udp_enabled  else "no",
+            "ipv6_enabled"    : "yes" if tox_opts["ipv6_enabled"] else "no",
+            "udp_enabled"     : "yes" if tox_opts["udp_enabled"]  else "no",
             "proxy_type"      : "",
-            "proxy_host"      : "" if tox_opts.proxy_host == None else tox_opts.proxy_host,
-            "proxy_port"      : str(tox_opts.proxy_port),
-            "start_port"      : str(tox_opts.start_port),
-            "end_port"        : str(tox_opts.end_port),
-            "tcp_port"        : str(tox_opts.tcp_port),
+            "proxy_host"      : "" if tox_opts["proxy_host"] == None else tox_opts["proxy_host"],
+            "proxy_port"      : str(tox_opts["proxy_port"]),
+            "start_port"      : str(tox_opts["start_port"]),
+            "end_port"        : str(tox_opts["end_port"]),
+            "tcp_port"        : str(tox_opts["tcp_port"]),
             "accept_avatars"  : "no",
             "max_avatar_size" : "0",
             "avatars_path"    : "",
@@ -166,12 +155,12 @@ class EchoBotOptions(object):
             "files_path"      : "",
         }
 
-        if tox_opts.proxy_type == ToxCore.TOX_PROXY_TYPE_SOCKS5:
+        if tox_opts["proxy_type"] == ToxCore.TOX_PROXY_TYPE_SOCKS5:
             options["proxy_type"] = "socks"
-        elif tox_opts.proxy_type == ToxCore.TOX_PROXY_TYPE_HTTP:
+        elif tox_opts["proxy_type"] == ToxCore.TOX_PROXY_TYPE_HTTP:
             options["proxy_type"] = "http"
-        elif tox_opts.proxy_type != ToxCore.TOX_PROXY_TYPE_NONE:
-            raise NotImplementedError("Unknown proxy_type: {0}".format(tox_opts.proxy_type))
+        elif tox_opts["proxy_type"] != ToxCore.TOX_PROXY_TYPE_NONE:
+            raise NotImplementedError("Unknown proxy_type: {0}".format(tox_opts["proxy_type"]))
 
         return options
 
@@ -233,24 +222,21 @@ class EchoBot(ToxCore):
         """
         self.options = options
 
-        tox_opts = Tox_Options()
-
-        tox_opts.ipv6_enabled = self.options.ipv6_enabled
-        tox_opts.udp_enabled  = self.options.udp_enabled
-        tox_opts.proxy_type   = self.options.proxy_type
-        tox_opts.proxy_host   = self.options.proxy_host
-        tox_opts.proxy_port   = self.options.proxy_port
-        tox_opts.start_port   = self.options.start_port
-        tox_opts.end_port     = self.options.end_port
-        tox_opts.tcp_port     = self.options.tcp_port
+        tox_opts = {
+            "ipv6_enabled" : self.options.ipv6_enabled,
+            "udp_enabled"  : self.options.udp_enabled,
+            "proxy_type"   : self.options.proxy_type,
+            "proxy_host"   : self.options.proxy_host,
+            "proxy_port"   : self.options.proxy_port,
+            "start_port"   : self.options.start_port,
+            "end_port"     : self.options.end_port,
+            "tcp_port"     : self.options.tcp_port
+        }
 
         if os.path.isfile(self.options.save_file):
             self.debug("Load data from file: {0}".format(self.options.save_file))
-
-            tox_opts.savedata_type = ToxCore.TOX_SAVEDATA_TYPE_TOX_SAVE
-
             with open(self.options.save_file, "rb") as f:
-                tox_opts.savedata_data = f.read()
+                tox_opts["savedata_data"] = f.read()
 
         super(EchoBot, self).__init__(tox_opts)
 
