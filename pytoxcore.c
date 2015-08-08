@@ -2055,12 +2055,20 @@ PyMethodDef Tox_methods[] = {
 
 static void init_options(PyObject* pyopts, struct Tox_Options* tox_opts)
 {
-    char*      buf = NULL;
-    Py_ssize_t sz  = 0;
-    PyObject*  p   = NULL;
+    char*      attr = NULL;
+    char*      buf  = NULL;
+    Py_ssize_t sz   = 0;
+    PyObject*  p    = NULL;
 
-    p = PyObject_GetAttrString(pyopts, "savedata_data");
-    if (p != Py_None) {
+    attr = "savedata_data";
+    if (PyObject_HasAttrString(pyopts, attr) == true)
+        p = PyObject_GetAttrString(pyopts, attr);
+    else {
+        PyObject* key = PYSTRING_FromString(attr);
+        p = PyObject_GetItem(pyopts, key);
+        Py_DECREF(key);
+    }
+    if (p != NULL && p != Py_None) {
         PyBytes_AsStringAndSize(p, &buf, &sz);
         if (sz > 0) {
             tox_opts->savedata_data = calloc(1, sz);
@@ -2069,43 +2077,108 @@ static void init_options(PyObject* pyopts, struct Tox_Options* tox_opts)
             tox_opts->savedata_type = TOX_SAVEDATA_TYPE_TOX_SAVE;
         }
     }
+    Py_XDECREF(p);
 
-    p = PyObject_GetAttrString(pyopts, "proxy_host");
-    if (p != Py_None) {
+    attr = "proxy_host";
+    if (PyObject_HasAttrString(pyopts, attr) == true)
+        p = PyObject_GetAttrString(pyopts, attr);
+    else {
+        PyObject* key = PYSTRING_FromString(attr);
+        p = PyObject_GetItem(pyopts, key);
+        Py_DECREF(key);
+    }
+    if (p != NULL && p != Py_None) {
         PyStringUnicode_AsStringAndSize(p, &buf, &sz);
         if (sz > 0) {
             tox_opts->proxy_host = calloc(1, sz);
             memcpy((void*)tox_opts->proxy_host, buf, sz);
         }
     }
+    Py_XDECREF(p);
 
-    p = PyObject_GetAttrString(pyopts, "proxy_port");
+    attr = "proxy_port";
+    if (PyObject_HasAttrString(pyopts, attr) == true)
+        p = PyObject_GetAttrString(pyopts, attr);
+    else {
+        PyObject* key = PYSTRING_FromString(attr);
+        p = PyObject_GetItem(pyopts, key);
+        Py_DECREF(key);
+    }
     if (p != NULL && p != Py_None)
         tox_opts->proxy_port = PyLong_AsLong(p);
+    Py_XDECREF(p);
 
-    p = PyObject_GetAttrString(pyopts, "proxy_type");
+    attr = "proxy_type";
+    if (PyObject_HasAttrString(pyopts, attr) == true)
+        p = PyObject_GetAttrString(pyopts, attr);
+    else {
+        PyObject* key = PYSTRING_FromString(attr);
+        p = PyObject_GetItem(pyopts, key);
+        Py_DECREF(key);
+    }
     if (p != NULL && p != Py_None)
         tox_opts->proxy_type = PyLong_AsLong(p);
+    Py_XDECREF(p);
 
-    p = PyObject_GetAttrString(pyopts, "ipv6_enabled");
+    attr = "ipv6_enabled";
+    if (PyObject_HasAttrString(pyopts, attr) == true)
+        p = PyObject_GetAttrString(pyopts, attr);
+    else {
+        PyObject* key = PYSTRING_FromString(attr);
+        p = PyObject_GetItem(pyopts, key);
+        Py_DECREF(key);
+    }
     if (p != NULL && p != Py_None)
-        tox_opts->ipv6_enabled = p == Py_True;
+        tox_opts->ipv6_enabled = (p == Py_True);
+    Py_XDECREF(p);
 
-    p = PyObject_GetAttrString(pyopts, "udp_enabled");
+    attr = "udp_enabled";
+    if (PyObject_HasAttrString(pyopts, attr) == true)
+        p = PyObject_GetAttrString(pyopts, attr);
+    else {
+        PyObject* key = PYSTRING_FromString(attr);
+        p = PyObject_GetItem(pyopts, key);
+        Py_DECREF(key);
+    }
     if (p != NULL && p != Py_None)
         tox_opts->udp_enabled = p == Py_True;
+    Py_XDECREF(p);
 
-    p = PyObject_GetAttrString(pyopts, "start_port");
+    attr = "start_port";
+    if (PyObject_HasAttrString(pyopts, attr) == true)
+        p = PyObject_GetAttrString(pyopts, attr);
+    else {
+        PyObject* key = PYSTRING_FromString(attr);
+        p = PyObject_GetItem(pyopts, key);
+        Py_DECREF(key);
+    }
     if (p != NULL && p != Py_None)
         tox_opts->start_port = PyLong_AsLong(p);
+    Py_XDECREF(p);
 
-    p = PyObject_GetAttrString(pyopts, "end_port");
+    attr = "end_port";
+    if (PyObject_HasAttrString(pyopts, attr) == true)
+        p = PyObject_GetAttrString(pyopts, attr);
+    else {
+        PyObject* key = PYSTRING_FromString(attr);
+        p = PyObject_GetItem(pyopts, key);
+        Py_DECREF(key);
+    }
     if (p != NULL && p != Py_None)
         tox_opts->end_port = PyLong_AsLong(p);
+    Py_XDECREF(p);
 
-    p = PyObject_GetAttrString(pyopts, "tcp_port");
+    attr = "tcp_port";
+    if (PyObject_HasAttrString(pyopts, attr) == true)
+        p = PyObject_GetAttrString(pyopts, attr);
+    else {
+        PyObject* key = PYSTRING_FromString(attr);
+        p = PyObject_GetItem(pyopts, key);
+        Py_DECREF(key);
+    }
     if (p != NULL && p != Py_None)
         tox_opts->tcp_port = PyLong_AsLong(p);
+    Py_XDECREF(p);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -2116,19 +2189,25 @@ static int init_helper(ToxCore* self, PyObject* args)
         self->tox = NULL;
     }
 
-    PyObject* opts = NULL;
+    PyObject* pyopts = NULL;
 
-    if (args)
-        if (!PyArg_ParseTuple(args, "O", &opts)) {
-            PyErr_SetString(PyExc_TypeError, "must supply a ToxOptions param");
-            return -1;
-        }
+    if (args != NULL)
+        PyArg_ParseTuple(args, "O", &pyopts);
 
     struct Tox_Options options = { 0 };
     tox_options_default(&options);
 
-    if (opts != NULL)
-        init_options(opts, &options);
+    if (pyopts != NULL) {
+        if (PyClass_Check(pyopts) == true || PyDict_Check(pyopts) == true)
+            init_options(pyopts, &options);
+        else if (pyopts != Py_None) {
+            Py_XDECREF(pyopts);
+            PyErr_SetString(ToxCoreException, "You must supply a Tox_Options param as a class or dict");
+            return -1;
+        }
+    }
+
+    Py_XDECREF(pyopts);
 
     TOX_ERR_NEW error = 0;
     Tox* tox = tox_new(&options, &error);
