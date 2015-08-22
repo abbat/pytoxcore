@@ -1568,7 +1568,7 @@ static PyObject* ToxCore_tox_add_groupchat(ToxCore* self, PyObject* args)
         return NULL;
     }
 
-    Py_RETURN_NONE;
+    return PyLong_FromUnsignedLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
