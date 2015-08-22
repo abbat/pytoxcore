@@ -142,7 +142,7 @@ class EchoBotOptions(object):
             "ipv6_enabled"    : "yes" if tox_opts["ipv6_enabled"] else "no",
             "udp_enabled"     : "yes" if tox_opts["udp_enabled"]  else "no",
             "proxy_type"      : "",
-            "proxy_host"      : "" if tox_opts["proxy_host"] == None else tox_opts["proxy_host"],
+            "proxy_host"      : "" if tox_opts["proxy_host"] is None else tox_opts["proxy_host"],
             "proxy_port"      : str(tox_opts["proxy_port"]),
             "start_port"      : str(tox_opts["start_port"]),
             "end_port"        : str(tox_opts["end_port"]),
@@ -177,7 +177,7 @@ class EchoBotOptions(object):
         Результат (dict):
             Конфигурация приложения на основе файла конфигурации
         """
-        if options == None:
+        if options is None:
             options = EchoBotOptions.defaultOptions()
 
         options = options.copy()
@@ -372,7 +372,7 @@ class EchoBot(ToxCore):
 
         friend_name = self.tox_friend_get_name(friend_number)
 
-        if name != None:
+        if name is not None:
             self.verbose("Send file {0} as {1} to {2}/{3}".format(path, name, friend_name, friend_number))
         else:
             self.verbose("Send file {0} to {1}/{2}".format(path, friend_name, friend_number))
@@ -386,7 +386,7 @@ class EchoBot(ToxCore):
         f.fd   = open(f.path, "rb")
         f.name = name
 
-        if f.name == None:
+        if f.name is None:
             f.name = os.path.basename(f.path)
 
         file_number = self.tox_file_send(friend_number, ToxCore.TOX_FILE_KIND_DATA, f.size, None, f.name)
@@ -562,10 +562,7 @@ class EchoBot(ToxCore):
                 (self.options.max_avatar_size == 0 or file_size <= self.options.max_avatar_size) and \
                 (os.path.isdir(self.options.avatars_path)))
 
-        else:
-            raise NotImplementedError("Unknown kind: {0}".format(kind))
-
-        return False
+        raise NotImplementedError("Unknown kind: {0}".format(kind))
 
 
     def tox_file_recv_cb(self, friend_number, file_number, kind, file_size, filename):
@@ -670,7 +667,7 @@ class EchoBot(ToxCore):
             f.fd.seek(position, 0)
             f.position = position
 
-        if data != None:
+        if data is not None:
             f.fd.write(data)
 
             length = len(data)
