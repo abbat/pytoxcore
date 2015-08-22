@@ -1558,22 +1558,118 @@ static PyObject* ToxCore_tox_friend_send_lossless_packet(ToxCore* self, PyObject
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_add_groupchat(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    int result = tox_add_groupchat(self->tox);
+    if (result == -1) {
+        PyErr_SetString(ToxCoreException, "Error when creating a group chat.");
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_del_groupchat(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    int group_number;
+
+    if (PyArg_ParseTuple(args, "I", &group_number) == false)
+        return NULL;
+
+    int result = tox_del_groupchat(self->tox, group_number);
+    if (result == -1) {
+        PyErr_SetString(ToxCoreException, "Error when deleting the group chat.");
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_invite_friend(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t friend_number;
+    int      group_number;
+
+    if (PyArg_ParseTuple(args, "II", &friend_number, &group_number) == false)
+        return NULL;
+
+    int result = tox_invite_friend(self->tox, friend_number, group_number);
+    if (result == -1) {
+        PyErr_SetString(ToxCoreException, "Error when sending invite to join group chat.");
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_set_title(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    int        group_number;
+    uint8_t*   title;
+    Py_ssize_t title_len;
+
+    if (PyArg_ParseTuple(args, "Is#", &group_number, &title, &title_len) == false)
+        return NULL;
+
+    if (title_len > TOX_MAX_NAME_LENGTH) {
+        PyErr_SetString(ToxCoreException, "Group chat title exceeded TOX_MAX_NAME_LENGTH.");
+        return NULL;
+    }
+
+    int result = tox_group_set_title(self->tox, group_number, title, title_len);
+    if (result == -1) {
+        PyErr_SetString(ToxCoreException, "Error when sending invite to join group chat.");
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_get_title(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    int group_number;
+
+    if (PyArg_ParseTuple(args, "I", &group_number) == false)
+        return NULL;
+
+    uint8_t title[TOX_MAX_NAME_LENGTH];
+    memset(title, 0, sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);
+
+    int result = tox_group_get_title(self->tox, group_number, title, TOX_MAX_NAME_LENGTH);
+    if (result == -1) {
+        PyErr_SetString(ToxCoreException, "Error occured when trying to get group chat title.");
+        return NULL;
+    }
+
+    return PYSTRING_FromString((const char*)title);
+}
+//----------------------------------------------------------------------------------------------
+
 // WARNING Group chats will be rewritten so this might change
 // TODO: tox_callback_group_invite
 // TODO: tox_callback_group_message
 // TODO: tox_callback_group_action
 // TODO: tox_callback_group_title
 // TODO: tox_callback_group_namelist_change
-// TODO: tox_add_groupchat
-// TODO: tox_del_groupchat
 // TODO: tox_group_peername
 // TODO: tox_group_peer_pubkey
-// TODO: tox_invite_friend
 // TODO: tox_join_groupchat
 // TODO: tox_group_message_send
 // TODO: tox_group_action_send
-// TODO: tox_group_set_title
-// TODO: tox_group_get_title
 // TODO: tox_group_peernumber_is_ours
 // TODO: tox_group_number_peers
 // TODO: tox_group_get_names
@@ -2042,6 +2138,31 @@ PyMethodDef Tox_methods[] = {
         "custom packet is TOX_MAX_CUSTOM_PACKET_SIZE.\n"
         "Lossless packet behaviour is comparable to TCP (reliability, arrive in order) "
         "but with packets instead of a stream."
+    },
+    {
+        "tox_add_groupchat", (PyCFunction)ToxCore_tox_add_groupchat, METH_NOARGS,
+        "tox_add_groupchat()\n"
+        "Creates a new groupchat and puts it in the chats array."
+    },
+    {
+        "tox_del_groupchat", (PyCFunction)ToxCore_tox_del_groupchat, METH_VARARGS,
+        "tox_del_groupchat(groupnumber)\n"
+        "Delete a groupchat from the chats array."
+    },
+    {
+        "tox_invite_friend", (PyCFunction)ToxCore_tox_invite_friend, METH_VARARGS,
+        "tox_invite_friend(friendnumber, groupnumber)\n"
+        "Invite peer to group chat."
+    },
+    {
+        "tox_group_get_title", (PyCFunction)ToxCore_tox_group_get_title, METH_VARARGS,
+        "tox_group_get_title(groupnumber)\n"
+        "Invite peer to group chat."
+    },
+    {
+        "tox_group_set_title", (PyCFunction)ToxCore_tox_group_set_title, METH_VARARGS,
+        "tox_group_set_title(groupnumber, title)\n"
+        "Invite peer to group chat."
     },
     {
         NULL
