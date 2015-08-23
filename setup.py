@@ -2,7 +2,7 @@ from distutils.core import setup, Extension
 
 setup(
     name         = "pytoxcore",
-    version      = "0.0.10",
+    version      = "0.0.11",
     description  = 'Python binding for ToxCore',
     author       = 'Anton Batenev',
     author_email = 'antonbatenev@yandex.ru',

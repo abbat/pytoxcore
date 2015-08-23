@@ -8,3 +8,4 @@ Developers: yatsen1
 Delete ToxAV and some obsolete code.
 Rewrite sources for more accuracy errors checking and type conversions.
 Developers: Anton Batenev <antonbatenev@yandex.ru>
+Contributors: Yaroslav Sidlovsky <zawertun@gmail.com>

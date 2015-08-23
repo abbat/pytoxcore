@@ -1,3 +1,10 @@
+python-toxcore (0.0.11) unstable; urgency=low
+
+  * Add tox_add_groupchat, tox_del_groupchat, tox_invite_friend,
+    tox_group_set_title and tox_group_get_title.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sun, 23 Aug 2015 16:28:14 +0300
+
 python-toxcore (0.0.10) unstable; urgency=low
 
   * Fix double free memory corruption.
