@@ -1629,7 +1629,7 @@ static PyObject* ToxCore_tox_group_set_title(ToxCore* self, PyObject* args)
 
     int result = tox_group_set_title(self->tox, group_number, title, title_len);
     if (result == -1) {
-        PyErr_SetString(ToxCoreException, "Error when sending invite to join group chat.");
+        PyErr_SetString(ToxCoreException, "Error when setting group chat title.");
         return NULL;
     }
 
@@ -2157,12 +2157,12 @@ PyMethodDef Tox_methods[] = {
     {
         "tox_group_get_title", (PyCFunction)ToxCore_tox_group_get_title, METH_VARARGS,
         "tox_group_get_title(groupnumber)\n"
-        "Invite peer to group chat."
+        "Get group title from groupnumber and put it in title."
     },
     {
         "tox_group_set_title", (PyCFunction)ToxCore_tox_group_set_title, METH_VARARGS,
         "tox_group_set_title(groupnumber, title)\n"
-        "Invite peer to group chat."
+        "Set the group's title, limited to MAX_NAME_LENGTH."
     },
     {
         NULL
