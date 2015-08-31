@@ -1660,6 +1660,14 @@ static PyObject* ToxCore_tox_group_get_title(ToxCore* self, PyObject* args)
 //----------------------------------------------------------------------------------------------
 
 // WARNING Group chats will be rewritten so this might change
+// See: https://github.com/JFreegman/toxcore/blob/new_groupchats/toxcore/tox.h
+
+// CHECK: tox_add_groupchat
+// CHECK: tox_del_groupchat
+// CHECK: tox_invite_friend
+// CHECK: tox_group_set_title
+// CHECK: tox_group_get_title
+
 // TODO: tox_callback_group_invite
 // TODO: tox_callback_group_message
 // TODO: tox_callback_group_action
