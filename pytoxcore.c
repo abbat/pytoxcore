@@ -2358,7 +2358,48 @@ static PyObject* ToxCore_tox_group_get_password(ToxCore* self, PyObject* args)
 
 static PyObject* ToxCore_tox_group_send_message(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t         groupnumber;
+    TOX_MESSAGE_TYPE type;
+    uint8_t*         message;
+    Py_ssize_t       message_len;
+
+    if (PyArg_ParseTuple(args, "IIs#", &groupnumber, &type, &message, &message_len) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_SEND_MESSAGE error;
+    bool result = tox_group_send_message(self->tox, groupnumber, type, message, message_len, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_SEND_MESSAGE_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_SEND_MESSAGE_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_SEND_MESSAGE_TOO_LONG:
+            PyErr_SetString(ToxCoreException, "Message length exceeded TOX_MAX_MESSAGE_LENGTH.");
+            break;
+        case TOX_ERR_GROUP_SEND_MESSAGE_EMPTY:
+            PyErr_SetString(ToxCoreException, "The message pointer is null or length is zero.");
+            break;
+        case TOX_ERR_GROUP_SEND_MESSAGE_BAD_TYPE:
+            PyErr_SetString(ToxCoreException, "The message type is invalid.");
+            break;
+        case TOX_ERR_GROUP_SEND_MESSAGE_PERMISSIONS:
+            PyErr_SetString(ToxCoreException, "The caller does not have the required permissions to send group messages.");
+            break;
+        case TOX_ERR_GROUP_SEND_MESSAGE_FAIL_SEND:
+            PyErr_SetString(ToxCoreException, "Packet failed to send.");
+            break;
+    }
+
+    if (success = false || result == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
