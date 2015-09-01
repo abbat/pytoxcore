@@ -208,6 +208,90 @@ static void callback_friend_lossless_packet(Tox* tox, uint32_t friend_number, co
 }
 //----------------------------------------------------------------------------------------------
 
+static void callback_group_peer_name(Tox* tox, uint32_t groupnumber, uint32_t peer_id, const uint8_t* name, size_t length, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_peer_name_cb", "IIs#", groupnumber, peer_id, name, length);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_group_peer_status(Tox* tox, uint32_t groupnumber, uint32_t peer_id, TOX_USER_STATUS status, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_peer_status_cb", "III", groupnumber, peer_id, status);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_group_topic(Tox* tox, uint32_t groupnumber, uint32_t peer_id, const uint8_t* topic, size_t length, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_topic_cb", "IIs#", groupnumber, peer_id, topic, length);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_group_privacy_state(Tox* tox, uint32_t groupnumber, TOX_GROUP_PRIVACY_STATE privacy_state, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_privacy_state_cb", "II", groupnumber, privacy_state);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_group_peer_limit(Tox* tox, uint32_t groupnumber, uint32_t peer_limit, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_peer_limit_cb", "II", groupnumber, peer_limit);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_group_password(Tox* tox, uint32_t groupnumber, const uint8_t* password, size_t length, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_password_cb", "Is#", groupnumber, password, length);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_group_message(Tox* tox, uint32_t groupnumber, uint32_t peer_id, TOX_MESSAGE_TYPE type, const uint8_t* message, size_t length, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_message_cb", "IIIs#", groupnumber, peer_id, type, message, length);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_group_private_message(Tox* tox, uint32_t groupnumber, uint32_t peer_id, const uint8_t* message, size_t length, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_private_message_cb", "IIs#", groupnumber, peer_id, message, length);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_group_invite(Tox* tox, uint32_t friend_number, const uint8_t* invite_data, size_t length, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_invite_cb", "I" BUF_TC "#", friend_number, invite_data, length);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_group_peer_join(Tox* tox, uint32_t groupnumber, uint32_t peer_id, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_peer_join_cb", "II", groupnumber, peer_id);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_group_peer_exit(Tox* tox, uint32_t groupnumber, uint32_t peer_id, const uint8_t* part_message, size_t length, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_peer_exit_cb", "IIs#", groupnumber, peer_id, part_message, length);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_group_self_join(Tox* tox, uint32_t groupnumber, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_self_join_cb", "I", groupnumber);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_group_join_fail(Tox* tox, uint32_t groupnumber, TOX_GROUP_JOIN_FAIL fail_type, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_join_fail_cb", "II", groupnumber, fail_type);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_group_moderation(Tox* tox, uint32_t groupnumber, uint32_t source_peer_number, uint32_t target_peer_number, TOX_GROUP_MOD_EVENT mod_type, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_moderation_cb", "IIII", groupnumber, source_peer_number, target_peer_number, mod_type);
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_callback_stub(ToxCore* self, PyObject* args)
 {
     Py_RETURN_NONE;
@@ -1561,21 +1645,6 @@ static PyObject* ToxCore_tox_friend_send_lossless_packet(ToxCore* self, PyObject
 // WARNING Group chats will be rewritten so this might change
 // See: https://github.com/JFreegman/toxcore/blob/new_groupchats/toxcore/tox.h
 
-// TODO: tox_group_peer_name_cb
-// TODO: tox_group_peer_status_cb
-// TODO: tox_group_topic_cb
-// TODO: tox_group_privacy_state_cb
-// TODO: tox_group_peer_limit_cb
-// TODO: tox_group_password_cb
-// TODO: tox_group_message_cb
-// TODO: tox_group_private_message_cb
-// TODO: tox_group_invite_cb
-// TODO: tox_group_peer_join_cb
-// TODO: tox_group_peer_exit_cb
-// TODO: tox_group_self_join_cb
-// TODO: tox_group_join_fail_cb
-// TODO: tox_group_moderation_cb
-
 // TODO: tox_group_new
 // TODO: tox_group_join
 // TODO: tox_group_reconnect
@@ -1717,6 +1786,78 @@ PyMethodDef Tox_methods[] = {
         "tox_friend_lossless_packet_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
         "tox_friend_lossless_packet_cb(friend_number, data)\n"
         "This event is triggered when a friend sends lossless packet."
+    },
+    {
+        "tox_group_peer_name_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_peer_name_cb(groupnumber, peer_id, name)\n"
+        "This event is triggered when a peer changes their nickname."
+    },
+    {
+        "tox_group_peer_status_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_peer_status_cb(groupnumber, peer_id, status)\n"
+        "This event is triggered when a peer changes their status."
+    },
+    {
+        "tox_group_topic_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_topic_cb(groupnumber, peer_id, topic)\n"
+        "This event is triggered when a peer changes the group topic."
+    },
+    {
+        "tox_group_privacy_state_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_privacy_state_cb(groupnumber, privacy_state)\n"
+        "This event is triggered when the group founder changes the privacy state."
+    },
+    {
+        "tox_group_peer_limit_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_peer_limit_cb(groupnumber, peer_limit)\n"
+        "This event is triggered when the group founder changes the maximum peer limit."
+    },
+    {
+        "tox_group_password_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_password_cb(groupnumber, password)\n"
+        "This event is triggered when the group founder changes the group password."
+    },
+    {
+        "tox_group_message_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_message_cb(groupnumber, peer_id, type, message)\n"
+        "This event is triggered when the client receives a group message."
+    },
+    {
+        "tox_group_private_message_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_private_message_cb(groupnumber, peer_id, message)\n"
+        "This event is triggered when the client receives a private message."
+    },
+    {
+        "tox_group_invite_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_invite_cb(friend_number, invite_data)\n"
+        "his event is triggered when the client receives a group invite from a friend. The client must store "
+        "invite_data which is used to join the group via tox_group_invite_accept."
+    },
+    {
+        "tox_group_peer_join_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_peer_join_cb(groupnumber, peer_id)\n"
+        "This event is triggered when a peer joins the group."
+    },
+    {
+        "tox_group_peer_exit_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_peer_exit_cb(groupnumber, peer_id, part_message)\n"
+        "This event is triggered when a peer exits the group."
+    },
+    {
+        "tox_group_self_join_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_self_join_cb(groupnumber)\n"
+        "This event is triggered when the client has successfully joined a group. Use this to initialize "
+        "any group information the client may need."
+    },
+    {
+        "tox_group_join_fail_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_join_fail_cb(groupnumber, fail_type)\n"
+        "This event is triggered when the client fails to join a group."
+    },
+    {
+        "tox_group_moderation_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_moderation_cb(groupnumber, source_peer_number, target_peer_number, mod_type)\n"
+        "This event is triggered when a moderator or founder executes a moderation event."
     },
 
     //
@@ -2256,6 +2397,7 @@ static int init_helper(ToxCore* self, PyObject* args)
         return -1;
 
     tox_callback_self_connection_status(tox, callback_self_connection_status, self);
+
     tox_callback_friend_request(tox, callback_friend_request, self);
     tox_callback_friend_message(tox, callback_friend_message, self);
     tox_callback_friend_name(tox, callback_friend_name, self);
@@ -2264,12 +2406,29 @@ static int init_helper(ToxCore* self, PyObject* args)
     tox_callback_friend_read_receipt(tox, callback_friend_read_receipt, self);
     tox_callback_friend_connection_status(tox, callback_friend_connection_status, self);
     tox_callback_friend_typing(tox, callback_friend_typing, self);
+
     tox_callback_file_chunk_request(tox, callback_file_chunk_request, self);
     tox_callback_file_recv_control(tox, callback_file_recv_control, self);
     tox_callback_file_recv(tox, callback_file_recv, self);
     tox_callback_file_recv_chunk(tox, callback_file_recv_chunk, self);
+
     tox_callback_friend_lossy_packet(tox, callback_friend_lossy_packet, self);
     tox_callback_friend_lossless_packet(tox, callback_friend_lossless_packet, self);
+
+    tox_callback_group_peer_name(tox, callback_group_peer_name, self);
+    tox_callback_group_peer_status(tox, callback_group_peer_status, self);
+    tox_callback_group_topic(tox, callback_group_topic, self);
+    tox_callback_group_privacy_state(tox, callback_group_privacy_state, self);
+    tox_callback_group_peer_limit(tox, callback_group_peer_limit, self);
+    tox_callback_group_password(tox, callback_group_password, self);
+    tox_callback_group_message(tox, callback_group_message, self);
+    tox_callback_group_private_message(tox, callback_group_private_message, self);
+    tox_callback_group_invite(tox, callback_group_invite, self);
+    tox_callback_group_peer_join(tox, callback_group_peer_join, self);
+    tox_callback_group_peer_exit(tox, callback_group_peer_exit, self);
+    tox_callback_group_self_join(tox, callback_group_self_join, self);
+    tox_callback_group_join_fail(tox, callback_group_join_fail, self);
+    tox_callback_group_moderation(tox, callback_group_moderation, self);
 
     self->tox = tox;
 
@@ -2401,6 +2560,17 @@ static void ToxCore_install_dict(void)
     // #define TOX_MAX_FILENAME_LENGTH
     SET(TOX_MAX_FILENAME_LENGTH)
 
+    // #define TOX_GROUP_MAX_TOPIC_LENGTH
+    SET(TOX_GROUP_MAX_TOPIC_LENGTH)
+    // #define TOX_GROUP_MAX_PART_LENGTH
+    SET(TOX_GROUP_MAX_PART_LENGTH)
+    // #define TOX_GROUP_MAX_GROUP_NAME_LENGTH
+    SET(TOX_GROUP_MAX_GROUP_NAME_LENGTH)
+    // #define TOX_GROUP_MAX_PASSWORD_SIZE
+    SET(TOX_GROUP_MAX_PASSWORD_SIZE)
+    // #define TOX_GROUP_CHAT_ID_SIZE
+    SET(TOX_GROUP_CHAT_ID_SIZE)
+
     // enum TOX_USER_STATUS
     SET(TOX_USER_STATUS_NONE)
     SET(TOX_USER_STATUS_AWAY)
@@ -2428,6 +2598,23 @@ static void ToxCore_install_dict(void)
     SET(TOX_FILE_CONTROL_RESUME)
     SET(TOX_FILE_CONTROL_PAUSE)
     SET(TOX_FILE_CONTROL_CANCEL)
+
+    // enum TOX_GROUP_PRIVACY_STATE
+    SET(TOX_GROUP_PRIVACY_STATE_PUBLIC)
+    SET(TOX_GROUP_PRIVACY_STATE_PRIVATE)
+
+    // enum enum TOX_GROUP_JOIN_FAIL
+    SET(TOX_GROUP_JOIN_FAIL_NAME_TAKEN)
+    SET(TOX_GROUP_JOIN_FAIL_PEER_LIMIT)
+    SET(TOX_GROUP_JOIN_FAIL_INVALID_PASSWORD)
+    SET(TOX_GROUP_JOIN_FAIL_UNKNOWN)
+
+    // enum TOX_GROUP_MOD_EVENT
+    SET(TOX_GROUP_MOD_EVENT_KICK)
+    SET(TOX_GROUP_MOD_EVENT_BAN)
+    SET(TOX_GROUP_MOD_EVENT_OBSERVER)
+    SET(TOX_GROUP_MOD_EVENT_USER)
+    SET(TOX_GROUP_MOD_EVENT_MODERATOR)
 
 #undef SET
 
