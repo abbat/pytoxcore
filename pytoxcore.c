@@ -1642,45 +1642,214 @@ static PyObject* ToxCore_tox_friend_send_lossless_packet(ToxCore* self, PyObject
 }
 //----------------------------------------------------------------------------------------------
 
-// WARNING Group chats will be rewritten so this might change
-// See: https://github.com/JFreegman/toxcore/blob/new_groupchats/toxcore/tox.h
+static PyObject* ToxCore_tox_group_new(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
 
-// TODO: tox_group_new
-// TODO: tox_group_join
-// TODO: tox_group_reconnect
-// TODO: tox_group_leave
-// TODO: tox_group_self_set_name
-// TODO: tox_group_self_get_name
-// TODO: tox_group_self_set_status
-// TODO: tox_group_self_get_status
-// TODO: tox_group_self_get_role
-// TODO: tox_group_self_get_peer_id
-// TODO: tox_group_peer_get_name
-// TODO: tox_group_peer_get_status
-// TODO: tox_group_peer_get_role
-// TODO: tox_group_set_topic
-// TODO: tox_group_get_topic
-// TODO: tox_group_get_name
-// TODO: tox_group_get_chat_id
-// TODO: tox_group_get_number_groups
-// TODO: tox_group_get_privacy_state
-// TODO: tox_group_get_peer_limit
-// TODO: tox_group_get_password
-// TODO: tox_group_send_message
-// TODO: tox_group_send_private_message
-// TODO: tox_group_invite_friend
-// TODO: tox_group_invite_accept
-// TODO: tox_group_founder_set_password
-// TODO: tox_group_founder_set_privacy_state
-// TODO: tox_group_founder_set_peer_limit
-// TODO: tox_group_toggle_ignore
-// TODO: tox_group_mod_set_role
-// TODO: tox_group_mod_remove_peer
-// TODO: tox_group_mod_remove_ban
-// TODO: tox_group_ban_get_list
-// TODO: tox_group_ban_get_name
-// TODO: tox_group_ban_get_time_set
+static PyObject* ToxCore_tox_group_join(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_group_reconnect(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_leave(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_self_set_name(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_self_get_name(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_self_set_status(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_self_get_status(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_self_get_role(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_self_get_peer_id(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_peer_get_name(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_peer_get_status(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_peer_get_role(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_set_topic(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_get_topic(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_get_name(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_get_chat_id(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_get_number_groups(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_get_privacy_state(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_get_peer_limit(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_get_password(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_send_message(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_send_private_message(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_invite_friend(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_invite_accept(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_founder_set_password(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_founder_set_privacy_state(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_founder_set_peer_limit(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_toggle_ignore(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_mod_set_role(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_mod_remove_peer(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_mod_remove_ban(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_ban_get_list(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_ban_get_name(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_group_ban_get_time_set(ToxCore* self, PyObject* args)
+{
+    // TODO:
+}
 //----------------------------------------------------------------------------------------------
 
 #if PY_MAJOR_VERSION >= 3
@@ -2214,6 +2383,235 @@ PyMethodDef Tox_methods[] = {
         "custom packet is TOX_MAX_CUSTOM_PACKET_SIZE.\n"
         "Lossless packet behaviour is comparable to TCP (reliability, arrive in order) "
         "but with packets instead of a stream."
+    },
+    {
+        "tox_group_new", (PyCFunction)ToxCore_tox_group_new, METH_VARARGS,
+        "tox_group_new(privacy_state, group_name)\n"
+        "Creates a new group chat.\n"
+        "This function creates a new group chat object and adds it to the chats array.\n"
+        "The client should initiate its peer list with self info after calling this function, as "
+        "the peer_join callback will not be triggered."
+    },
+    {
+        "tox_group_join", (PyCFunction)ToxCore_tox_group_join, METH_VARARGS,
+        "tox_group_join(chat_id, password)\n"
+        " * Joins a group chat with specified Chat ID.\n"
+        "This function creates a new group chat object, adds it to the chats array, and sends "
+        "a DHT announcement to find peers in the group associated with chat_id. Once a peer has been "
+        "found a join attempt will be initiated."
+    },
+    {
+        "tox_group_reconnect", (PyCFunction)ToxCore_tox_group_reconnect, METH_VARARGS,
+        "tox_group_reconnect(groupnumber)\n"
+        "Reconnects to a group.\n"
+        "This function disconnects from all peers in the group, then attempts to reconnect with the group. "
+        "The caller's state is not changed (i.e. name, status, role, chat public key etc.)"
+    },
+    {
+        "tox_group_leave", (PyCFunction)ToxCore_tox_group_leave, METH_VARARGS,
+        "tox_group_leave(groupnumber, message)\n"
+        "Leaves a group.\n"
+        "This function sends a parting packet containing a custom (non-obligatory) message to all "
+        "peers in a group, and deletes the group from the chat array. All group state information is permanently "
+        "lost, including keys and role credentials."
+    },
+    {
+        "tox_group_self_set_name", (PyCFunction)ToxCore_tox_group_self_set_name, METH_VARARGS,
+        "tox_group_self_set_name(groupnumber, name)\n"
+        "Set the client's nickname for the group instance designated by the given group number.\n"
+        "Nickname length cannot exceed TOX_MAX_NAME_LENGTH. If length is equal to zero or name is a None "
+        "the function call will fail.
+    },
+    {
+        "tox_group_self_get_name", (PyCFunction)ToxCore_tox_group_self_get_name, METH_VARARGS,
+        "tox_group_self_get_name(groupnumber)\n"
+        "Return the nickname set by tox_group_self_set_name.\n"
+        "If no nickname was set before calling this function, the name is empty, "
+        "and this function has no effect."
+    },
+    {
+        "tox_group_self_set_status", (PyCFunction)ToxCore_tox_group_self_set_status, METH_VARARGS,
+        "tox_group_self_set_status(groupnumber, status)\n"
+        "Set the client's status for the group instance. Status must be a TOX_USER_STATUS."
+    },
+    {
+        "tox_group_self_get_status", (PyCFunction)ToxCore_tox_group_self_get_status, METH_VARARGS,
+        "tox_group_self_get_status(groupnumber)\n"
+        "Returns the client's status for the group instance on success."
+    },
+    {
+        "tox_group_self_get_role", (PyCFunction)ToxCore_tox_group_self_get_role, METH_VARARGS,
+        "tox_group_self_get_role(groupnumber)\n"
+        "Returns the client's role for the group instance on success."
+    },
+    {
+        "tox_group_self_get_peer_id", (PyCFunction)ToxCore_tox_group_self_get_peer_id, METH_VARARGS,
+        "tox_group_self_get_peer_id(groupnumber)\n"
+        "Returns the client's peer id for the group instance on success."
+    },
+    {
+        "tox_group_peer_get_name", (PyCFunction)ToxCore_tox_group_peer_get_name, METH_VARARGS,
+        "tox_group_peer_get_name(groupnumber, peer_id)\n"
+        "Returns the name of the peer designated by the given ID.\n"
+        "The data is equal to the data received by the last tox_group_peer_name_cb."
+    },
+    {
+        "tox_group_peer_get_status", (PyCFunction)ToxCore_tox_group_peer_get_status, METH_VARARGS,
+        "tox_group_peer_get_status(groupnumber, peer_id)\n"
+        "Return the peer's user status (away/busy/...). If the ID or group number is "
+        "invalid, the return value is unspecified.\n"
+        "The status returned is equal to the last status received through the group_peer_status_cb."
+    },
+    {
+        "tox_group_peer_get_role", (PyCFunction)ToxCore_tox_group_peer_get_role, METH_VARARGS,
+        "tox_group_peer_get_role(groupnumber, peer_id)\n"
+        "Return the peer's role (user/moderator/founder...). If the ID or group number is "
+        "invalid, the return value is unspecified.\n"
+        "The role returned is equal to the last role received through the group_moderation_cb"
+    },
+    {
+        "tox_group_set_topic", (PyCFunction)ToxCore_tox_group_set_topic, METH_VARARGS,
+        "tox_group_set_topic(groupnumber, topic)\n"
+        "Set the group topic and broadcast it to the rest of the group.\n"
+        "topic length cannot be longer than TOX_GROUP_MAX_TOPIC_LENGTH. If topic is empty or "
+        "topic is set to None, the topic will be unset."
+    },
+    {
+        "tox_group_get_topic", (PyCFunction)ToxCore_tox_group_get_topic, METH_VARARGS,
+        "tox_group_get_topic(groupnumber)\n"
+        "Returns the topic designated by the given group number.\n"
+        "The returned data is equal to the data received by the last group_topic_cb"
+    },
+    {
+        "tox_group_get_name", (PyCFunction)ToxCore_tox_group_get_name, METH_VARARGS,
+        "tox_group_get_name(groupnumber)\n"
+        "Returns the name of the group designated by the given group number."
+    },
+    {
+        "tox_group_get_chat_id", (PyCFunction)ToxCore_tox_group_get_chat_id, METH_VARARGS,
+        "tox_group_get_chat_id(groupnumber)\n"
+        "Returns the Chat ID designated by the given group number."
+    },
+    {
+        "tox_group_get_number_groups", (PyCFunction)ToxCore_tox_group_get_number_groups, METH_NOARGS,
+        "tox_group_get_number_groups()\n"
+        "Returns the number of groups in the Tox chats array."
+    },
+    {
+        "tox_group_get_privacy_state", (PyCFunction)ToxCore_tox_group_get_privacy_state, METH_VARARGS,
+        "tox_group_get_privacy_state(groupnumber)\n"
+        "Returns the privacy state of the group designated by the given group number. If group number "
+        "is invalid, the return value is unspecified.\n"
+        "The value returned is equal to the data received by the last group_privacy_state_cb"
+    },
+    {
+        "tox_group_get_peer_limit", (PyCFunction)ToxCore_tox_group_get_peer_limit, METH_VARARGS,
+        "tox_group_get_peer_limit(groupnumber)\n"
+        "Returns the maximum number of peers allowed for the group designated by the given group number. "
+        "If the group number is invalid, the return value is unspecified.\n"
+        "The value returned is equal to the data received by the last group_peer_limit_cb."
+    },
+    {
+        "tox_group_get_password", (PyCFunction)ToxCore_tox_group_get_password, METH_VARARGS,
+        "tox_group_get_password(groupnumber)\n"
+        "Returns the password for the group designated by the given group number.\n"
+        "The data received is equal to the data received by the last group_password_cb."
+    },
+    {
+        "tox_group_send_message", (PyCFunction)ToxCore_tox_group_send_message, METH_VARARGS,
+        "tox_group_send_message(groupnumber, type, message)\n"
+        "Send a text chat message to the entire group.\n"
+        "The message length may not exceed TOX_MAX_MESSAGE_LENGTH. Larger messages "
+        "must be split by the client and sent as separate messages. Other clients can "
+        "then reassemble the fragments. Messages may not be empty."
+    },
+    {
+        "tox_group_send_private_message", (PyCFunction)ToxCore_tox_group_send_private_message, METH_VARARGS,
+        "tox_group_send_private_message(groupnumber, peer_id, message)\n"
+        "Send a text chat message to the specified peer in the specified group.\n"
+        "The message length may not exceed TOX_MAX_MESSAGE_LENGTH. Larger messages "
+        "must be split by the client and sent as separate messages. Other clients can "
+        "then reassemble the fragments. Messages may not be empty."
+    },
+    {
+        "tox_group_invite_friend", (PyCFunction)ToxCore_tox_group_invite_friend, METH_VARARGS,
+        "tox_group_invite_friend(groupnumber, friend_number)\n"
+        "Invite a friend to a group."
+    },
+    {
+        "tox_group_invite_accept", (PyCFunction)ToxCore_tox_group_invite_accept, METH_VARARGS,
+        "tox_group_invite_accept(invite_data, password)\n"
+        "Accept an invite to a group chat that the client previously received from a friend. The invite "
+        "is only valid while the inviter is present in the group."
+    },
+    {
+        "tox_group_founder_set_password", (PyCFunction)ToxCore_tox_group_founder_set_password, METH_VARARGS,
+        "tox_group_founder_set_password(groupnumber, password)\n"
+        "Set or unset the group password.\n"
+        "This function sets the groups password, creates a new group shared state including the change, "
+        "and distributes it to the rest of the group."
+    },
+    {
+        "tox_group_founder_set_privacy_state", (PyCFunction)ToxCore_tox_group_founder_set_privacy_state, METH_VARARGS,
+        "tox_group_founder_set_privacy_state(groupnumber, privacy_state)\n"
+        "Set the group privacy state.\n"
+        "This function sets the group's privacy state, creates a new group shared state "
+        "including the change, and distributes it to the rest of the group.\n"
+        "If an attempt is made to set the privacy state to the same state that the group is already "
+        "in, the function call will be successful and no action will be taken."
+    },
+    {
+        "tox_group_founder_set_peer_limit", (PyCFunction)ToxCore_tox_group_founder_set_peer_limit, METH_VARARGS,
+        "tox_group_founder_set_peer_limit(groupnumber, max_peers)\n"
+        "Set the group peer limit.\n"
+        "This function sets a limit for the number of peers who may be in the group, creates a new "
+        "group shared state including the change, and distributes it to the rest of the group."
+    },
+    {
+        "tox_group_toggle_ignore", (PyCFunction)ToxCore_tox_group_toggle_ignore, METH_VARARGS,
+        "tox_group_toggle_ignore(groupnumber, peer_id, ignore)\n"
+        "Ignore or unignore a peer."
+    },
+    {
+        "tox_group_mod_set_role", (PyCFunction)ToxCore_tox_group_mod_set_role, METH_VARARGS,
+        "tox_group_mod_set_role(groupnumber, peer_id, role)\n"
+        "Set a peer's role.\n"
+        "This function will first remove the peer's previous role and then assign them a new role. "
+        "It will also send a packet to the rest of the group, requesting that they perform "
+        "the role reassignment. Note: peers cannot be set to the founder role."
+    },
+    {
+        "tox_group_mod_remove_peer", (PyCFunction)ToxCore_tox_group_mod_remove_peer, METH_VARARGS,
+        "tox_group_mod_remove_peer(groupnumber, peer_id, set_ban)\n"
+        "Kick/ban a peer.\n"
+        "This function will remove a peer from the caller's peer list and optionally add their IP address "
+        "to the ban list. It will also send a packet to all group members requesting them "
+        "to do the same."
+    },
+    {
+        "tox_group_mod_remove_ban", (PyCFunction)ToxCore_tox_group_mod_remove_ban, METH_VARARGS,
+        "tox_group_mod_remove_ban(groupnumber, ban_id)\n"
+        "Removes a ban.\n"
+        "This function removes a ban entry from the ban list, and sends a packet to the rest of "
+        "the group requesting that they do the same."
+    },
+    {
+        "tox_group_ban_get_list", (PyCFunction)ToxCore_tox_group_ban_get_list, METH_VARARGS,
+        "tox_group_ban_get_list(groupnumber)\n"
+        "Returns a list of valid ban list ID's."
+    },
+    {
+        "tox_group_ban_get_name", (PyCFunction)ToxCore_tox_group_ban_get_name, METH_VARARGS,
+        "tox_group_ban_get_name(groupnumber, ban_id)\n"
+        "Returns the name of the ban entry designated by ban_id in the group designated by the "
+        "given group number"
+    },
+    {
+        "tox_group_ban_get_time_set", (PyCFunction)ToxCore_tox_group_ban_get_time_set, METH_VARARGS,
+        "tox_group_ban_get_time_set(groupnumber, ban_id)\n"
+        "Return a time stamp indicating the time the ban was set, for the ban list entry "
+        "designated by ban_id, in the group designated by the given group number. "
+        "If either groupnumber or ban_id is invalid, the return value is unspecified."
     },
     {
         NULL
