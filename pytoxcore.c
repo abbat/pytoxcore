@@ -2276,7 +2276,20 @@ static PyObject* ToxCore_tox_group_get_number_groups(ToxCore* self, PyObject* ar
 
 static PyObject* ToxCore_tox_group_get_privacy_state(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_STATE_QUERIES error;
+    TOX_GROUP_PRIVACY_STATE result = tox_group_get_privacy_state(self->tox, groupnumber, &error);
+
+    if (TOX_ERR_GROUP_STATE_QUERIES_parse(error) == false)
+        return NULL;
+
+    return PyLong_FromUnsignedLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
