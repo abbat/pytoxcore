@@ -1644,73 +1644,432 @@ static PyObject* ToxCore_tox_friend_send_lossless_packet(ToxCore* self, PyObject
 
 static PyObject* ToxCore_tox_group_new(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    TOX_GROUP_PRIVACY_STATE privacy_state;
+    uint8_t*                group_name;
+    Py_ssize_t              group_name_len;
+
+    if (PyArg_ParseTuple(args, "Is#", &privacy_state, &group_name, &group_name_len) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_NEW error;
+    uint32_t result = tox_group_new(self->tox, privacy_state, group_name, group_name_len, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_NEW_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_NEW_TOO_LONG:
+            PyErr_SetString(ToxCoreException, "The group name exceeded TOX_GROUP_MAX_GROUP_NAME_LENGTH.");
+            break;
+        case TOX_ERR_GROUP_NEW_EMPTY:
+            PyErr_SetString(ToxCoreException, "group_name is NULL or length is zero.");
+            break;
+        case TOX_ERR_GROUP_NEW_PRIVACY:
+            PyErr_SetString(ToxCoreException, "TOX_GROUP_PRIVACY_STATE is an invalid type.");
+            break;
+        case TOX_ERR_GROUP_NEW_INIT:
+            PyErr_SetString(ToxCoreException, "The group instance failed to initialize.");
+            break;
+        case TOX_ERR_GROUP_NEW_STATE:
+            PyErr_SetString(ToxCoreException, "The group state failed to initialize. This usually indicates that something went wrong related to cryptographic signing.");
+            break;
+        case TOX_ERR_GROUP_NEW_ANNOUNCE:
+            PyErr_SetString(ToxCoreException, "The group failed to announce to the DHT. This indicates a network related error.");
+            break;
+    }
+
+    if (result == UINT32_MAX || success == false)
+        return NULL;
+
+    return PyLong_FromUnsignedLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
 static PyObject* ToxCore_tox_group_join(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint8_t*   chat_id_hex;
+    Py_ssize_t chat_id_hex_len;
+    uint8_t*   password;
+    Py_ssize_t password_len;
+
+    if (PyArg_ParseTuple(args, "s#s#", &chat_id_hex, &chat_id_hex_len, &password, &password_len) == false)
+        return NULL;
+
+    if (chat_id_hex_len != TOX_GROUP_CHAT_ID_SIZE * 2) {
+        PyErr_SetString(ToxCoreException, "chat_id must be hex string of TOX_GROUP_CHAT_ID_SIZE length.");
+        return NULL;
+    }
+
+    uint8_t chat_id[TOX_GROUP_CHAT_ID_SIZE];
+    hex_string_to_bytes(chat_id_hex, TOX_GROUP_CHAT_ID_SIZE, chat_id);
+
+    TOX_ERR_GROUP_JOIN error;
+    uint32_t result = tox_group_join(self->tox, chat_id, password, password_len, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_JOIN_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_JOIN_INIT:
+            PyErr_SetString(ToxCoreException, "The group instance failed to initialize.");
+            break;
+        case TOX_ERR_GROUP_JOIN_BAD_CHAT_ID:
+            PyErr_SetString(ToxCoreException, "The chat_id pointer is set to NULL.");
+            break;
+        case TOX_ERR_GROUP_JOIN_TOO_LONG:
+            PyErr_SetString(ToxCoreException, "Password length exceeded TOX_GROUP_MAX_PASSWORD_SIZE.");
+            break;
+    }
+
+    if (result == UINT32_MAX || success == false)
+        return NULL;
+
+    return PyLong_FromUnsignedLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
 static PyObject* ToxCore_tox_group_reconnect(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_RECONNECT error;
+    bool result = tox_group_reconnect(self->tox, groupnumber, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_RECONNECT_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_RECONNECT_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
 static PyObject* ToxCore_tox_group_leave(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t   groupnumber;
+    uint8_t*   message;
+    Py_ssize_t message_len;
+
+    if (PyArg_ParseTuple(args, "Is#", &groupnumber, message, message_len) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_LEAVE error;
+    bool result = tox_group_leave(self->tox, groupnumber, message, message_len, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_LEAVE_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_LEAVE_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_LEAVE_TOO_LONG:
+            PyErr_SetString(ToxCoreException, "Message length exceeded TOX_GROUP_MAX_PART_LENGTH.");
+            break;
+        case TOX_ERR_GROUP_LEAVE_FAIL_SEND:
+            PyErr_SetString(ToxCoreException, "The parting packet failed to send.");
+            break;
+        case TOX_ERR_GROUP_LEAVE_DELETE_FAIL:
+            PyErr_SetString(ToxCoreException, "The group chat instance failed to be deleted. This may occur due to memory related errors.");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
 static PyObject* ToxCore_tox_group_self_set_name(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t   groupnumber;
+    uint8_t*   name;
+    Py_ssize_t name_len;
+
+    if (PyArg_ParseTuple(args, "Is#", &groupnumber, name, name_len) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_SELF_NAME_SET error;
+    bool result = tox_group_self_set_name(self->tox, groupnumber, name, name_len, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_SELF_NAME_SET_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_SELF_NAME_SET_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_SELF_NAME_SET_TOO_LONG:
+            PyErr_SetString(ToxCoreException, "Name length exceeded TOX_MAX_NAME_LENGTH.");
+            break;
+        case TOX_ERR_GROUP_SELF_NAME_SET_INVALID:
+            PyErr_SetString(ToxCoreException, "The length given to the set function is zero or name is a NULL pointer.");
+            break;
+        case TOX_ERR_GROUP_SELF_NAME_SET_TAKEN:
+            PyErr_SetString(ToxCoreException, "The name is already taken by another peer in the group.");
+            break;
+        case TOX_ERR_GROUP_SELF_NAME_SET_FAIL_SEND:
+            PyErr_SetString(ToxCoreException, "The packet failed to send.");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
+static bool TOX_ERR_GROUP_SELF_QUERY_parse(TOX_ERR_GROUP_SELF_QUERY error)
+{
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_SELF_QUERY_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_SELF_QUERY_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+    }
+
+    return success;
 }
 //----------------------------------------------------------------------------------------------
 
 static PyObject* ToxCore_tox_group_self_get_name(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_SELF_QUERY error;
+    size_t name_len = tox_group_self_get_name_size(self->tox, groupnumber, &error);
+
+    if (TOX_ERR_GROUP_SELF_QUERY_parse(error) == false)
+        return NULL;
+
+    if (name_len == 0)
+        return PYSTRING_FromString("");
+
+    uint8_t* name = (uint8_t*)malloc(name_len);
+    if (name == NULL) {
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
+        return NULL;
+    }
+
+    bool result = tox_group_self_get_name(self->tox, groupnumber, name, &error);
+
+    if (TOX_ERR_GROUP_SELF_QUERY_parse(error) == false || result == false) {
+        free(name);
+        return NULL;
+    }
+
+    PyObject* result = PYSTRING_FromStringAndSize((const char*)name, name_len);
+
+    free(name);
+
+    return result;
 }
 //----------------------------------------------------------------------------------------------
 
 static PyObject* ToxCore_tox_group_self_set_status(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t        groupnumber;
+    TOX_USER_STATUS status;
+
+    if (PyArg_ParseTuple(args, "II", &groupnumber, &status) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_SELF_STATUS_SET error;
+    bool result = tox_group_self_set_status(self->tox, groupnumber, status, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_SELF_STATUS_SET_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_SELF_STATUS_SET_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_SELF_STATUS_SET_INVALID:
+            PyErr_SetString(ToxCoreException, "An invalid type was passed to the set function.");
+            break;
+        case TOX_ERR_GROUP_SELF_STATUS_SET_FAIL_SEND:
+            PyErr_SetString(ToxCoreException, "The packet failed to send.");
+            break;
+    }
+
+    if (success == false || result == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
 static PyObject* ToxCore_tox_group_self_get_status(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_SELF_QUERY error;
+    TOX_USER_STATUS result = tox_group_self_get_status(self->tox, groupnumber, &error);
+
+    if (TOX_ERR_GROUP_SELF_QUERY_parse(error) == false)
+        return NULL;
+
+    return PyLong_FromUnsignedLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
 static PyObject* ToxCore_tox_group_self_get_role(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_SELF_QUERY error;
+    TOX_GROUP_ROLE result = tox_group_self_get_role(self->tox, groupnumber, &error);
+
+    if (TOX_ERR_GROUP_SELF_QUERY_parse(error) == false)
+        return NULL;
+
+    return PyLong_FromUnsignedLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
 static PyObject* ToxCore_tox_group_self_get_peer_id(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_SELF_QUERY error;
+    uint32_t result = tox_group_self_get_peer_id(self->tox, groupnumber, &error);
+
+    if (TOX_ERR_GROUP_SELF_QUERY_parse(error) == false)
+        return NULL;
+
+    return PyLong_FromUnsignedLong(result);
+}
+//----------------------------------------------------------------------------------------------
+
+static bool TOX_ERR_GROUP_PEER_QUERY_parse(TOX_ERR_GROUP_PEER_QUERY error)
+{
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_PEER_QUERY_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_PEER_QUERY_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_PEER_QUERY_PEER_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The ID passed did not designate a valid peer.");
+            break;
+    }
+
+    return success;
 }
 //----------------------------------------------------------------------------------------------
 
 static PyObject* ToxCore_tox_group_peer_get_name(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+    uint32_t peer_id;
+
+    if (PyArg_ParseTuple(args, "II", &groupnumber, &peer_id) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_PEER_QUERY error;
+    size_t name_len = tox_group_peer_get_name_size(self->tox, groupnumber, peer_id, &error);
+
+    if (TOX_ERR_GROUP_PEER_QUERY_parse(error) == false)
+        return NULL;
+
+    if (name_len == 0)
+        return PYSTRING_FromString("");
+
+    uint8_t* name = (uint8_t*)malloc(name_len);
+    if (name == NULL) {
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
+        return NULL;
+    }
+
+    bool result = tox_group_peer_get_name(self->tox, groupnumber, peer_id, name, &error);
+
+    if (TOX_ERR_GROUP_PEER_QUERY_parse(error) == false || result == false) {
+        free(name);
+        return NULL;
+    }
+
+    PyObject* result = PYSTRING_FromStringAndSize((const char*)name, name_len);
+
+    free(name);
+
+    return result;
 }
 //----------------------------------------------------------------------------------------------
 
 static PyObject* ToxCore_tox_group_peer_get_status(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+    uint32_t peer_id;
+
+    if (PyArg_ParseTuple(args, "II", &groupnumber, &peer_id) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_PEER_QUERY error;
+    TOX_USER_STATUS result = tox_group_peer_get_status(self->tox, groupnumber, peer_id, &error);
+
+    if (TOX_ERR_GROUP_PEER_QUERY_parse(error) == false)
+        return NULL;
+
+    return PyLong_FromUnsignedLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -3013,6 +3372,12 @@ static void ToxCore_install_dict(void)
     SET(TOX_GROUP_MOD_EVENT_OBSERVER)
     SET(TOX_GROUP_MOD_EVENT_USER)
     SET(TOX_GROUP_MOD_EVENT_MODERATOR)
+
+    // enum TOX_GROUP_ROLE
+    SET(TOX_GROUP_ROLE_FOUNDER)
+    SET(TOX_GROUP_ROLE_MODERATOR)
+    SET(TOX_GROUP_ROLE_USER)
+    SET(TOX_GROUP_ROLE_OBSERVER)
 
 #undef SET
 
