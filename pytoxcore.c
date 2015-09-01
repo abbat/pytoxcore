@@ -503,8 +503,10 @@ static PyObject* ToxCore_tox_get_savedata(ToxCore* self, PyObject* args)
     size_t size = tox_get_savedata_size(self->tox);
 
     uint8_t* savedata = (uint8_t*)malloc(size);
-    if (savedata == NULL)
+    if (savedata == NULL) {
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
         return NULL;
+    }
 
     tox_get_savedata(self->tox, savedata);
 
@@ -1156,8 +1158,10 @@ static PyObject* ToxCore_tox_self_get_friend_list(ToxCore* self, PyObject* args)
     size_t    count = tox_self_get_friend_list_size(self->tox);
     uint32_t* list  = (uint32_t*)malloc(count * sizeof(uint32_t));
 
-    if (list == NULL)
+    if (list == NULL) {
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
         return NULL;
+    }
 
     tox_self_get_friend_list(self->tox, list);
 
@@ -1165,12 +1169,16 @@ static PyObject* ToxCore_tox_self_get_friend_list(ToxCore* self, PyObject* args)
 
     if (plist == NULL) {
         free(list);
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
         return NULL;
     }
 
     size_t i = 0;
     for (i = 0; i < count; i++)
-        PyList_Append(plist, PyLong_FromLong(list[i]));
+        if (PyList_Append(plist, PyLong_FromLong(list[i])) != 0) {
+            free(list);
+            return NULL;
+        }
 
     free(list);
 
@@ -1886,9 +1894,9 @@ static PyObject* ToxCore_tox_group_self_get_name(ToxCore* self, PyObject* args)
         return NULL;
     }
 
-    bool result = tox_group_self_get_name(self->tox, groupnumber, name, &error);
+    bool success = tox_group_self_get_name(self->tox, groupnumber, name, &error);
 
-    if (TOX_ERR_GROUP_SELF_QUERY_parse(error) == false || result == false) {
+    if (TOX_ERR_GROUP_SELF_QUERY_parse(error) == false || success == false) {
         free(name);
         return NULL;
     }
@@ -2038,9 +2046,9 @@ static PyObject* ToxCore_tox_group_peer_get_name(ToxCore* self, PyObject* args)
         return NULL;
     }
 
-    bool result = tox_group_peer_get_name(self->tox, groupnumber, peer_id, name, &error);
+    bool success = tox_group_peer_get_name(self->tox, groupnumber, peer_id, name, &error);
 
-    if (TOX_ERR_GROUP_PEER_QUERY_parse(error) == false || result == false) {
+    if (TOX_ERR_GROUP_PEER_QUERY_parse(error) == false || success == false) {
         free(name);
         return NULL;
     }
@@ -2176,9 +2184,9 @@ static PyObject* ToxCore_tox_group_get_topic(ToxCore* self, PyObject* args)
         return NULL;
     }
 
-    bool result = tox_group_get_topic(self->tox, groupnumber, topic, &error);
+    bool success = tox_group_get_topic(self->tox, groupnumber, topic, &error);
 
-    if (TOX_ERR_GROUP_STATE_QUERIES_parse(error) == false || result == false) {
+    if (TOX_ERR_GROUP_STATE_QUERIES_parse(error) == false || success == false) {
         free(topic);
         return NULL;
     }
