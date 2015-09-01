@@ -2452,7 +2452,40 @@ static PyObject* ToxCore_tox_group_send_private_message(ToxCore* self, PyObject*
 
 static PyObject* ToxCore_tox_group_invite_friend(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+    uint32_t friend_number;
+
+    if (PyArg_ParseTuple(args, "II", &groupnumber, &friend_number) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_INVITE_FRIEND error;
+    bool result = tox_group_invite_friend(self->tox, groupnumber, friend_number, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_INVITE_FRIEND_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_INVITE_FRIEND_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_INVITE_FRIEND_FRIEND_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The friend number passed did not designate a valid friend.");
+            break;
+        case TOX_ERR_GROUP_INVITE_FRIEND_INVITE_FAIL:
+            PyErr_SetString(ToxCoreException, "Creation of the invite packet failed. This indicates a network related error.");
+            break;
+        case TOX_ERR_GROUP_INVITE_FRIEND_FAIL_SEND:
+            PyErr_SetString(ToxCoreException, "Packet failed to send.");
+            break;
+    }
+
+    if (success = false || result == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
