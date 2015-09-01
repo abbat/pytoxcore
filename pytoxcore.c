@@ -2136,9 +2136,58 @@ static PyObject* ToxCore_tox_group_set_topic(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static bool TOX_ERR_GROUP_STATE_QUERIES_parse(TOX_ERR_GROUP_STATE_QUERIES error)
+{
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_STATE_QUERIES_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_STATE_QUERIES_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+    }
+
+    return success;
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_tox_group_get_topic(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_STATE_QUERIES error;
+    size_t topic_len = tox_group_get_topic_size(self->tox, groupnumber, &error);
+
+    if (TOX_ERR_GROUP_STATE_QUERIES_parse(error) == false)
+        return NULL;
+
+    if (topic_len == 0)
+        return PYSTRING_FromString("");
+
+    uint8_t* topic = (uint8_t*)malloc(topic_len);
+    if (topic == NULL) {
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
+        return NULL;
+    }
+
+    bool result = tox_group_get_topic(self->tox, groupnumber, topic, &error);
+
+    if (TOX_ERR_GROUP_STATE_QUERIES_parse(error) == false || result == false) {
+        free(topic);
+        return NULL;
+    }
+
+    PyObject* result = PYSTRING_FromStringAndSize((const char*)topic, topic_len);
+
+    free(topic);
+
+    return result;
 }
 //----------------------------------------------------------------------------------------------
 
