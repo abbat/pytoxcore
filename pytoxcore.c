@@ -1879,6 +1879,7 @@ static PyObject* ToxCore_tox_group_self_get_name(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
         return NULL;
 
+    // FIXME: TOX_MAX_NAME_LENGTH in tox_group_self_set_name
     TOX_ERR_GROUP_SELF_QUERY error;
     size_t name_len = tox_group_self_get_name_size(self->tox, groupnumber, &error);
 
@@ -2031,6 +2032,7 @@ static PyObject* ToxCore_tox_group_peer_get_name(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "II", &groupnumber, &peer_id) == false)
         return NULL;
 
+    // FIXME: TOX_MAX_NAME_LENGTH in tox_group_self_set_name, so peer must have equal limits
     TOX_ERR_GROUP_PEER_QUERY error;
     size_t name_len = tox_group_peer_get_name_size(self->tox, groupnumber, peer_id, &error);
 
@@ -2169,6 +2171,7 @@ static PyObject* ToxCore_tox_group_get_topic(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
         return NULL;
 
+    // FIXME: TOX_GROUP_MAX_TOPIC_LENGTH in tox_group_set_topic
     TOX_ERR_GROUP_STATE_QUERIES error;
     size_t topic_len = tox_group_get_topic_size(self->tox, groupnumber, &error);
 
@@ -2208,6 +2211,7 @@ static PyObject* ToxCore_tox_group_get_name(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
         return NULL;
 
+    // FIXME: TOX_GROUP_MAX_GROUP_NAME_LENGTH in tox_group_new
     TOX_ERR_GROUP_STATE_QUERIES error;
     size_t name_len = tox_group_get_name_size(self->tox, groupnumber, &error);
 
@@ -2218,7 +2222,7 @@ static PyObject* ToxCore_tox_group_get_name(ToxCore* self, PyObject* args)
         return PYSTRING_FromString("");
 
     uint8_t* name = (uint8_t*)malloc(name_len);
-    if (topic == NULL) {
+    if (name == NULL) {
         PyErr_SetString(ToxCoreException, "Can not allocate memory.");
         return NULL;
     }
@@ -2314,7 +2318,41 @@ static PyObject* ToxCore_tox_group_get_peer_limit(ToxCore* self, PyObject* args)
 
 static PyObject* ToxCore_tox_group_get_password(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    // FIXME: TOX_GROUP_MAX_PASSWORD_SIZE in tox_group_join
+    TOX_ERR_GROUP_STATE_QUERIES error;
+    size_t password_len = tox_group_get_password_size(self->tox, groupnumber, &error);
+
+    if (TOX_ERR_GROUP_STATE_QUERIES_parse(error) == false)
+        return NULL;
+
+    if (password_len == 0)
+        return PYSTRING_FromString("");
+
+    uint8_t* password = (uint8_t*)malloc(password_len);
+    if (password == NULL) {
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
+        return NULL;
+    }
+
+    bool success = tox_group_get_password(self->tox, groupnumber, password, &error);
+
+    if (TOX_ERR_GROUP_STATE_QUERIES_parse(error) == false || success == false) {
+        free(password);
+        return NULL;
+    }
+
+    PyObject* result = PYSTRING_FromStringAndSize((const char*)password, password_len);
+
+    free(password);
+
+    return result;
 }
 //----------------------------------------------------------------------------------------------
 
