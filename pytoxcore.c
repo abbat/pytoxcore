@@ -2266,7 +2266,11 @@ static PyObject* ToxCore_tox_group_get_chat_id(ToxCore* self, PyObject* args)
 
 static PyObject* ToxCore_tox_group_get_number_groups(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t result = tox_group_get_number_groups(self->tox);
+
+    return PyLong_FromUnsignedLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
