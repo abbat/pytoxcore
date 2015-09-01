@@ -1662,28 +1662,56 @@ static PyObject* ToxCore_tox_group_get_title(ToxCore* self, PyObject* args)
 // WARNING Group chats will be rewritten so this might change
 // See: https://github.com/JFreegman/toxcore/blob/new_groupchats/toxcore/tox.h
 
-// CHECK: tox_add_groupchat
-// CHECK: tox_del_groupchat
-// CHECK: tox_invite_friend
-// CHECK: tox_group_set_title
-// CHECK: tox_group_get_title
+// TODO: tox_group_peer_name_cb
+// TODO: tox_group_peer_status_cb
+// TODO: tox_group_topic_cb
+// TODO: tox_group_privacy_state_cb
+// TODO: tox_group_peer_limit_cb
+// TODO: tox_group_password_cb
+// TODO: tox_group_message_cb
+// TODO: tox_group_private_message_cb
+// TODO: tox_group_invite_cb
+// TODO: tox_group_peer_join_cb
+// TODO: tox_group_peer_exit_cb
+// TODO: tox_group_self_join_cb
+// TODO: tox_group_join_fail_cb
+// TODO: tox_group_moderation_cb
 
-// TODO: tox_callback_group_invite
-// TODO: tox_callback_group_message
-// TODO: tox_callback_group_action
-// TODO: tox_callback_group_title
-// TODO: tox_callback_group_namelist_change
-// TODO: tox_group_peername
-// TODO: tox_group_peer_pubkey
-// TODO: tox_join_groupchat
-// TODO: tox_group_message_send
-// TODO: tox_group_action_send
-// TODO: tox_group_peernumber_is_ours
-// TODO: tox_group_number_peers
-// TODO: tox_group_get_names
-// TODO: tox_count_chatlist
-// TODO: tox_get_chatlist
-// TODO: tox_group_get_type
+// TODO: tox_group_new
+// TODO: tox_group_join
+// TODO: tox_group_reconnect
+// TODO: tox_group_leave
+// TODO: tox_group_self_set_name
+// TODO: tox_group_self_get_name
+// TODO: tox_group_self_set_status
+// TODO: tox_group_self_get_status
+// TODO: tox_group_self_get_role
+// TODO: tox_group_self_get_peer_id
+// TODO: tox_group_peer_get_name
+// TODO: tox_group_peer_get_status
+// TODO: tox_group_peer_get_role
+// TODO: tox_group_set_topic
+// TODO: tox_group_get_topic
+// TODO: tox_group_get_name
+// TODO: tox_group_get_chat_id
+// TODO: tox_group_get_number_groups
+// TODO: tox_group_get_privacy_state
+// TODO: tox_group_get_peer_limit
+// TODO: tox_group_get_password
+// TODO: tox_group_send_message
+// TODO: tox_group_send_private_message
+// TODO: tox_group_invite_friend
+// TODO: tox_group_invite_accept
+// TODO: tox_group_founder_set_password
+// TODO: tox_group_founder_set_privacy_state
+// TODO: tox_group_founder_set_peer_limit
+// TODO: tox_group_toggle_ignore
+// TODO: tox_group_mod_set_role
+// TODO: tox_group_mod_remove_peer
+// TODO: tox_group_mod_remove_ban
+// TODO: tox_group_ban_get_list
+// TODO: tox_group_ban_get_name
+// TODO: tox_group_ban_get_time_set
 
 //----------------------------------------------------------------------------------------------
 
