@@ -2075,13 +2075,64 @@ static PyObject* ToxCore_tox_group_peer_get_status(ToxCore* self, PyObject* args
 
 static PyObject* ToxCore_tox_group_peer_get_role(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+    uint32_t peer_id;
+
+    if (PyArg_ParseTuple(args, "II", &groupnumber, &peer_id) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_PEER_QUERY error;
+    TOX_GROUP_ROLE result = tox_group_peer_get_role(self->tox, groupnumber, peer_id, &error);
+
+    if (TOX_ERR_GROUP_PEER_QUERY_parse(error) == false)
+        return NULL;
+
+    return PyLong_FromUnsignedLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
 static PyObject* ToxCore_tox_group_set_topic(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t   groupnumber;
+    uint8_t*   topic;
+    Py_ssize_t topic_len;
+
+    if (PyArg_ParseTuple(args, "Is#", &groupnumber, name, name_len) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_TOPIC_SET error;
+    bool result = tox_group_set_topic(self->tox, groupnumber, topic, topic_len, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_TOPIC_SET_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_TOPIC_SET_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_TOPIC_SET_TOO_LONG:
+            PyErr_SetString(ToxCoreException, "Topic length exceeded TOX_GROUP_MAX_TOPIC_LENGTH.");
+            break;
+        case TOX_ERR_GROUP_TOPIC_SET_PERMISSIONS:
+            PyErr_SetString(ToxCoreException, "The caller does not have the required permissions to set the topic.");
+            break;
+        case TOX_ERR_GROUP_TOPIC_SET_FAIL_CREATE:
+            PyErr_SetString(ToxCoreException, "The packet could not be created. This error is usually related to cryptographic signing.");
+            break;
+        case TOX_ERR_GROUP_TOPIC_SET_FAIL_SEND:
+            PyErr_SetString(ToxCoreException, "The packet failed to send.");
+            break;
+    }
+
+    if (success == false || result == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
