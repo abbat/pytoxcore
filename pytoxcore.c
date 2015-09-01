@@ -2240,7 +2240,27 @@ static PyObject* ToxCore_tox_group_get_name(ToxCore* self, PyObject* args)
 
 static PyObject* ToxCore_tox_group_get_chat_id(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    uint8_t chat_id[TOX_GROUP_CHAT_ID_SIZE];
+
+    TOX_ERR_GROUP_STATE_QUERIES error;
+    bool result = tox_group_get_chat_id(self->tox, groupnumber, chat_id, &error);
+
+    if (TOX_ERR_GROUP_STATE_QUERIES_parse(error) == false || result == false)
+        return NULL;
+
+    uint8_t chat_id_hex[TOX_GROUP_CHAT_ID_SIZE * 2 + 1];
+    memset(chat_id_hex, 0, sizeof(uint8_t) * (TOX_GROUP_CHAT_ID_SIZE * 2 + 1));
+
+    bytes_to_hex_string(chat_id, TOX_GROUP_CHAT_ID_SIZE, chat_id_hex);
+
+    return PYSTRING_FromString((const char*)chat_id_hex);
 }
 //----------------------------------------------------------------------------------------------
 
