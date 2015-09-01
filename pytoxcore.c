@@ -2295,7 +2295,20 @@ static PyObject* ToxCore_tox_group_get_privacy_state(ToxCore* self, PyObject* ar
 
 static PyObject* ToxCore_tox_group_get_peer_limit(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_STATE_QUERIES error;
+    uint32_t result = tox_group_get_peer_limit(self->tox, groupnumber, &error);
+
+    if (TOX_ERR_GROUP_STATE_QUERIES_parse(error) == false)
+        return NULL;
+
+    return PyLong_FromUnsignedLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
