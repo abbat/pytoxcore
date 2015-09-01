@@ -2201,7 +2201,40 @@ static PyObject* ToxCore_tox_group_get_topic(ToxCore* self, PyObject* args)
 
 static PyObject* ToxCore_tox_group_get_name(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_STATE_QUERIES error;
+    size_t name_len = tox_group_get_name_size(self->tox, groupnumber, &error);
+
+    if (TOX_ERR_GROUP_STATE_QUERIES_parse(error) == false)
+        return NULL;
+
+    if (name_len == 0)
+        return PYSTRING_FromString("");
+
+    uint8_t* name = (uint8_t*)malloc(name_len);
+    if (topic == NULL) {
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
+        return NULL;
+    }
+
+    bool success = tox_group_get_name(self->tox, groupnumber, name, &error);
+
+    if (TOX_ERR_GROUP_STATE_QUERIES_parse(error) == false || success == false) {
+        free(name);
+        return NULL;
+    }
+
+    PyObject* result = PYSTRING_FromStringAndSize((const char*)name, name_len);
+
+    free(name);
+
+    return result;
 }
 //----------------------------------------------------------------------------------------------
 
