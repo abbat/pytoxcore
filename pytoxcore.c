@@ -2826,6 +2826,25 @@ static bool TOX_ERR_GROUP_BAN_QUERY_parse(TOX_ERR_GROUP_BAN_QUERY error)
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_group_ban_get_list_size(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_BAN_QUERY error;
+    size_t result = tox_group_ban_get_list_size(self->tox, groupnumber, &error);
+
+    if (TOX_ERR_GROUP_BAN_QUERY_parse(error) == false)
+        return NULL;
+
+    return PyLong_FromUnsignedLongLong(result);
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_tox_group_ban_get_list(ToxCore* self, PyObject* args)
 {
     // TODO:
@@ -3634,6 +3653,12 @@ PyMethodDef Tox_methods[] = {
         "Removes a ban.\n"
         "This function removes a ban entry from the ban list, and sends a packet to the rest of "
         "the group requesting that they do the same."
+    },
+    {
+        "tox_group_ban_get_list_size", (PyCFunction)ToxCore_tox_group_ban_get_list_size, METH_VARARGS,
+        "tox_group_ban_get_list_size(groupnumber)\n"
+        "Return the number of entries in the ban list for the group designated by "
+        "the given group number. If the group number is invalid, the return value is unspecified."
     },
     {
         "tox_group_ban_get_list", (PyCFunction)ToxCore_tox_group_ban_get_list, METH_VARARGS,
