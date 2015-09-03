@@ -2529,7 +2529,41 @@ static PyObject* ToxCore_tox_group_invite_accept(ToxCore* self, PyObject* args)
 
 static PyObject* ToxCore_tox_group_founder_set_password(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t   groupnumber;
+    uint8_t*   password;
+    Py_ssize_t password_len;
+
+    if (PyArg_ParseTuple(args, "Is#", &groupnumber, &password, &password_len) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_FOUNDER_SET_PASSWORD error;
+    bool result = tox_group_founder_set_password(self->tox, groupnumber, password, password_len, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_FOUNDER_SET_PASSWORD_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_FOUNDER_SET_PASSWORD_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_FOUNDER_SET_PASSWORD_PERMISSIONS:
+            PyErr_SetString(ToxCoreException, "The caller does not have the required permissions to set the password.");
+            break;
+        case TOX_ERR_GROUP_FOUNDER_SET_PASSWORD_TOO_LONG:
+            PyErr_SetString(ToxCoreException, "Password length exceeded TOX_GROUP_MAX_PASSWORD_SIZE.");
+            break;
+        case TOX_ERR_GROUP_FOUNDER_SET_PASSWORD_FAIL_SEND:
+            PyErr_SetString(ToxCoreException, "The packet failed to send.");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
