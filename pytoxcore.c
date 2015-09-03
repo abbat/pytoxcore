@@ -2770,7 +2770,40 @@ static PyObject* ToxCore_tox_group_mod_remove_peer(ToxCore* self, PyObject* args
 
 static PyObject* ToxCore_tox_group_mod_remove_ban(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+    uint32_t ban_id;
+
+    if (PyArg_ParseTuple(args, "II", &groupnumber, &ban_id) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_MOD_REMOVE_BAN error;
+    bool result = tox_group_mod_remove_ban(self->tox, groupnumber, ban_id, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_MOD_REMOVE_BAN_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_MOD_REMOVE_BAN_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_MOD_REMOVE_BAN_PERMISSIONS:
+            PyErr_SetString(ToxCoreException, "The caller does not have the required permissions for this action.");
+            break;
+        case TOX_ERR_GROUP_MOD_REMOVE_BAN_FAIL_ACTION:
+            PyErr_SetString(ToxCoreException, "The ban entry could not be removed. This may occur if ban_id does not designate a valid ban entry.");
+            break;
+        case TOX_ERR_GROUP_MOD_REMOVE_BAN_FAIL_SEND:
+            PyErr_SetString(ToxCoreException, "The packet failed to send.");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
