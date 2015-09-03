@@ -1,0 +1,31 @@
+language: c
+
+compiler:
+  - gcc
+
+install:
+  - curl -L http://download.opensuse.org/repositories/home:antonbatenev:tox/xUbuntu_14.04/Release.key | sudo apt-key add -
+  - echo 'deb http://download.opensuse.org/repositories/home:/antonbatenev:/tox/xUbuntu_14.04/ /' | sudo tee -a /etc/apt/sources.list
+  - sudo apt-get update -qq
+  - sudo apt-get install python-dev tox-libsodium-dev tox-libtoxcore-dev
+
+script:
+  - /usr/bin/env python setup.py build
+
+branches:
+  only:
+    - master
+
+env:
+  global:
+    - secure: "09BXz8iEhCN30gpJiK47r5ngghY6aQ2HjeFy//OV6Vi/ALt8lnKmj9QDPxqZINHLnbzre917cygAYTNv51MF6J9iTzovWwYBVXScpxyJN/dZPpLjMBahjQGsUMxzyUMOcsf4H9UQCWCg028Qe2NGY5BbMDvJq/suu72hb367N3vQho19YBnyEGaUQ9OC9U1+YcJPav+H8rYMLErMBexUtM6fsYfRN0F5Rl7ClpvDtJZaTpZLe2fcaTF80/VGV70Duyy5eBWzH7pAYljoK199FeWqQhUTfbgpAjT8wmzNGKhfdrEMKmkI6wa/a1w8c5QVowFKBRAtjMoUr5jYdzJ+BZC+pK+bUfq0LmAwUDaHKdN/G/aK2eRG/fRMiLFpaBV9QzBOCqx4q1i9rB3dCsM4zepevOwIU2xTwzu3koOwbwAyNQLA6NwHpc8DQgbnvifK+v28YhLXv4FPQAZ7BPxVk7Ni4bZ8mJ/YCOZ4ZoZoCLUGvkt2IAlNgge6JwYWeECGz8VBwEbQ1Gqnw4Jn27PuLBSgF5Y4DLCdPZxmd56ZYvVVIVSioX5NFYmgxX0IP6XZsbiApEfAKcBeEDlRI4/jkqWd3BFIbmJ3+YidfNZXDhBfmeqEc7MHkgCKgyDkCQPEwtrqWApjlQ0HXF2qVnTwcEFHmnj04fBfVd3p3YNzdiw="
+
+addons:
+  coverity_scan:
+    project:
+      name: "abbat/pytoxcore"
+      description: "Build submitted via Travis CI"
+    notification_email: antonbatenev@yandex.ru
+    build_command_prepend: true
+    build_command: python setup.py build
+    branch_pattern: master
