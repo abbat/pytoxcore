@@ -7,7 +7,7 @@ install:
   - curl -L http://download.opensuse.org/repositories/home:antonbatenev:tox/xUbuntu_14.04/Release.key | sudo apt-key add -
   - echo 'deb http://download.opensuse.org/repositories/home:/antonbatenev:/tox/xUbuntu_14.04/ /' | sudo tee -a /etc/apt/sources.list
   - sudo apt-get update -qq
-  - sudo apt-get install python-dev tox-libtoxcore-dev
+  - sudo apt-get install python-dev tox-libsodium-dev tox-libtoxcore-dev
 
 script:
   - /usr/bin/env python setup.py build
