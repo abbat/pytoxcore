@@ -1446,7 +1446,7 @@ static PyObject* ToxCore_tox_file_seek(ToxCore* self, PyObject* args)
     uint32_t file_number;
     uint64_t position;
 
-    if (!PyArg_ParseTuple(args, "IIK", &friend_number, &file_number, &position) == false)
+    if (PyArg_ParseTuple(args, "IIK", &friend_number, &file_number, &position) == false)
         return NULL;
 
     TOX_ERR_FILE_SEEK error;
@@ -1778,7 +1778,7 @@ static PyObject* ToxCore_tox_group_leave(ToxCore* self, PyObject* args)
     uint8_t*   message;
     Py_ssize_t message_len;
 
-    if (PyArg_ParseTuple(args, "Is#", &groupnumber, message, message_len) == false)
+    if (PyArg_ParseTuple(args, "Is#", &groupnumber, &message, &message_len) == false)
         return NULL;
 
     TOX_ERR_GROUP_LEAVE error;
@@ -1818,7 +1818,7 @@ static PyObject* ToxCore_tox_group_self_set_name(ToxCore* self, PyObject* args)
     uint8_t*   name;
     Py_ssize_t name_len;
 
-    if (PyArg_ParseTuple(args, "Is#", &groupnumber, name, name_len) == false)
+    if (PyArg_ParseTuple(args, "Is#", &groupnumber, &name, &name_len) == false)
         return NULL;
 
     TOX_ERR_GROUP_SELF_NAME_SET error;
@@ -2110,7 +2110,7 @@ static PyObject* ToxCore_tox_group_set_topic(ToxCore* self, PyObject* args)
     uint8_t*   topic;
     Py_ssize_t topic_len;
 
-    if (PyArg_ParseTuple(args, "Is#", &groupnumber, name, name_len) == false)
+    if (PyArg_ParseTuple(args, "Is#", &groupnumber, &topic, &topic_len) == false)
         return NULL;
 
     TOX_ERR_GROUP_TOPIC_SET error;
@@ -2395,7 +2395,7 @@ static PyObject* ToxCore_tox_group_send_message(ToxCore* self, PyObject* args)
             break;
     }
 
-    if (success = false || result == false)
+    if (success == false || result == false)
         return NULL;
 
     Py_RETURN_NONE;
@@ -2442,7 +2442,7 @@ static PyObject* ToxCore_tox_group_send_private_message(ToxCore* self, PyObject*
             break;
     }
 
-    if (success = false || result == false)
+    if (success == false || result == false)
         return NULL;
 
     Py_RETURN_NONE;
@@ -2481,7 +2481,7 @@ static PyObject* ToxCore_tox_group_invite_friend(ToxCore* self, PyObject* args)
             break;
     }
 
-    if (success = false || result == false)
+    if (success == false || result == false)
         return NULL;
 
     Py_RETURN_NONE;
@@ -3520,7 +3520,7 @@ PyMethodDef Tox_methods[] = {
         "tox_group_self_set_name(groupnumber, name)\n"
         "Set the client's nickname for the group instance designated by the given group number.\n"
         "Nickname length cannot exceed TOX_MAX_NAME_LENGTH. If length is equal to zero or name is a None "
-        "the function call will fail.
+        "the function call will fail."
     },
     {
         "tox_group_self_get_name", (PyCFunction)ToxCore_tox_group_self_get_name, METH_VARARGS,
