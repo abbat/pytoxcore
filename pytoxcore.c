@@ -2650,7 +2650,35 @@ static PyObject* ToxCore_tox_group_founder_set_peer_limit(ToxCore* self, PyObjec
 
 static PyObject* ToxCore_tox_group_toggle_ignore(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+    uint32_t peer_id;
+    bool     ignore;
+
+    if (PyArg_ParseTuple(args, "III", &groupnumber, &peer_id, &ignore) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_TOGGLE_IGNORE error;
+    bool result = tox_group_toggle_ignore(self->tox, groupnumber, peer_id, ignore, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_TOGGLE_IGNORE_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_TOGGLE_IGNORE_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_TOGGLE_IGNORE_PEER_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The ID passed did not designate a valid peer.");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
