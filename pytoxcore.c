@@ -2727,7 +2727,44 @@ static PyObject* ToxCore_tox_group_mod_set_role(ToxCore* self, PyObject* args)
 
 static PyObject* ToxCore_tox_group_mod_remove_peer(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+    uint32_t peer_id;
+    bool     set_ban;
+
+    if (PyArg_ParseTuple(args, "III", &groupnumber, &peer_id, &set_ban) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_MOD_REMOVE_PEER error;
+    bool result = tox_group_mod_remove_peer(self->tox, groupnumber, peer_id, set_ban, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_MOD_REMOVE_PEER_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_MOD_REMOVE_PEER_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_MOD_REMOVE_PEER_PEER_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The ID passed did not designate a valid peer.");
+            break;
+        case TOX_ERR_GROUP_MOD_REMOVE_PEER_PERMISSIONS:
+            PyErr_SetString(ToxCoreException, "The caller does not have the required permissions for this action.");
+            break;
+        case TOX_ERR_GROUP_MOD_REMOVE_PEER_FAIL_ACTION:
+            PyErr_SetString(ToxCoreException, "The peer could not be removed from the group.");
+            break;
+        case TOX_ERR_GROUP_MOD_REMOVE_PEER_FAIL_SEND:
+            PyErr_SetString(ToxCoreException, "The packet failed to send.");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
