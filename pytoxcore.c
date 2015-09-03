@@ -2807,6 +2807,25 @@ static PyObject* ToxCore_tox_group_mod_remove_ban(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static bool TOX_ERR_GROUP_BAN_QUERY_parse(TOX_ERR_GROUP_BAN_QUERY error)
+{
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_BAN_QUERY_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_BAN_QUERY_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_BAN_QUERY_BAD_ID:
+            PyErr_SetString(ToxCoreException, "The ban_id does not designate a valid ban list entry.");
+            break;
+    }
+
+    return success;
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_tox_group_ban_get_list(ToxCore* self, PyObject* args)
 {
     // TODO:
@@ -2821,7 +2840,21 @@ static PyObject* ToxCore_tox_group_ban_get_name(ToxCore* self, PyObject* args)
 
 static PyObject* ToxCore_tox_group_ban_get_time_set(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+    uint32_t ban_id;
+
+    if (PyArg_ParseTuple(args, "II", &groupnumber, &ban_id) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_BAN_QUERY error;
+    uint64_t result = tox_group_ban_get_time_set(self->tox, groupnumber, ban_id, &error);
+
+    if (TOX_ERR_GROUP_BAN_QUERY_parse(error) == false)
+        return NULL;
+
+    return PyLong_FromUnsignedLongLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
