@@ -2834,7 +2834,41 @@ static PyObject* ToxCore_tox_group_ban_get_list(ToxCore* self, PyObject* args)
 
 static PyObject* ToxCore_tox_group_ban_get_name(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+    uint32_t ban_id;
+
+    if (PyArg_ParseTuple(args, "II", &groupnumber, &ban_id) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_BAN_QUERY error;
+    size_t name_len = tox_group_ban_get_name_size(self->tox, groupnumber, ban_id, &error);
+
+    if (TOX_ERR_GROUP_BAN_QUERY_parse(error) == false)
+        return NULL;
+
+    if (name_len == 0)
+        return PYSTRING_FromString("");
+
+    uint8_t* name = (uint8_t*)malloc(name_len);
+    if (name == NULL) {
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
+        return NULL;
+    }
+
+    bool success = tox_group_ban_get_name(self->tox, groupnumber, ban_id, name, &error);
+
+    if (TOX_ERR_GROUP_BAN_QUERY_parse(error) == false || success == false) {
+        free(name);
+        return NULL;
+    }
+
+    PyObject* result = PYSTRING_FromStringAndSize((const char*)name, name_len);
+
+    free(name);
+
+    return result;
 }
 //----------------------------------------------------------------------------------------------
 
