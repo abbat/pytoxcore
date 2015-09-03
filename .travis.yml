@@ -3,7 +3,7 @@ language: c
 compiler:
   - gcc
 
-before_script:
+install:
   - curl -L http://download.opensuse.org/repositories/home:antonbatenev:tox/xUbuntu_14.04/Release.key | sudo apt-key add -
   - echo 'deb http://download.opensuse.org/repositories/home:/antonbatenev:/tox/xUbuntu_14.04/ /' | sudo tee -a /etc/apt/sources.list
   - sudo apt-get update -qq
