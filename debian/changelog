@@ -1,3 +1,10 @@
+python-toxcore (0.0.12) unstable; urgency=low
+
+  * Fix tox_file_seek arguments parsing;
+  * More accuracy memory errors handling.
+
+ -- Anton Batenev <sntonbatenev@yandex.ru>  Thu, 03 Sep 2015 23:16:38 +0300
+
 python-toxcore (0.0.11) unstable; urgency=low
 
   * Add tox_add_groupchat, tox_del_groupchat, tox_invite_friend,

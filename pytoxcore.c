@@ -419,8 +419,10 @@ static PyObject* ToxCore_tox_get_savedata(ToxCore* self, PyObject* args)
     size_t size = tox_get_savedata_size(self->tox);
 
     uint8_t* savedata = (uint8_t*)malloc(size);
-    if (savedata == NULL)
+    if (savedata == NULL) {
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
         return NULL;
+    }
 
     tox_get_savedata(self->tox, savedata);
 
@@ -1072,21 +1074,27 @@ static PyObject* ToxCore_tox_self_get_friend_list(ToxCore* self, PyObject* args)
     size_t    count = tox_self_get_friend_list_size(self->tox);
     uint32_t* list  = (uint32_t*)malloc(count * sizeof(uint32_t));
 
-    if (list == NULL)
+    if (list == NULL) {
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
         return NULL;
+    }
 
     tox_self_get_friend_list(self->tox, list);
 
-    PyObject* plist = PyList_New(0);
-
+    PyObject* plist = PyList_New(count);
     if (plist == NULL) {
         free(list);
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
         return NULL;
     }
 
     size_t i = 0;
     for (i = 0; i < count; i++)
-        PyList_Append(plist, PyLong_FromLong(list[i]));
+        if (PyList_Append(plist, PyLong_FromUnsignedLong(list[i])) != 0) {
+            free(list);
+            Py_DECREF(plist);
+            return NULL;
+        }
 
     free(list);
 
@@ -1355,7 +1363,7 @@ static PyObject* ToxCore_tox_file_seek(ToxCore* self, PyObject* args)
     uint32_t file_number;
     uint64_t position;
 
-    if (!PyArg_ParseTuple(args, "IIK", &friend_number, &file_number, &position) == false)
+    if (PyArg_ParseTuple(args, "IIK", &friend_number, &file_number, &position) == false)
         return NULL;
 
     TOX_ERR_FILE_SEEK error;

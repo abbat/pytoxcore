@@ -1,5 +1,5 @@
 Name:           python-toxcore
-Version:        0.0.11
+Version:        0.0.12
 Release:        1
 Summary:        Python binding for ToxCore
 License:        GPL-3
@@ -34,5 +34,5 @@ python setup.py install --prefix=%{buildroot}/usr
 
 
 %changelog
-* Sun Aug 23 2015 Anton Batenev <antonbatenev@yandex.ru> - 0.0.11-1
+* Thu Sep 03 2015 Anton Batenev <antonbatenev@yandex.ru> - 0.0.12-1
 - Initial
