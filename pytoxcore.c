@@ -2569,7 +2569,43 @@ static PyObject* ToxCore_tox_group_founder_set_password(ToxCore* self, PyObject*
 
 static PyObject* ToxCore_tox_group_founder_set_privacy_state(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t                groupnumber;
+    TOX_GROUP_PRIVACY_STATE privacy_state;
+
+    if (PyArg_ParseTuple(args, "II", &groupnumber, &privacy_state) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_FOUNDER_SET_PRIVACY_STATE error;
+    bool result = tox_group_founder_set_privacy_state(self->tox, groupnumber, privacy_state, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_FOUNDER_SET_PRIVACY_STATE_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_FOUNDER_SET_PRIVACY_STATE_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_FOUNDER_SET_PRIVACY_STATE_INVALID:
+            PyErr_SetString(ToxCoreException, "TOX_GROUP_PRIVACY_STATE is an invalid type.");
+            break;
+        case TOX_ERR_GROUP_FOUNDER_SET_PRIVACY_STATE_PERMISSIONS:
+            PyErr_SetString(ToxCoreException, "The caller does not have the required permissions to set the privacy state.");
+            break;
+        case TOX_ERR_GROUP_FOUNDER_SET_PRIVACY_STATE_FAIL_SET:
+            PyErr_SetString(ToxCoreException, "The privacy state could not be set. This may occur due to an error related to cryptographic signing of the new shared state.");
+            break;
+        case TOX_ERR_GROUP_FOUNDER_SET_PRIVACY_STATE_FAIL_SEND:
+            PyErr_SetString(ToxCoreException, "The packet failed to send.");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
