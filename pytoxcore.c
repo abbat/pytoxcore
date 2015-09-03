@@ -2491,7 +2491,39 @@ static PyObject* ToxCore_tox_group_invite_friend(ToxCore* self, PyObject* args)
 
 static PyObject* ToxCore_tox_group_invite_accept(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint8_t*   invite_data;
+    Py_ssize_t invite_data_len;
+    uint8_t*   password;
+    Py_ssize_t password_len;
+
+    if (PyArg_ParseTuple(args, "s#s#", &invite_data, &invite_data_len, &password, &password_len) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_INVITE_ACCEPT error;
+    uint32_t result = tox_group_invite_accept(self->tox, invite_data, invite_data_len, password, password_len, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_INVITE_ACCEPT_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_INVITE_ACCEPT_BAD_INVITE:
+            PyErr_SetString(ToxCoreException, "The invite data is not in the expected format.");
+            break;
+        case TOX_ERR_GROUP_INVITE_ACCEPT_INIT_FAILED:
+            PyErr_SetString(ToxCoreException, "The group instance failed to initialize.");
+            break;
+        case TOX_ERR_GROUP_INVITE_ACCEPT_TOO_LONG:
+            PyErr_SetString(ToxCoreException, "Password length exceeded TOX_GROUP_MAX_PASSWORD_SIZE.");
+            break;
+    }
+
+    if (result == UINT32_MAX || success == false)
+        return NULL;
+
+    return PyLong_FromUnsignedLong(result);
 }
 //----------------------------------------------------------------------------------------------
 
