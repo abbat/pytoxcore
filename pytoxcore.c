@@ -2611,7 +2611,40 @@ static PyObject* ToxCore_tox_group_founder_set_privacy_state(ToxCore* self, PyOb
 
 static PyObject* ToxCore_tox_group_founder_set_peer_limit(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+    uint32_t max_peers;
+
+    if (PyArg_ParseTuple(args, "II", &groupnumber, &max_peers) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_FOUNDER_SET_PEER_LIMIT error;
+    bool result = tox_group_founder_set_peer_limit(self->tox, groupnumber, max_peers, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_FOUNDER_SET_PEER_LIMIT_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_FOUNDER_SET_PEER_LIMIT_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_FOUNDER_SET_PEER_LIMIT_PERMISSIONS:
+            PyErr_SetString(ToxCoreException, "The caller does not have the required permissions to set the peer limit.");
+            break;
+        case TOX_ERR_GROUP_FOUNDER_SET_PEER_LIMIT_FAIL_SET:
+            PyErr_SetString(ToxCoreException, "The peer limit could not be set. This may occur due to an error related to cryptographic signing of the new shared state.");
+            break;
+        case TOX_ERR_GROUP_FOUNDER_SET_PEER_LIMIT_FAIL_SEND:
+            PyErr_SetString(ToxCoreException, "The packet failed to send.");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
