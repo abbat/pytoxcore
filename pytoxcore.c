@@ -1166,7 +1166,6 @@ static PyObject* ToxCore_tox_self_get_friend_list(ToxCore* self, PyObject* args)
     tox_self_get_friend_list(self->tox, list);
 
     PyObject* plist = PyList_New(0);
-
     if (plist == NULL) {
         free(list);
         PyErr_SetString(ToxCoreException, "Can not allocate memory.");
@@ -1175,7 +1174,7 @@ static PyObject* ToxCore_tox_self_get_friend_list(ToxCore* self, PyObject* args)
 
     size_t i = 0;
     for (i = 0; i < count; i++)
-        if (PyList_Append(plist, PyLong_FromLong(list[i])) != 0) {
+        if (PyList_Append(plist, PyLong_FromUnsignedLong(list[i])) != 0) {
             free(list);
             return NULL;
         }
@@ -2847,7 +2846,49 @@ static PyObject* ToxCore_tox_group_ban_get_list_size(ToxCore* self, PyObject* ar
 
 static PyObject* ToxCore_tox_group_ban_get_list(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_BAN_QUERY error;
+    size_t count = tox_group_ban_get_list_size(self->tox, groupnumber, &error);
+
+    if (TOX_ERR_GROUP_BAN_QUERY_parse(error) == false)
+        return NULL;
+
+    uint32_t* list = (uint32_t*)malloc(count * sizeof(uint32_t));
+    if (list == NULL) {
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
+        return NULL;
+    }
+
+    bool result = tox_group_ban_get_list(self->tox, groupnumber, list, &error);
+
+    if (TOX_ERR_GROUP_BAN_QUERY_parse(error) == false || result == false) {
+        free(list);
+        return NULL;
+    }
+
+    PyObject* plist = PyList_New(0);
+    if (plist == NULL) {
+        free(list);
+        PyErr_SetString(ToxCoreException, "Can not allocate memory.");
+        return NULL;
+    }
+
+    size_t i = 0;
+    for (i = 0; i < count; i++)
+        if (PyList_Append(plist, PyLong_FromUnsignedLong(list[i])) != 0) {
+            free(list);
+            return NULL;
+        }
+
+    free(list);
+
+    return plist;
 }
 //----------------------------------------------------------------------------------------------
 
