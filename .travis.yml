@@ -27,5 +27,5 @@ addons:
       description: "Build submitted via Travis CI"
     notification_email: antonbatenev@yandex.ru
     build_command_prepend: true
-    build_command: /usr/bin/env python setup.py build
+    build_command: /usr/bin/env python setup.py build && cat cov-int/scm_log.txt
     branch_pattern: master
