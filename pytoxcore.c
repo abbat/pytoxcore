@@ -2684,7 +2684,44 @@ static PyObject* ToxCore_tox_group_toggle_ignore(ToxCore* self, PyObject* args)
 
 static PyObject* ToxCore_tox_group_mod_set_role(ToxCore* self, PyObject* args)
 {
-    // TODO:
+    CHECK_TOX(self);
+
+    uint32_t       groupnumber;
+    uint32_t       peer_id;
+    TOX_GROUP_ROLE role;
+
+    if (PyArg_ParseTuple(args, "III", &groupnumber, &peer_id, &role) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_MOD_SET_ROLE error;
+    bool result = tox_group_mod_set_role(self->tox, groupnumber, peer_id, role, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_MOD_SET_ROLE_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_MOD_SET_ROLE_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_MOD_SET_ROLE_PEER_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The ID passed did not designate a valid peer. Note: you cannot set your own role.");
+            break;
+        case TOX_ERR_GROUP_MOD_SET_ROLE_PERMISSIONS:
+            PyErr_SetString(ToxCoreException, "The caller does not have the required permissions for this action.");
+            break;
+        case TOX_ERR_GROUP_MOD_SET_ROLE_ASSIGNMENT:
+            PyErr_SetString(ToxCoreException, "The role assignment is invalid. This will occur if you try to set a peer's role to the role they already have.");
+            break;
+        case TOX_ERR_GROUP_MOD_SET_ROLE_FAIL_ACTION:
+            PyErr_SetString(ToxCoreException, "The role was not successfully set. This may occur if something goes wrong with role setting, or if the packet fails to send.");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
