@@ -2012,7 +2012,7 @@ static PyObject* ToxCore_tox_group_self_get_public_key(ToxCore* self, PyObject* 
     if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
         return NULL;
 
-    uint8_t* public_key[TOX_GROUP_PEER_PUBLIC_KEY_SIZE];
+    uint8_t public_key[TOX_GROUP_PEER_PUBLIC_KEY_SIZE];
 
     TOX_ERR_GROUP_SELF_QUERY error;
     bool result = tox_group_self_get_public_key(self->tox, groupnumber, public_key, &error);
@@ -2020,12 +2020,12 @@ static PyObject* ToxCore_tox_group_self_get_public_key(ToxCore* self, PyObject* 
     if (TOX_ERR_GROUP_SELF_QUERY_parse(error) == false || result == false)
         return NULL;
 
-    uint8_t* public_key_hex[TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1];
+    uint8_t public_key_hex[TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1];
     memset(public_key_hex, 0, sizeof(uint8_t) * (TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1));
 
     bytes_to_hex_string(public_key, TOX_GROUP_PEER_PUBLIC_KEY_SIZE, public_key_hex);
 
-    return return PYSTRING_FromString((const char*)public_key_hex);
+    return PYSTRING_FromString((const char*)public_key_hex);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -2148,7 +2148,7 @@ static PyObject* ToxCore_tox_group_peer_get_public_key(ToxCore* self, PyObject* 
         return NULL;
 
     uint8_t public_key_hex[TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1];
-    memset(public_key_hex, 0, sizeof(uint8_t) * (TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1);
+    memset(public_key_hex, 0, sizeof(uint8_t) * (TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1));
 
     bytes_to_hex_string(public_key, TOX_GROUP_PEER_PUBLIC_KEY_SIZE, public_key_hex);
 
