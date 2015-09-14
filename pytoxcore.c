@@ -2003,6 +2003,32 @@ static PyObject* ToxCore_tox_group_self_get_peer_id(ToxCore* self, PyObject* arg
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_group_self_get_public_key(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+
+    if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
+        return NULL;
+
+    uint8_t* public_key[TOX_GROUP_PEER_PUBLIC_KEY_SIZE];
+
+    TOX_ERR_GROUP_SELF_QUERY error;
+    bool result = tox_group_self_get_public_key(self->tox, groupnumber, public_key, &error);
+
+    if (TOX_ERR_GROUP_SELF_QUERY_parse(error) == false || result == false)
+        return NULL;
+
+    uint8_t* public_key_hex[TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1];
+    memset(public_key_hex, 0, sizeof(uint8_t) * (TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1));
+
+    bytes_to_hex_string(public_key, TOX_GROUP_PEER_PUBLIC_KEY_SIZE, public_key_hex);
+
+    return return PYSTRING_FromString((const char*)public_key_hex);
+}
+//----------------------------------------------------------------------------------------------
+
 static bool TOX_ERR_GROUP_PEER_QUERY_parse(TOX_ERR_GROUP_PEER_QUERY error)
 {
     bool success = false;
@@ -3577,6 +3603,14 @@ PyMethodDef Tox_methods[] = {
         "tox_group_self_get_peer_id", (PyCFunction)ToxCore_tox_group_self_get_peer_id, METH_VARARGS,
         "tox_group_self_get_peer_id(groupnumber)\n"
         "Returns the client's peer id for the group instance on success."
+    },
+    {
+        "tox_group_self_get_public_key", (PyCFunction)ToxCore_tox_group_self_get_public_key, METH_VARARGS,
+        "tox_group_self_get_public_key(groupnumber)\n"
+        "Return the client's group public key designated by the given group number.\n"
+        "This key will be parmanently tied to the client's identity for this particular group until "
+        "the client explicitly leaves the group or gets kicked/banned. This key is the only way for "
+        "other peers to reliably identify the client across client restarts."
     },
     {
         "tox_group_peer_get_name", (PyCFunction)ToxCore_tox_group_peer_get_name, METH_VARARGS,
