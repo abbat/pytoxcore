@@ -2103,6 +2103,33 @@ static PyObject* ToxCore_tox_group_peer_get_role(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_group_peer_get_public_key(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t groupnumber;
+    uint32_t peer_id;
+
+    if (PyArg_ParseTuple(args, "II", &groupnumber, &peer_id) == false)
+        return NULL;
+
+    uint8_t public_key[TOX_GROUP_PEER_PUBLIC_KEY_SIZE];
+
+    TOX_ERR_GROUP_PEER_QUERY error;
+    bool result = tox_group_peer_get_public_key(self->tox, groupnumber, peer_id, public_key, &error);
+
+    if (TOX_ERR_GROUP_PEER_QUERY_parse(error) == false || result == false)
+        return NULL;
+
+    uint8_t public_key_hex[TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1];
+    memset(public_key_hex, 0, sizeof(uint8_t) * (TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1);
+
+    bytes_to_hex_string(public_key, TOX_GROUP_PEER_PUBLIC_KEY_SIZE, public_key_hex);
+
+    return PYSTRING_FromString((const char*)public_key_hex);
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_tox_group_set_topic(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
@@ -3107,12 +3134,12 @@ PyMethodDef Tox_methods[] = {
     {
         "tox_group_peer_join_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
         "tox_group_peer_join_cb(groupnumber, peer_id)\n"
-        "This event is triggered when a peer joins the group."
+        "This event is triggered when a peer other than self joins the group."
     },
     {
         "tox_group_peer_exit_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
         "tox_group_peer_exit_cb(groupnumber, peer_id, part_message)\n"
-        "This event is triggered when a peer exits the group."
+        "This event is triggered when a peer other than self exits the group."
     },
     {
         "tox_group_self_join_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
@@ -3570,6 +3597,13 @@ PyMethodDef Tox_methods[] = {
         "Return the peer's role (user/moderator/founder...). If the ID or group number is "
         "invalid, the return value is unspecified.\n"
         "The role returned is equal to the last role received through the group_moderation_cb"
+    },
+    {
+        "tox_group_peer_get_public_key", (PyCFunction)ToxCore_tox_group_peer_get_public_key, METH_VARARGS,
+        "tox_group_peer_get_public_key(groupnumber, peer_id)\n"
+        "Return the group public key with the designated peer_id for the designated group number.\n"
+        "This key will be parmanently tied to a particular peer until they explicitly leave the group or "
+        "get kicked/banned, and is the only way to reliably identify the same peer across client restarts."
     },
     {
         "tox_group_set_topic", (PyCFunction)ToxCore_tox_group_set_topic, METH_VARARGS,
