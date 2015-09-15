@@ -3915,8 +3915,8 @@ static int init_helper(ToxCore* self, PyObject* args)
 
     PyObject* pyopts = NULL;
 
-    if (args != NULL)
-        PyArg_ParseTuple(args, "O", &pyopts);
+    if (args != NULL && PyTuple_Size(args) == 1 && PyArg_ParseTuple(args, "O", &pyopts) == false)
+        return -1;
 
     struct Tox_Options options = { 0 };
     tox_options_default(&options);
