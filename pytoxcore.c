@@ -292,6 +292,12 @@ static void callback_group_moderation(Tox* tox, uint32_t groupnumber, uint32_t s
 }
 //----------------------------------------------------------------------------------------------
 
+static void callback_group_custom_packet(Tox* tox, uint32_t groupnumber, uint32_t peer_id, const uint8_t* data, size_t length, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "tox_group_custom_packet_cb", "II" BUF_TC "#", groupnumber, peer_id, data, length);
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_callback_stub(ToxCore* self, PyObject* args)
 {
     Py_RETURN_NONE;
@@ -3007,6 +3013,47 @@ static PyObject* ToxCore_tox_group_ban_get_time_set(ToxCore* self, PyObject* arg
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_group_send_custom_packet(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t   groupnumber;
+    bool       lossless;
+    uint8_t*   data;
+    Py_ssize_t data_len;
+
+    if (PyArg_ParseTuple(args, "IIs#", &groupnumber, &lossless, &data, &data_len) == false)
+        return NULL;
+
+    TOX_ERR_GROUP_SEND_CUSTOM_PACKET error;
+    bool result = tox_group_send_custom_packet(self->tox, groupnumber, lossless, data, data_len, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_GROUP_SEND_CUSTOM_PACKET_OK:
+            success = true;
+            break;
+        case TOX_ERR_GROUP_SEND_CUSTOM_PACKET_GROUP_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The group number passed did not designate a valid group.");
+            break;
+        case TOX_ERR_GROUP_SEND_CUSTOM_PACKET_TOO_LONG:
+            PyErr_SetString(ToxCoreException, "Message length exceeded TOX_MAX_MESSAGE_LENGTH.");
+            break;
+        case TOX_ERR_GROUP_SEND_CUSTOM_PACKET_EMPTY:
+            PyErr_SetString(ToxCoreException, "The message pointer is null or length is zero.");
+            break;
+        case TOX_ERR_GROUP_SEND_CUSTOM_PACKET_PERMISSIONS:
+            PyErr_SetString(ToxCoreException, "The caller does not have the required permissions to send group messages.");
+            break;
+    }
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
 #if PY_MAJOR_VERSION >= 3
 struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
@@ -3182,6 +3229,11 @@ PyMethodDef Tox_methods[] = {
         "tox_group_moderation_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
         "tox_group_moderation_cb(groupnumber, source_peer_number, target_peer_number, mod_type)\n"
         "This event is triggered when a moderator or founder executes a moderation event."
+    },
+    {
+        "tox_group_custom_packet_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_group_custom_packet_cb(groupnumber, peer_id, data)\n"
+        "This event is triggered when custom packet received."
     },
 
     //
@@ -3790,6 +3842,18 @@ PyMethodDef Tox_methods[] = {
         "If either groupnumber or ban_id is invalid, the return value is unspecified."
     },
     {
+        "tox_group_send_custom_packet", (PyCFunction)ToxCore_tox_group_send_custom_packet, METH_VARARGS,
+        "tox_group_send_custom_packet(groupnumber, lossless, data)\n"
+        "Send a custom packet to the group.\n"
+        "If lossless is true the packet will be lossless. Lossless packet behaviour is comparable "
+        "to TCP (reliability, arrive in order) but with packets instead of a stream.\n"
+        "If lossless is false, the packet will be lossy. Lossy packets behave like UDP packets, "
+        "meaning they might never reach the other side or might arrive more than once (if someone "
+        "is messing with the connection) or might arrive in the wrong order.\n"
+        "Unless latency is an issue or message reliability is not important, it is recommended that you use "
+        "lossless custom packets."
+    },
+    {
         NULL
     }
 };
@@ -4003,6 +4067,7 @@ static int init_helper(ToxCore* self, PyObject* args)
     tox_callback_group_self_join(tox, callback_group_self_join, self);
     tox_callback_group_join_fail(tox, callback_group_join_fail, self);
     tox_callback_group_moderation(tox, callback_group_moderation, self);
+    tox_callback_group_custom_packet(tox, callback_group_custom_packet, self);
 
     self->tox = tox;
 
