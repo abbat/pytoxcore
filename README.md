@@ -1,5 +1,7 @@
 ## pytoxcore
 
+[![Build Status](https://secure.travis-ci.org/abbat/pytoxcore.png?branch=master)](http://travis-ci.org/abbat/pytoxcore) [![Coverity status](https://scan.coverity.com/projects/6250/badge.svg)](https://scan.coverity.com/projects/abbat-pytoxcore)
+
 Python binding for [ToxCore](https://github.com/irungentoo/toxcore).
 
 ### Download / Install
