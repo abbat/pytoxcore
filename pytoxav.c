@@ -164,6 +164,49 @@ static PyObject* ToxAV_toxav_call(ToxCoreAV* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxAV_toxav_answer(ToxCoreAV* self, PyObject* args)
+{
+    CHECK_TOXAV(self);
+
+    uint32_t friend_number;
+    uint32_t audio_bit_rate;
+    uint32_t video_bit_rate;
+
+    if (PyArg_ParseTuple(args, "III", &friend_number, &audio_bit_rate, &video_bit_rate) == false)
+        return NULL;
+
+    TOXAV_ERR_ANSWER error;
+    bool result = toxav_answer(self->av, friend_number, audio_bit_rate, video_bit_rate, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOXAV_ERR_ANSWER_OK:
+            success = true;
+            break;
+        case TOXAV_ERR_ANSWER_SYNC:
+            PyErr_SetString(ToxAVException, "Synchronization error occurred.");
+            break;
+        case TOXAV_ERR_ANSWER_CODEC_INITIALIZATION:
+            PyErr_SetString(ToxAVException, "Failed to initialize codecs for call session. Note that codec initiation will fail if there is no receive callback registered for either audio or video.");
+            break;
+        case TOXAV_ERR_ANSWER_FRIEND_NOT_FOUND:
+            PyErr_SetString(ToxAVException, "The friend number did not designate a valid friend.");
+            break;
+        case TOXAV_ERR_ANSWER_FRIEND_NOT_CALLING:
+            PyErr_SetString(ToxAVException, "The friend was valid, but they are not currently trying to initiate a call. This is also returned if this client is already in a call with the friend.");
+            break;
+        case TOXAV_ERR_ANSWER_INVALID_BIT_RATE:
+            PyErr_SetString(ToxAVException, "Audio or video bit rate is invalid.");
+            break;
+    };
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
 #if PY_MAJOR_VERSION >= 3
 struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
@@ -247,6 +290,14 @@ PyMethodDef ToxAV_methods[] = {
         "if such behaviour is desired. If the client does not stop ringing, the "
         "library will not stop until the friend is disconnected. Audio and video "
         "receiving are both enabled by default."
+    },
+    {
+        "toxav_answer", (PyCFunction)ToxAV_toxav_answer, METH_VARARGS,
+        "toxav_answer(friend_number, audio_bit_rate, video_bit_rate)\n"
+        "Accept an incoming call.\n"
+        "If answering fails for any reason, the call will still be pending and it is "
+        "possible to try and answer it later. Audio and video receiving are both "
+        "enabled by default."
     },
     {
         NULL
