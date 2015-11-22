@@ -17,30 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 //----------------------------------------------------------------------------------------------
-#define PY_SSIZE_T_CLEAN
-//----------------------------------------------------------------------------------------------
-#include <Python.h>
-#include <stdio.h>
-#include <arpa/inet.h>
-#include <tox/tox.h>
-//----------------------------------------------------------------------------------------------
-#if PY_MAJOR_VERSION < 3
-    #define BUF_TC "s"
-#else
-    #define BUF_TC "y"
-#endif
-//----------------------------------------------------------------------------------------------
-#if PY_MAJOR_VERSION < 3
-    #define PYSTRING_FromString        PyString_FromString
-    #define PYSTRING_FromStringAndSize PyString_FromStringAndSize
-    #define PYSTRING_Check             PyString_Check
-    #define PYBYTES_FromStringAndSize  PyString_FromStringAndSize
-#else
-    #define PYSTRING_FromString        PyUnicode_FromString
-    #define PYSTRING_FromStringAndSize PyUnicode_FromStringAndSize
-    #define PYSTRING_Check             PyUnicode_Check
-    #define PYBYTES_FromStringAndSize  PyBytes_FromStringAndSize
-#endif
+#include "pytoxcore.h"
 //----------------------------------------------------------------------------------------------
 #define CHECK_TOX(self)                                              \
     if ((self)->tox == NULL) {                                       \
@@ -48,15 +25,10 @@
         return NULL;                                                 \
     }
 //----------------------------------------------------------------------------------------------
-typedef struct {
-    PyObject_HEAD
-    Tox* tox;
-} ToxCore;
-//----------------------------------------------------------------------------------------------
 PyObject* ToxCoreException;
 //----------------------------------------------------------------------------------------------
 
-static void bytes_to_hex_string(const uint8_t* digest, int length, uint8_t* hex_digest)
+void bytes_to_hex_string(const uint8_t* digest, int length, uint8_t* hex_digest)
 {
     hex_digest[2 * length] = 0;
 
@@ -90,7 +62,7 @@ static int hex_char_to_int(char c)
 }
 //----------------------------------------------------------------------------------------------
 
-static void hex_string_to_bytes(uint8_t* hexstr, int length, uint8_t* bytes)
+void hex_string_to_bytes(uint8_t* hexstr, int length, uint8_t* bytes)
 {
     int i;
     for (i = 0; i < length; i++)
@@ -192,19 +164,19 @@ static void callback_file_recv_control(Tox* tox, uint32_t friend_number, uint32_
 
 static void callback_file_recv_chunk(Tox* tox, uint32_t friend_number, uint32_t file_number, uint64_t position, const uint8_t* data, size_t length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_file_recv_chunk_cb", "IIK" BUF_TC "#", friend_number, file_number, position, data, length);
+    PyObject_CallMethod((PyObject*)self, "tox_file_recv_chunk_cb", "IIK" BUF_TCS, friend_number, file_number, position, data, length);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_lossy_packet(Tox* tox, uint32_t friend_number, const uint8_t* data, size_t length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_friend_lossy_packet_cb", "I" BUF_TC "#", friend_number, data, length);
+    PyObject_CallMethod((PyObject*)self, "tox_friend_lossy_packet_cb", "I" BUF_TCS, friend_number, data, length);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_lossless_packet(Tox* tox, uint32_t friend_number, const uint8_t* data, size_t length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_friend_lossless_packet_cb", "I" BUF_TC "#", friend_number, data, length);
+    PyObject_CallMethod((PyObject*)self, "tox_friend_lossless_packet_cb", "I" BUF_TCS, friend_number, data, length);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -4143,7 +4115,7 @@ PyTypeObject ToxCoreType = {
     0,                                          /* tp_weaklistoffset */
     0,                                          /* tp_iter           */
     0,                                          /* tp_iternext       */
-    Tox_methods,                                /* tp_methods        */
+    ToxCore_methods,                            /* tp_methods        */
     0,                                          /* tp_members        */
     0,                                          /* tp_getset         */
     0,                                          /* tp_base           */
@@ -4162,42 +4134,42 @@ static void ToxCore_install_dict(void)
 #define SET(name)                                  \
     PyObject* obj_##name = PyLong_FromLong(name);  \
     PyDict_SetItemString(dict, #name, obj_##name); \
-    Py_DECREF(obj_##name);
+    Py_DECREF(obj_##name)
 
     PyObject* dict = PyDict_New();
     if (dict == NULL)
         return;
 
     // #define TOX_VERSION_MAJOR
-    SET(TOX_VERSION_MAJOR)
+    SET(TOX_VERSION_MAJOR);
     // #define TOX_VERSION_MINOR
-    SET(TOX_VERSION_MINOR)
+    SET(TOX_VERSION_MINOR);
     // #define TOX_VERSION_PATCH
-    SET(TOX_VERSION_PATCH)
+    SET(TOX_VERSION_PATCH);
 
     // #define TOX_PUBLIC_KEY_SIZE
-    SET(TOX_PUBLIC_KEY_SIZE)
+    SET(TOX_PUBLIC_KEY_SIZE);
     // #define TOX_SECRET_KEY_SIZE
-    SET(TOX_SECRET_KEY_SIZE)
+    SET(TOX_SECRET_KEY_SIZE);
     // #define TOX_ADDRESS_SIZE
-    SET(TOX_ADDRESS_SIZE)
+    SET(TOX_ADDRESS_SIZE);
 
     // #define TOX_MAX_NAME_LENGTH
-    SET(TOX_MAX_NAME_LENGTH)
+    SET(TOX_MAX_NAME_LENGTH);
     // #define TOX_MAX_STATUS_MESSAGE_LENGTH
-    SET(TOX_MAX_STATUS_MESSAGE_LENGTH)
+    SET(TOX_MAX_STATUS_MESSAGE_LENGTH);
     // #define TOX_MAX_FRIEND_REQUEST_LENGTH
-    SET(TOX_MAX_FRIEND_REQUEST_LENGTH)
+    SET(TOX_MAX_FRIEND_REQUEST_LENGTH);
     // #define TOX_MAX_MESSAGE_LENGTH
-    SET(TOX_MAX_MESSAGE_LENGTH)
+    SET(TOX_MAX_MESSAGE_LENGTH);
     // #define TOX_MAX_CUSTOM_PACKET_SIZE
-    SET(TOX_MAX_CUSTOM_PACKET_SIZE)
+    SET(TOX_MAX_CUSTOM_PACKET_SIZE);
     // #define TOX_HASH_LENGTH
-    SET(TOX_HASH_LENGTH)
+    SET(TOX_HASH_LENGTH);
     // #define TOX_FILE_ID_LENGTH
-    SET(TOX_FILE_ID_LENGTH)
+    SET(TOX_FILE_ID_LENGTH);
     // #define TOX_MAX_FILENAME_LENGTH
-    SET(TOX_MAX_FILENAME_LENGTH)
+    SET(TOX_MAX_FILENAME_LENGTH);
 
     // #define TOX_GROUP_MAX_TOPIC_LENGTH
     SET(TOX_GROUP_MAX_TOPIC_LENGTH)
@@ -4211,32 +4183,32 @@ static void ToxCore_install_dict(void)
     SET(TOX_GROUP_CHAT_ID_SIZE)
 
     // enum TOX_USER_STATUS
-    SET(TOX_USER_STATUS_NONE)
-    SET(TOX_USER_STATUS_AWAY)
-    SET(TOX_USER_STATUS_BUSY)
+    SET(TOX_USER_STATUS_NONE);
+    SET(TOX_USER_STATUS_AWAY);
+    SET(TOX_USER_STATUS_BUSY);
 
     // enum TOX_MESSAGE_TYPE
-    SET(TOX_MESSAGE_TYPE_NORMAL)
-    SET(TOX_MESSAGE_TYPE_ACTION)
+    SET(TOX_MESSAGE_TYPE_NORMAL);
+    SET(TOX_MESSAGE_TYPE_ACTION);
 
     // enum TOX_PROXY_TYPE
-    SET(TOX_PROXY_TYPE_NONE)
-    SET(TOX_PROXY_TYPE_HTTP)
-    SET(TOX_PROXY_TYPE_SOCKS5)
+    SET(TOX_PROXY_TYPE_NONE);
+    SET(TOX_PROXY_TYPE_HTTP);
+    SET(TOX_PROXY_TYPE_SOCKS5);
 
     // enum TOX_CONNECTION
-    SET(TOX_CONNECTION_NONE)
-    SET(TOX_CONNECTION_TCP)
-    SET(TOX_CONNECTION_UDP)
+    SET(TOX_CONNECTION_NONE);
+    SET(TOX_CONNECTION_TCP);
+    SET(TOX_CONNECTION_UDP);
 
     // enum TOX_FILE_KIND
-    SET(TOX_FILE_KIND_DATA)
-    SET(TOX_FILE_KIND_AVATAR)
+    SET(TOX_FILE_KIND_DATA);
+    SET(TOX_FILE_KIND_AVATAR);
 
     // enum TOX_FILE_CONTROL
-    SET(TOX_FILE_CONTROL_RESUME)
-    SET(TOX_FILE_CONTROL_PAUSE)
-    SET(TOX_FILE_CONTROL_CANCEL)
+    SET(TOX_FILE_CONTROL_RESUME);
+    SET(TOX_FILE_CONTROL_PAUSE);
+    SET(TOX_FILE_CONTROL_CANCEL);
 
     // enum TOX_GROUP_PRIVACY_STATE
     SET(TOX_GROUP_PRIVACY_STATE_PUBLIC)
