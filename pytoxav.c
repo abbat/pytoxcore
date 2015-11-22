@@ -213,6 +213,45 @@ static PyObject* ToxAV_toxav_answer(ToxCoreAV* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxAV_toxav_call_control(ToxCoreAV* self, PyObject* args)
+{
+    CHECK_TOXAV(self);
+
+    uint32_t           friend_number;
+    TOXAV_CALL_CONTROL control;
+
+    if (PyArg_ParseTuple(args, "II", &friend_number, &control) == false)
+        return NULL;
+
+    TOXAV_ERR_CALL_CONTROL error;
+    bool result = toxav_call_control(self->av, friend_number, control, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOXAV_ERR_CALL_CONTROL_OK:
+            success = true;
+            break;
+        case TOXAV_ERR_CALL_CONTROL_SYNC:
+            PyErr_SetString(ToxAVException, "Synchronization error occurred.");
+            break;
+        case TOXAV_ERR_CALL_CONTROL_FRIEND_NOT_FOUND:
+            PyErr_SetString(ToxAVException, "The friend_number passed did not designate a valid friend.");
+            break;
+        case TOXAV_ERR_CALL_CONTROL_FRIEND_NOT_IN_CALL:
+            PyErr_SetString(ToxAVException, "This client is currently not in a call with the friend. Before the call is answered, only CANCEL is a valid control.");
+            break;
+        case TOXAV_ERR_CALL_CONTROL_INVALID_TRANSITION:
+            PyErr_SetString(ToxAVException, "Happens if user tried to pause an already paused call or if trying to resume a call that is not paused.");
+            break;
+    };
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
 #if PY_MAJOR_VERSION >= 3
 struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
@@ -309,6 +348,11 @@ PyMethodDef ToxAV_methods[] = {
         "If answering fails for any reason, the call will still be pending and it is "
         "possible to try and answer it later. Audio and video receiving are both "
         "enabled by default."
+    },
+    {
+        "toxav_call_control", (PyCFunction)ToxAV_toxav_call_control, METH_VARARGS,
+        "toxav_call_control(friend_number, control)\n"
+        "Sends a call control command to a friend."
     },
     {
         NULL
@@ -468,6 +512,15 @@ static void ToxAV_install_dict(void)
     SET(TOXAV_FRIEND_CALL_STATE_SENDING_V);
     SET(TOXAV_FRIEND_CALL_STATE_ACCEPTING_A);
     SET(TOXAV_FRIEND_CALL_STATE_ACCEPTING_V);
+
+    // enum TOXAV_CALL_CONTROL
+    SET(TOXAV_CALL_CONTROL_RESUME);
+    SET(TOXAV_CALL_CONTROL_PAUSE);
+    SET(TOXAV_CALL_CONTROL_CANCEL);
+    SET(TOXAV_CALL_CONTROL_MUTE_AUDIO);
+    SET(TOXAV_CALL_CONTROL_UNMUTE_AUDIO);
+    SET(TOXAV_CALL_CONTROL_HIDE_VIDEO);
+    SET(TOXAV_CALL_CONTROL_SHOW_VIDEO);
 
 #undef SET
 
