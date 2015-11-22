@@ -46,6 +46,26 @@ static void callback_bit_rate_status(ToxAV* av, uint32_t friend_number, uint32_t
 }
 //----------------------------------------------------------------------------------------------
 
+static void callback_audio_receive_frame(ToxAV* av, uint32_t friend_number, const int16_t* pcm, size_t sample_count, uint8_t channels, uint32_t sampling_rate, void* self)
+{
+    size_t pcm_length = sample_count * channels * 2;
+
+    // TODO:
+    PyObject_CallMethod((PyObject*)self, "toxav_audio_receive_frame_cb", "I" BUF_TC "#KII", friend_number, pcm, pcm_length, sample_count, channels, sampling_rate);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_video_receive_frame(ToxAV* av, uint32_t friend_number, uint16_t width, uint16_t height, const uint8_t* y, const uint8_t* u, const uint8_t* v, int32_t ystride, int32_t ustride, int32_t vstride, void* self)
+{
+    size_t y_length = max(width, abs(ystride)) * height;
+    size_t u_length = max(width / 2, abs(ustride)) * (height / 2);
+    size_t v_length = max(width / 2, abs(vstride)) * (height / 2);
+
+    // TODO:
+    PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TC "#" BUF_TC "#" BUF_TC "#III", friend_number, width, height, y, y_length, u, u_length, v, v_length, ystride, ustride, vstride);
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxAV_callback_stub(ToxCoreAV* self, PyObject* args)
 {
     Py_RETURN_NONE;
@@ -352,6 +372,8 @@ static PyObject* ToxAV_toxav_audio_send_frame(ToxCoreAV* self, PyObject* args)
     if (PyArg_ParseTuple(args, "Is#KBI", &friend_number, &pcm, &pcm_length, &sample_count, &channels, &sampling_rate) == false)
         return NULL;
 
+    // TODO: check sizes
+
     TOXAV_ERR_SEND_FRAME error;
     bool result = toxav_audio_send_frame(self->av, friend_number, (int16_t*)pcm, sample_count, channels, sampling_rate, &error);
 
@@ -375,6 +397,8 @@ static PyObject* ToxAV_toxav_video_send_frame(ToxCoreAV* self, PyObject* args)
 
     if (PyArg_ParseTuple(args, "IIIs#s#s#", &friend_number, &width, &height, &y, &y_length, &u, &u_length, &v, &v_length) == false)
         return NULL;
+
+    // TODO: check sizes
 
     TOXAV_ERR_SEND_FRAME error;
     bool result = toxav_video_send_frame(self->av, friend_number, width, height, y, u, v, &error);
@@ -571,6 +595,8 @@ static int init_helper(ToxCoreAV* self, PyObject* args)
     toxav_callback_call(av, callback_call, self);
     toxav_callback_call_state(av, callback_call_state, self);
     toxav_callback_bit_rate_status(av, callback_bit_rate_status, self);
+    toxav_callback_audio_receive_frame(av, callback_audio_receive_frame, self);
+    toxav_callback_video_receive_frame(av, callback_video_receive_frame, self);
 
     return 0;
 }
