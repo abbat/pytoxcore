@@ -28,9 +28,15 @@
 PyObject* ToxAVException;
 //----------------------------------------------------------------------------------------------
 
-static void callback_toxav_call(ToxAV* av, uint32_t friend_number, bool audio_enabled, bool video_enabled, void* self)
+static void callback_call(ToxAV* av, uint32_t friend_number, bool audio_enabled, bool video_enabled, void* self)
 {
     PyObject_CallMethod((PyObject*)self, "toxav_call_cb", "III", friend_number, audio_enabled, video_enabled);
+}
+//----------------------------------------------------------------------------------------------
+
+static void callback_call_state(ToxAV* av, uint32_t friend_number, uint32_t state, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "toxav_call_state_cb", "II", friend_number, state);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -232,6 +238,11 @@ PyMethodDef ToxAV_methods[] = {
         "toxav_call_cb(friend_number, audio_enabled, video_enabled)\n"
         "This event is triggered when a friend answer for call."
     },
+    {
+        "toxav_call_state_cb", (PyCFunction)ToxAV_callback_stub, METH_VARARGS,
+        "toxav_call_state_cb(friend_number, state)\n"
+        "This event is triggered when a call state changed."
+    },
 
     //
     // methods
@@ -345,7 +356,8 @@ static int init_helper(ToxCoreAV* self, PyObject* args)
 
     Py_INCREF(self->core);
 
-    toxav_callback_call(av, callback_toxav_call, self);
+    toxav_callback_call(av, callback_call, self);
+    toxav_callback_call_state(av, callback_call_state, self);
 
     return 0;
 }
@@ -436,18 +448,26 @@ static void ToxAV_install_dict(void)
 #define SET(name)                                  \
     PyObject* obj_##name = PyLong_FromLong(name);  \
     PyDict_SetItemString(dict, #name, obj_##name); \
-    Py_DECREF(obj_##name);
+    Py_DECREF(obj_##name)
 
     PyObject* dict = PyDict_New();
     if (dict == NULL)
         return;
 
     // #define TOXAV_VERSION_MAJOR
-    SET(TOXAV_VERSION_MAJOR)
+    SET(TOXAV_VERSION_MAJOR);
     // #define TOXAV_VERSION_MINOR
-    SET(TOXAV_VERSION_MINOR)
+    SET(TOXAV_VERSION_MINOR);
     // #define TOXAV_VERSION_PATCH
-    SET(TOXAV_VERSION_PATCH)
+    SET(TOXAV_VERSION_PATCH);
+
+    // enum TOXAV_FRIEND_CALL_STATE
+    SET(TOXAV_FRIEND_CALL_STATE_ERROR);
+    SET(TOXAV_FRIEND_CALL_STATE_FINISHED);
+    SET(TOXAV_FRIEND_CALL_STATE_SENDING_A);
+    SET(TOXAV_FRIEND_CALL_STATE_SENDING_V);
+    SET(TOXAV_FRIEND_CALL_STATE_ACCEPTING_A);
+    SET(TOXAV_FRIEND_CALL_STATE_ACCEPTING_V);
 
 #undef SET
 
