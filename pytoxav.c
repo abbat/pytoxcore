@@ -51,7 +51,7 @@ static void callback_audio_receive_frame(ToxAV* av, uint32_t friend_number, cons
     size_t pcm_length = sample_count * channels * 2;
 
     // TODO:
-    PyObject_CallMethod((PyObject*)self, "toxav_audio_receive_frame_cb", "I" BUF_TC "#KII", friend_number, pcm, pcm_length, sample_count, channels, sampling_rate);
+    PyObject_CallMethod((PyObject*)self, "toxav_audio_receive_frame_cb", "I" BUF_TCS "KII", friend_number, pcm, pcm_length, sample_count, channels, sampling_rate);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -62,7 +62,7 @@ static void callback_video_receive_frame(ToxAV* av, uint32_t friend_number, uint
     size_t v_length = max(width / 2, abs(vstride)) * (height / 2);
 
     // TODO:
-    PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TC "#" BUF_TC "#" BUF_TC "#III", friend_number, width, height, y, y_length, u, u_length, v, v_length, ystride, ustride, vstride);
+    PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TCS BUF_TCS BUF_TCS "III", friend_number, width, height, y, y_length, u, u_length, v, v_length, ystride, ustride, vstride);
 }
 //----------------------------------------------------------------------------------------------
 

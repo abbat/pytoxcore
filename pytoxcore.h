@@ -29,9 +29,9 @@
 #include <tox/toxav.h>
 //----------------------------------------------------------------------------------------------
 #if PY_MAJOR_VERSION < 3
-    #define BUF_TC "s"
+    #define BUF_TCS "t#"
 #else
-    #define BUF_TC "y"
+    #define BUF_TCS "y#"
 #endif
 //----------------------------------------------------------------------------------------------
 #if PY_MAJOR_VERSION < 3
