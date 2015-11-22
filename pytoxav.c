@@ -263,8 +263,8 @@ static PyObject* ToxAV_toxav_bit_rate_set(ToxCoreAV* self, PyObject* args)
     CHECK_TOXAV(self);
 
     uint32_t friend_number;
-    int32_t  audio_bit_rate,
-    int32_t  video_bit_rate,
+    uint32_t audio_bit_rate;
+    uint32_t video_bit_rate;
 
     if (PyArg_ParseTuple(args, "III", &friend_number, &audio_bit_rate, &video_bit_rate) == false)
         return NULL;
@@ -298,6 +298,88 @@ static PyObject* ToxAV_toxav_bit_rate_set(ToxCoreAV* self, PyObject* args)
         return NULL;
 
     Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* parse_TOXAV_ERR_SEND_FRAME(bool result, TOXAV_ERR_SEND_FRAME error)
+{
+    bool success = false;
+    switch (error) {
+        case TOXAV_ERR_SEND_FRAME_OK:
+            success = true;
+            break;
+        case TOXAV_ERR_SEND_FRAME_NULL:
+            PyErr_SetString(ToxAVException, "In case of video, one of Y, U, or V was NULL. In case of audio, the samples data pointer was NULL.");
+            break;
+        case TOXAV_ERR_SEND_FRAME_FRIEND_NOT_FOUND:
+            PyErr_SetString(ToxAVException, "The friend_number passed did not designate a valid friend.");
+            break;
+        case TOXAV_ERR_SEND_FRAME_FRIEND_NOT_IN_CALL:
+            PyErr_SetString(ToxAVException, "This client is currently not in a call with the friend.");
+            break;
+        case TOXAV_ERR_SEND_FRAME_SYNC:
+            PyErr_SetString(ToxAVException, "Synchronization error occurred.");
+            break;
+        case TOXAV_ERR_SEND_FRAME_INVALID:
+            PyErr_SetString(ToxAVException, "One of the frame parameters was invalid. E.g. the resolution may be too small or too large, or the audio sampling rate may be unsupported.");
+            break;
+        case TOXAV_ERR_SEND_FRAME_PAYLOAD_TYPE_DISABLED:
+            PyErr_SetString(ToxAVException, "Either friend turned off audio or video receiving or we turned off sending for the said payload.");
+            break;
+        case TOXAV_ERR_SEND_FRAME_RTP_FAILED:
+            PyErr_SetString(ToxAVException, "Failed to push frame through rtp interface.");
+            break;
+    };
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxAV_toxav_audio_send_frame(ToxCoreAV* self, PyObject* args)
+{
+    CHECK_TOXAV(self);
+
+    uint32_t   friend_number;
+    uint8_t*   pcm;
+    Py_ssize_t pcm_length;
+    size_t     sample_count;
+    uint8_t    channels;
+    uint32_t   sampling_rate;
+
+    if (PyArg_ParseTuple(args, "Is#KBI", &friend_number, &pcm, &pcm_length, &sample_count, &channels, &sampling_rate) == false)
+        return NULL;
+
+    TOXAV_ERR_SEND_FRAME error;
+    bool result = toxav_audio_send_frame(self->av, friend_number, (int16_t*)pcm, sample_count, channels, sampling_rate, &error);
+
+    return parse_TOXAV_ERR_SEND_FRAME(result, error);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxAV_toxav_video_send_frame(ToxCoreAV* self, PyObject* args)
+{
+    CHECK_TOXAV(self);
+
+    uint32_t   friend_number;
+    uint16_t   width;
+    uint16_t   height;
+    uint8_t*   y;
+    Py_ssize_t y_length;
+    uint8_t*   u;
+    Py_ssize_t u_length;
+    uint8_t*   v;
+    Py_ssize_t v_length;
+
+    if (PyArg_ParseTuple(args, "IIIs#s#s#", &friend_number, &width, &height, &y, &y_length, &u, &u_length, &v, &v_length) == false)
+        return NULL;
+
+    TOXAV_ERR_SEND_FRAME error;
+    bool result = toxav_video_send_frame(self->av, friend_number, width, height, y, u, v, &error);
+
+    return parse_TOXAV_ERR_SEND_FRAME(result, error);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -415,6 +497,32 @@ PyMethodDef ToxAV_methods[] = {
         "Set the bit rate to be used in subsequent audio/video frames."
     },
     {
+        "toxav_audio_send_frame", (PyCFunction)ToxAV_toxav_audio_send_frame, METH_VARARGS,
+        "toxav_audio_send_frame(friend_number, pcm, sample_count, channels, sampling_rate)\n"
+        "Send an audio frame to a friend.\n"
+        "The expected format of the PCM data is: [s1c1][s1c2][...][s2c1][s2c2][...]...\n"
+        "Meaning: sample 1 for channel 1, sample 1 for channel 2, ...\n"
+        "For mono audio, this has no meaning, every sample is subsequent. For stereo, "
+        "this means the expected format is LRLRLR... with samples for left and right "
+        "alternating.\n"
+        "pcm - an array of audio samples. The size of this array must be sample_count * channels.\n"
+        "sample_count - number of samples in this frame. Valid numbers here are "
+        "((sample rate) * (audio length) / 1000), where audio length can be "
+        "2.5, 5, 10, 20, 40 or 60 millseconds.\n"
+        "channels - number of audio channels. Supported values are 1 and 2.\n"
+        "sampling_rate - audio sampling rate used in this frame. Valid sampling "
+        "rates are 8000, 12000, 16000, 24000, or 48000."
+    },
+    {
+        "toxav_video_send_frame", (PyCFunction)ToxAV_toxav_video_send_frame, METH_VARARGS,
+        "toxav_video_send_frame(friend_number, width, height, y, u, v)\n"
+        "Send a video frame to a friend.\n"
+        "width / height - width / height of the frame in pixels.\n"
+        "y - (Luminance) plane data should be of size: height * width\n"
+        "u - (Chroma) plane data should be of size: (height/2) * (width/2)\n"
+        "v - (Chroma) plane data should be of size: (height/2) * (width/2)"
+    },
+    {
         NULL
     }
 };
@@ -462,7 +570,7 @@ static int init_helper(ToxCoreAV* self, PyObject* args)
 
     toxav_callback_call(av, callback_call, self);
     toxav_callback_call_state(av, callback_call_state, self);
-    toxav_callback_bit_rate_status(av, callback_bit_rate_status, self)
+    toxav_callback_bit_rate_status(av, callback_bit_rate_status, self);
 
     return 0;
 }
