@@ -11,7 +11,7 @@ setup(
     ext_modules  = [
         Extension(
             "pytoxcore",
-            sources            = ["pytoxcore.c"],
+            sources            = ["pytoxcore.c", "pytoxav.c"],
             define_macros      = [],
             include_dirs       = ["/usr/tox/include"],
             library_dirs       = ["/usr/tox/lib"],

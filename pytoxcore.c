@@ -17,30 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 //----------------------------------------------------------------------------------------------
-#define PY_SSIZE_T_CLEAN
-//----------------------------------------------------------------------------------------------
-#include <Python.h>
-#include <stdio.h>
-#include <arpa/inet.h>
-#include <tox/tox.h>
-//----------------------------------------------------------------------------------------------
-#if PY_MAJOR_VERSION < 3
-    #define BUF_TC "s"
-#else
-    #define BUF_TC "y"
-#endif
-//----------------------------------------------------------------------------------------------
-#if PY_MAJOR_VERSION < 3
-    #define PYSTRING_FromString        PyString_FromString
-    #define PYSTRING_FromStringAndSize PyString_FromStringAndSize
-    #define PYSTRING_Check             PyString_Check
-    #define PYBYTES_FromStringAndSize  PyString_FromStringAndSize
-#else
-    #define PYSTRING_FromString        PyUnicode_FromString
-    #define PYSTRING_FromStringAndSize PyUnicode_FromStringAndSize
-    #define PYSTRING_Check             PyUnicode_Check
-    #define PYBYTES_FromStringAndSize  PyBytes_FromStringAndSize
-#endif
+#include "pytoxcore.h"
 //----------------------------------------------------------------------------------------------
 #define CHECK_TOX(self)                                              \
     if ((self)->tox == NULL) {                                       \
@@ -48,15 +25,10 @@
         return NULL;                                                 \
     }
 //----------------------------------------------------------------------------------------------
-typedef struct {
-    PyObject_HEAD
-    Tox* tox;
-} ToxCore;
-//----------------------------------------------------------------------------------------------
 PyObject* ToxCoreException;
 //----------------------------------------------------------------------------------------------
 
-static void bytes_to_hex_string(const uint8_t* digest, int length, uint8_t* hex_digest)
+void bytes_to_hex_string(const uint8_t* digest, int length, uint8_t* hex_digest)
 {
     hex_digest[2 * length] = 0;
 
@@ -90,7 +62,7 @@ static int hex_char_to_int(char c)
 }
 //----------------------------------------------------------------------------------------------
 
-static void hex_string_to_bytes(uint8_t* hexstr, int length, uint8_t* bytes)
+void hex_string_to_bytes(uint8_t* hexstr, int length, uint8_t* bytes)
 {
     int i;
     for (i = 0; i < length; i++)
@@ -1710,7 +1682,7 @@ struct PyModuleDef moduledef = {
 #endif
 //----------------------------------------------------------------------------------------------
 
-PyMethodDef Tox_methods[] = {
+PyMethodDef ToxCore_methods[] = {
     //
     // callbacks
     //
@@ -2451,7 +2423,7 @@ PyTypeObject ToxCoreType = {
     0,                                          /* tp_weaklistoffset */
     0,                                          /* tp_iter           */
     0,                                          /* tp_iternext       */
-    Tox_methods,                                /* tp_methods        */
+    ToxCore_methods,                            /* tp_methods        */
     0,                                          /* tp_members        */
     0,                                          /* tp_getset         */
     0,                                          /* tp_base           */
