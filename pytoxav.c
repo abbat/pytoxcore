@@ -40,6 +40,12 @@ static void callback_call_state(ToxAV* av, uint32_t friend_number, uint32_t stat
 }
 //----------------------------------------------------------------------------------------------
 
+static void callback_bit_rate_status(ToxAV* av, uint32_t friend_number, uint32_t audio_bit_rate, uint32_t video_bit_rate, void* self)
+{
+    PyObject_CallMethod((PyObject*)self, "toxav_bit_rate_status_cb", "III", friend_number, audio_bit_rate, video_bit_rate);
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxAV_callback_stub(ToxCoreAV* self, PyObject* args)
 {
     Py_RETURN_NONE;
@@ -252,6 +258,49 @@ static PyObject* ToxAV_toxav_call_control(ToxCoreAV* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxAV_toxav_bit_rate_set(ToxCoreAV* self, PyObject* args)
+{
+    CHECK_TOXAV(self);
+
+    uint32_t friend_number;
+    int32_t  audio_bit_rate,
+    int32_t  video_bit_rate,
+
+    if (PyArg_ParseTuple(args, "III", &friend_number, &audio_bit_rate, &video_bit_rate) == false)
+        return NULL;
+
+    TOXAV_ERR_BIT_RATE_SET error;
+    bool result = toxav_bit_rate_set(self->av, friend_number, audio_bit_rate, video_bit_rate, &error);
+
+    bool success = false;
+    switch (error) {
+        case TOXAV_ERR_BIT_RATE_SET_OK:
+            success = true;
+            break;
+        case TOXAV_ERR_BIT_RATE_SET_SYNC:
+            PyErr_SetString(ToxAVException, "Synchronization error occurred.");
+            break;
+        case TOXAV_ERR_BIT_RATE_SET_INVALID_AUDIO_BIT_RATE:
+            PyErr_SetString(ToxAVException, "The audio bit rate passed was not one of the supported values.");
+            break;
+        case TOXAV_ERR_BIT_RATE_SET_INVALID_VIDEO_BIT_RATE:
+            PyErr_SetString(ToxAVException, "The video bit rate passed was not one of the supported values.");
+            break;
+        case TOXAV_ERR_BIT_RATE_SET_FRIEND_NOT_FOUND:
+            PyErr_SetString(ToxAVException, "The friend_number passed did not designate a valid friend.");
+            break;
+        case TOXAV_ERR_BIT_RATE_SET_FRIEND_NOT_IN_CALL:
+            PyErr_SetString(ToxAVException, "This client is currently not in a call with the friend.");
+            break;
+    };
+
+    if (result == false || success == false)
+        return NULL;
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
 #if PY_MAJOR_VERSION >= 3
 struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
@@ -281,6 +330,12 @@ PyMethodDef ToxAV_methods[] = {
         "toxav_call_state_cb", (PyCFunction)ToxAV_callback_stub, METH_VARARGS,
         "toxav_call_state_cb(friend_number, state)\n"
         "This event is triggered when a call state changed."
+    },
+    {
+        "toxav_bit_rate_status_cb", (PyCFunction)ToxAV_callback_stub, METH_VARARGS,
+        "toxav_bit_rate_status_cb(friend_number, audio_bit_rate, video_bit_rate)\n"
+        "This event is triggered when the network becomes too saturated for current bit rates at which "
+        "point core suggests new bit rates."
     },
 
     //
@@ -355,6 +410,11 @@ PyMethodDef ToxAV_methods[] = {
         "Sends a call control command to a friend."
     },
     {
+        "toxav_bit_rate_set", (PyCFunction)ToxAV_toxav_bit_rate_set, METH_VARARGS,
+        "toxav_bit_rate_set(friend_number, audio_bit_rate, video_bit_rate)\n"
+        "Set the bit rate to be used in subsequent audio/video frames."
+    },
+    {
         NULL
     }
 };
@@ -402,6 +462,7 @@ static int init_helper(ToxCoreAV* self, PyObject* args)
 
     toxav_callback_call(av, callback_call, self);
     toxav_callback_call_state(av, callback_call_state, self);
+    toxav_callback_bit_rate_status(av, callback_bit_rate_status, self)
 
     return 0;
 }
