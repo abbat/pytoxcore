@@ -84,7 +84,7 @@ static int hex_char_to_int(char c)
     else if (c >= 'a' && c <= 'f')
         val = c - 'a' + 10;
     else
-      val = 0;
+        val = 0;
 
     return val;
 }
