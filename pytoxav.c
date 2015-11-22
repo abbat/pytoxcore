@@ -48,21 +48,21 @@ static void callback_bit_rate_status(ToxAV* av, uint32_t friend_number, uint32_t
 
 static void callback_audio_receive_frame(ToxAV* av, uint32_t friend_number, const int16_t* pcm, size_t sample_count, uint8_t channels, uint32_t sampling_rate, void* self)
 {
-    size_t pcm_length = sample_count * channels * 2;
+    size_t pcm_len = sample_count * channels * 2;
 
     // TODO:
-    PyObject_CallMethod((PyObject*)self, "toxav_audio_receive_frame_cb", "I" BUF_TCS "KII", friend_number, pcm, pcm_length, sample_count, channels, sampling_rate);
+    PyObject_CallMethod((PyObject*)self, "toxav_audio_receive_frame_cb", "I" BUF_TCS "KII", friend_number, pcm, pcm_len, sample_count, channels, sampling_rate);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_video_receive_frame(ToxAV* av, uint32_t friend_number, uint16_t width, uint16_t height, const uint8_t* y, const uint8_t* u, const uint8_t* v, int32_t ystride, int32_t ustride, int32_t vstride, void* self)
 {
-    size_t y_length = max(width, abs(ystride)) * height;
-    size_t u_length = max(width / 2, abs(ustride)) * (height / 2);
-    size_t v_length = max(width / 2, abs(vstride)) * (height / 2);
+    size_t y_len = max(width, abs(ystride)) * height;
+    size_t u_len = max(width / 2, abs(ustride)) * (height / 2);
+    size_t v_len = max(width / 2, abs(vstride)) * (height / 2);
 
     // TODO:
-    PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TCS BUF_TCS BUF_TCS "III", friend_number, width, height, y, y_length, u, u_length, v, v_length, ystride, ustride, vstride);
+    PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TCS BUF_TCS BUF_TCS "III", friend_number, width, height, y, y_len, u, u_len, v, v_len, ystride, ustride, vstride);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -364,15 +364,18 @@ static PyObject* ToxAV_toxav_audio_send_frame(ToxCoreAV* self, PyObject* args)
 
     uint32_t   friend_number;
     uint8_t*   pcm;
-    Py_ssize_t pcm_length;
+    Py_ssize_t pcm_len;
     size_t     sample_count;
     uint8_t    channels;
     uint32_t   sampling_rate;
 
-    if (PyArg_ParseTuple(args, "Is#KBI", &friend_number, &pcm, &pcm_length, &sample_count, &channels, &sampling_rate) == false)
+    if (PyArg_ParseTuple(args, "Is#KBI", &friend_number, &pcm, &pcm_len, &sample_count, &channels, &sampling_rate) == false)
         return NULL;
 
-    // TODO: check sizes
+    if (pcm_len != sample_count * channels * 2) {
+        PyErr_SetString(ToxAVException, "Invalid pcm size - must be sample_count * channels * 2 bytes.");
+        return NULL;
+    }
 
     TOXAV_ERR_SEND_FRAME error;
     bool result = toxav_audio_send_frame(self->av, friend_number, (int16_t*)pcm, sample_count, channels, sampling_rate, &error);
@@ -389,16 +392,29 @@ static PyObject* ToxAV_toxav_video_send_frame(ToxCoreAV* self, PyObject* args)
     uint16_t   width;
     uint16_t   height;
     uint8_t*   y;
-    Py_ssize_t y_length;
+    Py_ssize_t y_len;
     uint8_t*   u;
-    Py_ssize_t u_length;
+    Py_ssize_t u_len;
     uint8_t*   v;
-    Py_ssize_t v_length;
+    Py_ssize_t v_len;
 
-    if (PyArg_ParseTuple(args, "IIIs#s#s#", &friend_number, &width, &height, &y, &y_length, &u, &u_length, &v, &v_length) == false)
+    if (PyArg_ParseTuple(args, "IIIs#s#s#", &friend_number, &width, &height, &y, &y_len, &u, &u_len, &v, &v_len) == false)
         return NULL;
 
-    // TODO: check sizes
+    if (y_len != height * width) {
+        PyErr_SetString(ToxAVException, "Invalid Y-plane size - must be height * width.");
+        return NULL;
+    }
+
+    if (u_len != (height / 2) * (width / 2)) {
+        PyErr_SetString(ToxAVException, "Invalid U-plane size - must be (height / 2) * (width / 2).");
+        return NULL;
+    }
+
+    if (v_len != (height / 2) * (width / 2)) {
+        PyErr_SetString(ToxAVException, "Invalid V-plane size - must be (height / 2) * (width / 2).");
+        return NULL;
+    }
 
     TOXAV_ERR_SEND_FRAME error;
     bool result = toxav_video_send_frame(self->av, friend_number, width, height, y, u, v, &error);
@@ -540,11 +556,11 @@ PyMethodDef ToxAV_methods[] = {
     {
         "toxav_video_send_frame", (PyCFunction)ToxAV_toxav_video_send_frame, METH_VARARGS,
         "toxav_video_send_frame(friend_number, width, height, y, u, v)\n"
-        "Send a video frame to a friend.\n"
+        "Send a I420 (IYUV) video frame to a friend.\n"
         "width / height - width / height of the frame in pixels.\n"
         "y - (Luminance) plane data should be of size: height * width\n"
-        "u - (Chroma) plane data should be of size: (height/2) * (width/2)\n"
-        "v - (Chroma) plane data should be of size: (height/2) * (width/2)"
+        "u - (Chroma) plane data should be of size: (height / 2) * (width / 2)\n"
+        "v - (Chroma) plane data should be of size: (height / 2) * (width / 2)"
     },
     {
         NULL
