@@ -236,7 +236,7 @@ static void callback_video_receive_frame(ToxAV* av, uint32_t friend_number, uint
     if (rgb == NULL)
         return;
 
-    // TODO: Choose bgr / rbg
+    // TODO: Let to choose BGR / RGB
     ystride = abs(ystride);
     ustride = abs(ustride);
     vstride = abs(vstride);
