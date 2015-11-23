@@ -193,6 +193,17 @@ static void yuv420_to_rgb(uint16_t width, uint16_t height, const uint8_t* y, con
 }
 //----------------------------------------------------------------------------------------------
 
+inline static vpx_image_t* vpx_image_realloc(vpx_image_t* image, uint32_t width, uint32_t height)
+{
+    if (image == NULL || image->d_w != width || image->d_h != height) {
+        vpx_img_free(image);
+        return vpx_img_alloc(NULL, VPX_IMG_FMT_I420, width, height, 1);
+    }
+
+    return image;
+}
+//----------------------------------------------------------------------------------------------
+
 static void callback_call(ToxAV* av, uint32_t friend_number, bool audio_enabled, bool video_enabled, void* self)
 {
     PyObject_CallMethod((PyObject*)self, "toxav_call_cb", "III", friend_number, audio_enabled, video_enabled);
@@ -293,6 +304,11 @@ static PyObject* ToxAV_toxav_kill(ToxCoreAV* self, PyObject* args)
     if (self->core != NULL) {
         Py_DECREF(self->core);
         self->core = NULL;
+    }
+
+    if (self->frame != NULL) {
+        vpx_img_free(self->frame);
+        self->frame = NULL;
     }
 
     Py_RETURN_NONE;
@@ -576,13 +592,13 @@ static PyObject* ToxAV_toxav_audio_send_frame(ToxCoreAV* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
-static PyObject* ToxAV_toxav_video_send_frame(ToxCoreAV* self, PyObject* args)
+static PyObject* ToxAV_toxav_video_send_yuv420_frame(ToxCoreAV* self, PyObject* args)
 {
     CHECK_TOXAV(self);
 
     uint32_t   friend_number;
-    uint16_t   width;
-    uint16_t   height;
+    uint32_t   width;
+    uint32_t   height;
     uint8_t*   y;
     Py_ssize_t y_len;
     uint8_t*   u;
@@ -592,6 +608,16 @@ static PyObject* ToxAV_toxav_video_send_frame(ToxCoreAV* self, PyObject* args)
 
     if (PyArg_ParseTuple(args, "IIIs#s#s#", &friend_number, &width, &height, &y, &y_len, &u, &u_len, &v, &v_len) == false)
         return NULL;
+
+    if (width < 1 || width > 0xFFFF) {
+        PyErr_SetString(ToxAVException, "Invalid width - must be 16 bit unsigned.");
+        return NULL;
+    }
+
+    if (height < 1 || height > 0xFFFF) {
+        PyErr_SetString(ToxAVException, "Invalid height - must be 16 bit unsigned.");
+        return NULL;
+    }
 
     if (y_len != height * width) {
         PyErr_SetString(ToxAVException, "Invalid Y-plane size - must be height * width.");
@@ -610,6 +636,94 @@ static PyObject* ToxAV_toxav_video_send_frame(ToxCoreAV* self, PyObject* args)
 
     TOXAV_ERR_SEND_FRAME error;
     bool result = toxav_video_send_frame(self->av, friend_number, width, height, y, u, v, &error);
+
+    return parse_TOXAV_ERR_SEND_FRAME(result, error);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxAV_toxav_video_send_bgr_frame(ToxCoreAV* self, PyObject* args)
+{
+    CHECK_TOXAV(self);
+
+    uint32_t   friend_number;
+    uint32_t   width;
+    uint32_t   height;
+    uint8_t*   bgr;
+    Py_ssize_t bgr_len;
+
+    if (PyArg_ParseTuple(args, "IIIs#", &friend_number, &width, &height, &bgr, &bgr_len) == false)
+        return NULL;
+
+    if (width < 1 || width > 0xFFFF) {
+        PyErr_SetString(ToxAVException, "Invalid width - must be 16 bit unsigned.");
+        return NULL;
+    }
+
+    if (height < 1 || height > 0xFFFF) {
+        PyErr_SetString(ToxAVException, "Invalid height - must be 16 bit unsigned.");
+        return NULL;
+    }
+
+    if (bgr_len != 3 * width * height) {
+        PyErr_SetString(ToxAVException, "Invalid BGR size - must be height * width * 3.");
+        return NULL;
+    }
+
+    self->frame = vpx_image_realloc(self->frame, width, height);
+
+    if (self->frame == NULL) {
+        PyErr_SetString(ToxAVException, "A resource allocation error occurred while trying to allocate image frame.");
+        return NULL;
+    }
+
+    bgr_to_yuv420(self->frame->planes[0], self->frame->planes[1], self->frame->planes[2], bgr, self->frame->d_w, self->frame->d_h);
+
+    TOXAV_ERR_SEND_FRAME error;
+    bool result = toxav_video_send_frame(self->av, friend_number, self->frame->d_w, self->frame->d_h, self->frame->planes[0], self->frame->planes[1], self->frame->planes[2], &error);
+
+    return parse_TOXAV_ERR_SEND_FRAME(result, error);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxAV_toxav_video_send_rgb_frame(ToxCoreAV* self, PyObject* args)
+{
+    CHECK_TOXAV(self);
+
+    uint32_t   friend_number;
+    uint32_t   width;
+    uint32_t   height;
+    uint8_t*   rgb;
+    Py_ssize_t rgb_len;
+
+    if (PyArg_ParseTuple(args, "IIIs#", &friend_number, &width, &height, &rgb, &rgb_len) == false)
+        return NULL;
+
+    if (width < 1 || width > 0xFFFF) {
+        PyErr_SetString(ToxAVException, "Invalid width - must be 16 bit unsigned.");
+        return NULL;
+    }
+
+    if (height < 1 || height > 0xFFFF) {
+        PyErr_SetString(ToxAVException, "Invalid height - must be 16 bit unsigned.");
+        return NULL;
+    }
+
+    if (rgb_len != 3 * width * height) {
+        PyErr_SetString(ToxAVException, "Invalid RGB size - must be height * width * 3.");
+        return NULL;
+    }
+
+    self->frame = vpx_image_realloc(self->frame, width, height);
+
+    if (self->frame == NULL) {
+        PyErr_SetString(ToxAVException, "A resource allocation error occurred while trying to allocate image frame.");
+        return NULL;
+    }
+
+    rgb_to_yuv420(self->frame->planes[0], self->frame->planes[1], self->frame->planes[2], rgb, self->frame->d_w, self->frame->d_h);
+
+    TOXAV_ERR_SEND_FRAME error;
+    bool result = toxav_video_send_frame(self->av, friend_number, self->frame->d_w, self->frame->d_h, self->frame->planes[0], self->frame->planes[1], self->frame->planes[2], &error);
 
     return parse_TOXAV_ERR_SEND_FRAME(result, error);
 }
@@ -756,12 +870,19 @@ PyMethodDef ToxAV_methods[] = {
         "rates are 8000, 12000, 16000, 24000, or 48000."
     },
     {
-        "toxav_video_send_frame", (PyCFunction)ToxAV_toxav_video_send_frame, METH_VARARGS,
-        "toxav_video_send_frame(friend_number, width, height, y, u, v)\n"
-        "Send a I420 (IYUV) video frame to a friend.\n"
-        "y - (Luminance) plane data should be of size: height * width\n"
-        "u - (Chroma) plane data should be of size: (height / 2) * (width / 2)\n"
-        "v - (Chroma) plane data should be of size: (height / 2) * (width / 2)"
+        "toxav_video_send_yuv420_frame", (PyCFunction)ToxAV_toxav_video_send_yuv420_frame, METH_VARARGS,
+        "toxav_video_send_yuv420_frame(friend_number, width, height, y, u, v)\n"
+        "Send a I420 (IYUV) video frame to a friend."
+    },
+    {
+        "toxav_video_send_bgr_frame", (PyCFunction)ToxAV_toxav_video_send_bgr_frame, METH_VARARGS,
+        "toxav_video_send_bgr_frame(friend_number, width, height, bgr)\n"
+        "Send a BGR video frame to a friend."
+    },
+    {
+        "toxav_video_send_rgb_frame", (PyCFunction)ToxAV_toxav_video_send_rgb_frame, METH_VARARGS,
+        "toxav_video_send_rgb_frame(friend_number, width, height, rgb)\n"
+        "Send a RGB video frame to a friend."
     },
     {
         NULL
@@ -823,8 +944,9 @@ static PyObject* ToxAV_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
 {
     ToxCoreAV* self = (ToxCoreAV*)type->tp_alloc(type, 0);
 
-    self->av   = NULL;
-    self->core = NULL;
+    self->av    = NULL;
+    self->core  = NULL;
+    self->frame = NULL;
 
     // we don't care about subclass's arguments
     if (init_helper(self, NULL) == -1)
