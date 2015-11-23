@@ -11,12 +11,12 @@ setup(
     ext_modules  = [
         Extension(
             "pytoxcore",
-            sources            = ["pytoxcore.c", "pytoxav.c"],
+            sources            = ["pytox.c", "pytoxcore.c", "pytoxav.c"],
             define_macros      = [],
             include_dirs       = ["/usr/tox/include"],
             library_dirs       = ["/usr/tox/lib"],
             extra_compile_args = ["-Wall", "-Wno-declaration-after-statement"],
-            libraries          = ["toxcore", "sodium", "vpx", "rt"]
+            libraries          = ["toxcore", "sodium", "vpx", "opus", "rt"]
         )
     ]
 )

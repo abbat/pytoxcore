@@ -28,63 +28,6 @@
 PyObject* ToxCoreException;
 //----------------------------------------------------------------------------------------------
 
-void bytes_to_hex_string(const uint8_t* digest, int length, uint8_t* hex_digest)
-{
-    hex_digest[2 * length] = 0;
-
-    int i;
-    int j;
-    for (i = j = 0; i < length; i++) {
-        char c;
-        c = (digest[i] >> 4) & 0xF;
-        c = (c > 9) ? c + 'A'- 10 : c + '0';
-        hex_digest[j++] = c;
-        c = (digest[i] & 0xF);
-        c = (c > 9) ? c + 'A' - 10 : c + '0';
-        hex_digest[j++] = c;
-    }
-}
-//----------------------------------------------------------------------------------------------
-
-static int hex_char_to_int(char c)
-{
-    int val = 0;
-    if (c >= '0' && c <= '9')
-        val = c - '0';
-    else if (c >= 'A' && c <= 'F')
-        val = c - 'A' + 10;
-    else if (c >= 'a' && c <= 'f')
-        val = c - 'a' + 10;
-    else
-        val = 0;
-
-    return val;
-}
-//----------------------------------------------------------------------------------------------
-
-void hex_string_to_bytes(uint8_t* hexstr, int length, uint8_t* bytes)
-{
-    int i;
-    for (i = 0; i < length; i++)
-        bytes[i] = (hex_char_to_int(hexstr[2 * i]) << 4) | (hex_char_to_int(hexstr[2 * i + 1]));
-}
-//----------------------------------------------------------------------------------------------
-
-void PyStringUnicode_AsStringAndSize(PyObject* object, char** str, Py_ssize_t* len)
-{
-#if PY_MAJOR_VERSION < 3
-    PyString_AsStringAndSize(object, str, len);
-#else
-    #if PY_MINOR_VERSION == 2
-        *str = PyUnicode_AS_DATA(object);
-        *len = PyUnicode_GET_DATA_SIZE(object);
-    #else
-        *str = PyUnicode_AsUTF8AndSize(object, len);
-    #endif
-#endif
-}
-//----------------------------------------------------------------------------------------------
-
 static void callback_self_connection_status(Tox* tox, TOX_CONNECTION connection_status, void* self)
 {
     PyObject_CallMethod((PyObject*)self, "tox_self_connection_status_cb", "I", connection_status);
@@ -1962,6 +1905,7 @@ static PyObject* ToxCore_tox_group_self_get_role(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+<<<<<<< HEAD
 static PyObject* ToxCore_tox_group_self_get_peer_id(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
@@ -3041,7 +2985,7 @@ struct PyModuleDef moduledef = {
 #endif
 //----------------------------------------------------------------------------------------------
 
-PyMethodDef Tox_methods[] = {
+PyMethodDef ToxCore_methods[] = {
     //
     // callbacks
     //
@@ -4053,7 +3997,6 @@ static PyObject* ToxCore_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
 
     self->tox = NULL;
 
-    // we don't care about subclass's arguments
     if (init_helper(self, NULL) == -1)
         return NULL;
 
@@ -4063,10 +4006,6 @@ static PyObject* ToxCore_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
 
 static int ToxCore_init(ToxCore* self, PyObject* args, PyObject* kwds)
 {
-    // since __init__ in Python is optional(superclass need to call it explicitly),
-    // we need to initialize self->tox in ToxCore_new instead of init.
-    // If ToxCore_init is called, we re-initialize self->tox and pass
-    // the new ipv6enabled setting.
     return init_helper(self, args);
 }
 //----------------------------------------------------------------------------------------------
@@ -4129,7 +4068,7 @@ PyTypeObject ToxCoreType = {
 };
 //----------------------------------------------------------------------------------------------
 
-static void ToxCore_install_dict(void)
+void ToxCore_install_dict(void)
 {
 #define SET(name)                                  \
     PyObject* obj_##name = PyLong_FromLong(name);  \
@@ -4236,45 +4175,5 @@ static void ToxCore_install_dict(void)
 #undef SET
 
     ToxCoreType.tp_dict = dict;
-}
-//----------------------------------------------------------------------------------------------
-
-#if PY_MAJOR_VERSION >= 3
-PyMODINIT_FUNC PyInit_pytoxcore(void)
-{
-    PyObject* module = PyModule_Create(&moduledef);
-#else
-PyMODINIT_FUNC initpytoxcore(void)
-{
-    PyObject* module = Py_InitModule("pytoxcore", NULL);
-#endif
-
-    if (module == NULL)
-        goto error;
-
-    ToxCore_install_dict();
-
-    // initialize toxcore
-    if (PyType_Ready(&ToxCoreType) < 0) {
-        fprintf(stderr, "Invalid PyTypeObject 'ToxCoreType'\n");
-        goto error;
-    }
-
-    Py_INCREF(&ToxCoreType);
-    PyModule_AddObject(module, "ToxCore", (PyObject*)&ToxCoreType);
-
-    ToxCoreException = PyErr_NewException("pytoxcore.ToxCoreException", NULL, NULL);
-    PyModule_AddObject(module, "ToxCoreException", (PyObject*)ToxCoreException);
-
-#if PY_MAJOR_VERSION >= 3
-    return module;
-#endif
-
-error:
-#if PY_MAJOR_VERSION >= 3
-    return NULL;
-#else
-    return;
-#endif
 }
 //----------------------------------------------------------------------------------------------

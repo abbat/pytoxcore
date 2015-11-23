@@ -9,6 +9,12 @@ BuildRequires:  python-devel, tox-libtoxcore-devel, libvpx-devel, tox-libsodium-
 Source0:        https://build.opensuse.org/source/home:antonbatenev:tox/%{name}/%{name}_%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
+%if 0%{?suse_version}
+BuildRequires: libopus-devel >= 0.9.14
+%else
+BuildRequires: opus-devel >= 0.9.14
+%endif
+
 %description
 PyToxCore provides a Pythonic binding, i.e Object-oriented instead of C style,
 raise exception instead of returning error code.

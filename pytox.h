@@ -17,21 +17,39 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 //----------------------------------------------------------------------------------------------
-#ifndef _pytoxcore_h_
-#define _pytoxcore_h_
+#ifndef _pytox_h_
+#define _pytox_h_
 //----------------------------------------------------------------------------------------------
-#include "pytox.h"
+#define PY_SSIZE_T_CLEAN
 //----------------------------------------------------------------------------------------------
-typedef struct {
-    PyObject_HEAD
-    Tox* tox;
-} ToxCore;
+#include <Python.h>
+#include <stdio.h>
+#include <arpa/inet.h>
+#include <tox/tox.h>
+#include <tox/toxav.h>
+#include <vpx/vpx_image.h>
 //----------------------------------------------------------------------------------------------
-extern PyTypeObject ToxCoreType;
+#if PY_MAJOR_VERSION < 3
+    #define BUF_TCS "t#"
+#else
+    #define BUF_TCS "y#"
+#endif
 //----------------------------------------------------------------------------------------------
-extern PyObject* ToxCoreException;
+#if PY_MAJOR_VERSION < 3
+    #define PYSTRING_FromString        PyString_FromString
+    #define PYSTRING_FromStringAndSize PyString_FromStringAndSize
+    #define PYSTRING_Check             PyString_Check
+    #define PYBYTES_FromStringAndSize  PyString_FromStringAndSize
+#else
+    #define PYSTRING_FromString        PyUnicode_FromString
+    #define PYSTRING_FromStringAndSize PyUnicode_FromStringAndSize
+    #define PYSTRING_Check             PyUnicode_Check
+    #define PYBYTES_FromStringAndSize  PyBytes_FromStringAndSize
+#endif
 //----------------------------------------------------------------------------------------------
-void ToxCore_install_dict(void);
+void bytes_to_hex_string(const uint8_t* digest, int length, uint8_t* hex_digest);
+void hex_string_to_bytes(uint8_t* hexstr, int length, uint8_t* bytes);
+void PyStringUnicode_AsStringAndSize(PyObject* object, char** str, Py_ssize_t* len);
 //----------------------------------------------------------------------------------------------
-#endif   // _pytoxcore_h_
+#endif   // _pytox_h_
 //----------------------------------------------------------------------------------------------
