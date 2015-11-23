@@ -17,21 +17,23 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 //----------------------------------------------------------------------------------------------
-#ifndef _pytoxcore_h_
-#define _pytoxcore_h_
+#ifndef _pytoxav_h_
+#define _pytoxav_h_
 //----------------------------------------------------------------------------------------------
-#include "pytox.h"
+#include "pytoxcore.h"
 //----------------------------------------------------------------------------------------------
 typedef struct {
     PyObject_HEAD
-    Tox* tox;
-} ToxCore;
+    ToxAV*       av;
+    ToxCore*     core;
+    vpx_image_t* frame;
+} ToxCoreAV;
 //----------------------------------------------------------------------------------------------
-extern PyTypeObject ToxCoreType;
+extern PyTypeObject ToxAVType;
 //----------------------------------------------------------------------------------------------
-extern PyObject* ToxCoreException;
+extern PyObject* ToxAVException;
 //----------------------------------------------------------------------------------------------
-void ToxCore_install_dict(void);
+void ToxAV_install_dict(void);
 //----------------------------------------------------------------------------------------------
-#endif   // _pytoxcore_h_
+#endif   // _pytoxavh_
 //----------------------------------------------------------------------------------------------

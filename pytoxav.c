@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 //----------------------------------------------------------------------------------------------
-#include "pytoxcore.h"
+#include "pytoxav.h"
 //----------------------------------------------------------------------------------------------
 #define CHECK_TOXAV(self)                                        \
     if ((self)->av == NULL) {                                    \
@@ -729,21 +729,6 @@ static PyObject* ToxAV_toxav_video_send_rgb_frame(ToxCoreAV* self, PyObject* arg
 }
 //----------------------------------------------------------------------------------------------
 
-#if PY_MAJOR_VERSION >= 3
-struct PyModuleDef moduledef = {
-    PyModuleDef_HEAD_INIT,
-    "pytoxav",
-    "Python binding for ToxAV",
-    -1,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-#endif
-//----------------------------------------------------------------------------------------------
-
 PyMethodDef ToxAV_methods[] = {
     //
     // callbacks
@@ -948,7 +933,6 @@ static PyObject* ToxAV_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
     self->core  = NULL;
     self->frame = NULL;
 
-    // we don't care about subclass's arguments
     if (init_helper(self, NULL) == -1)
         return NULL;
 
@@ -958,10 +942,6 @@ static PyObject* ToxAV_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
 
 static int ToxAV_init(ToxCoreAV* self, PyObject* args, PyObject* kwds)
 {
-    // since __init__ in Python is optional(superclass need to call it explicitly),
-    // we need to initialize self->toxav in ToxAV_new instead of init.
-    // If ToxAV_init is called, we re-initialize self->toxav and pass
-    // the new ipv6enabled setting.
     return init_helper(self, args);
 }
 //----------------------------------------------------------------------------------------------
@@ -1021,7 +1001,7 @@ PyTypeObject ToxAVType = {
 };
 //----------------------------------------------------------------------------------------------
 
-static void ToxAV_install_dict(void)
+void ToxAV_install_dict(void)
 {
 #define SET(name)                                  \
     PyObject* obj_##name = PyLong_FromLong(name);  \
@@ -1059,45 +1039,5 @@ static void ToxAV_install_dict(void)
 #undef SET
 
     ToxAVType.tp_dict = dict;
-}
-//----------------------------------------------------------------------------------------------
-
-#if PY_MAJOR_VERSION >= 3
-PyMODINIT_FUNC PyInit_pytoxav(void)
-{
-    PyObject* module = PyModule_Create(&moduledef);
-#else
-PyMODINIT_FUNC initpytoxav(void)
-{
-    PyObject* module = Py_InitModule("pytoxav", NULL);
-#endif
-
-    if (module == NULL)
-        goto error;
-
-    ToxAV_install_dict();
-
-    // initialize toxav
-    if (PyType_Ready(&ToxAVType) < 0) {
-        fprintf(stderr, "Invalid PyTypeObject 'ToxAVType'\n");
-        goto error;
-    }
-
-    Py_INCREF(&ToxAVType);
-    PyModule_AddObject(module, "ToxAV", (PyObject*)&ToxAVType);
-
-    ToxAVException = PyErr_NewException("pytoxav.ToxAVException", NULL, NULL);
-    PyModule_AddObject(module, "ToxAVException", (PyObject*)ToxAVException);
-
-#if PY_MAJOR_VERSION >= 3
-    return module;
-#endif
-
-error:
-#if PY_MAJOR_VERSION >= 3
-    return NULL;
-#else
-    return;
-#endif
 }
 //----------------------------------------------------------------------------------------------
