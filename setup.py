@@ -16,7 +16,7 @@ setup(
             include_dirs       = ["/usr/tox/include"],
             library_dirs       = ["/usr/tox/lib"],
             extra_compile_args = ["-Wall", "-Wno-declaration-after-statement"],
-            libraries          = ["toxcore", "sodium", "rt"]
+            libraries          = ["toxcore", "sodium", "vpx", "rt"]
         )
     ]
 )
