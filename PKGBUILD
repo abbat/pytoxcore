@@ -9,7 +9,7 @@ arch=('i686' 'x86_64')
 url="https://github.com/abbat/pytoxcore"
 license=('GPL-3')
 depends=('python2')
-makedepends=('tox-libtoxcore' 'libsodium')
+makedepends=('tox-libtoxcore' 'libvpx' 'libsodium')
 source=("https://build.opensuse.org/source/home:antonbatenev:tox/${pkgname}/${pkgname}_${pkgver}.tar.bz2")
 sha512sums=('SKIP')
 

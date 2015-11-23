@@ -27,6 +27,7 @@
 #include <arpa/inet.h>
 #include <tox/tox.h>
 #include <tox/toxav.h>
+#include <vpx/vpx_image.h>
 //----------------------------------------------------------------------------------------------
 #if PY_MAJOR_VERSION < 3
     #define BUF_TCS "t#"
@@ -53,8 +54,9 @@ typedef struct {
 //----------------------------------------------------------------------------------------------
 typedef struct {
     PyObject_HEAD
-    ToxAV*   av;
-    ToxCore* core;
+    ToxAV*       av;
+    ToxCore*     core;
+    vpx_image_t* frame;
 } ToxCoreAV;
 //----------------------------------------------------------------------------------------------
 void bytes_to_hex_string(const uint8_t* digest, int length, uint8_t* hex_digest);
