@@ -631,6 +631,16 @@ PyMethodDef ToxAV_methods[] = {
         "This event is triggered when the network becomes too saturated for current bit rates at which "
         "point core suggests new bit rates."
     },
+    {
+        "toxav_audio_receive_frame_cb", (PyCFunction)ToxAV_callback_stub, METH_VARARGS,
+        "toxav_audio_receive_frame_cb(friend_number, pcm, sample_count, channels, sampling_rate)\n"
+        "This event is triggered when a audio data received."
+    },
+    {
+        "toxav_video_receive_frame_cb", (PyCFunction)ToxAV_callback_stub, METH_VARARGS,
+        "toxav_video_receive_frame_cb(friend_number, width, height, data)\n"
+        "This event is triggered when a video data received."
+    },
 
     //
     // methods
@@ -729,7 +739,6 @@ PyMethodDef ToxAV_methods[] = {
         "toxav_video_send_frame", (PyCFunction)ToxAV_toxav_video_send_frame, METH_VARARGS,
         "toxav_video_send_frame(friend_number, width, height, y, u, v)\n"
         "Send a I420 (IYUV) video frame to a friend.\n"
-        "width / height - width / height of the frame in pixels.\n"
         "y - (Luminance) plane data should be of size: height * width\n"
         "u - (Chroma) plane data should be of size: (height / 2) * (width / 2)\n"
         "v - (Chroma) plane data should be of size: (height / 2) * (width / 2)"
