@@ -2970,21 +2970,6 @@ static PyObject* ToxCore_tox_group_send_custom_packet(ToxCore* self, PyObject* a
 }
 //----------------------------------------------------------------------------------------------
 
-#if PY_MAJOR_VERSION >= 3
-struct PyModuleDef moduledef = {
-    PyModuleDef_HEAD_INIT,
-    "pytoxcore",
-    "Python binding for ToxCore",
-    -1,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-#endif
-//----------------------------------------------------------------------------------------------
-
 PyMethodDef ToxCore_methods[] = {
     //
     // callbacks
