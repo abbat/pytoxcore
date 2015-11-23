@@ -173,7 +173,7 @@ static void callback_group_private_message(Tox* tox, uint32_t groupnumber, uint3
 
 static void callback_group_invite(Tox* tox, uint32_t friend_number, const uint8_t* invite_data, size_t length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_group_invite_cb", "I" BUF_TC "#", friend_number, invite_data, length);
+    PyObject_CallMethod((PyObject*)self, "tox_group_invite_cb", "I" BUF_TCS, friend_number, invite_data, length);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -209,7 +209,7 @@ static void callback_group_moderation(Tox* tox, uint32_t groupnumber, uint32_t s
 
 static void callback_group_custom_packet(Tox* tox, uint32_t groupnumber, uint32_t peer_id, const uint8_t* data, size_t length, void* self)
 {
-    PyObject_CallMethod((PyObject*)self, "tox_group_custom_packet_cb", "II" BUF_TC "#", groupnumber, peer_id, data, length);
+    PyObject_CallMethod((PyObject*)self, "tox_group_custom_packet_cb", "II" BUF_TCS, groupnumber, peer_id, data, length);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -1905,7 +1905,6 @@ static PyObject* ToxCore_tox_group_self_get_role(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
-<<<<<<< HEAD
 static PyObject* ToxCore_tox_group_self_get_peer_id(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
@@ -3503,7 +3502,7 @@ PyMethodDef ToxCore_methods[] = {
     {
         "tox_group_join", (PyCFunction)ToxCore_tox_group_join, METH_VARARGS,
         "tox_group_join(chat_id, password)\n"
-        " * Joins a group chat with specified Chat ID.\n"
+        "Joins a group chat with specified Chat ID.\n"
         "This function creates a new group chat object, adds it to the chats array, and sends "
         "a DHT announcement to find peers in the group associated with chat_id. Once a peer has been "
         "found a join attempt will be initiated."
@@ -4096,15 +4095,15 @@ void ToxCore_install_dict(void)
     SET(TOX_MAX_FILENAME_LENGTH);
 
     // #define TOX_GROUP_MAX_TOPIC_LENGTH
-    SET(TOX_GROUP_MAX_TOPIC_LENGTH)
+    SET(TOX_GROUP_MAX_TOPIC_LENGTH);
     // #define TOX_GROUP_MAX_PART_LENGTH
-    SET(TOX_GROUP_MAX_PART_LENGTH)
+    SET(TOX_GROUP_MAX_PART_LENGTH);
     // #define TOX_GROUP_MAX_GROUP_NAME_LENGTH
-    SET(TOX_GROUP_MAX_GROUP_NAME_LENGTH)
+    SET(TOX_GROUP_MAX_GROUP_NAME_LENGTH);
     // #define TOX_GROUP_MAX_PASSWORD_SIZE
-    SET(TOX_GROUP_MAX_PASSWORD_SIZE)
+    SET(TOX_GROUP_MAX_PASSWORD_SIZE);
     // #define TOX_GROUP_CHAT_ID_SIZE
-    SET(TOX_GROUP_CHAT_ID_SIZE)
+    SET(TOX_GROUP_CHAT_ID_SIZE);
 
     // enum TOX_USER_STATUS
     SET(TOX_USER_STATUS_NONE);
@@ -4135,27 +4134,27 @@ void ToxCore_install_dict(void)
     SET(TOX_FILE_CONTROL_CANCEL);
 
     // enum TOX_GROUP_PRIVACY_STATE
-    SET(TOX_GROUP_PRIVACY_STATE_PUBLIC)
-    SET(TOX_GROUP_PRIVACY_STATE_PRIVATE)
+    SET(TOX_GROUP_PRIVACY_STATE_PUBLIC);
+    SET(TOX_GROUP_PRIVACY_STATE_PRIVATE);
 
     // enum enum TOX_GROUP_JOIN_FAIL
-    SET(TOX_GROUP_JOIN_FAIL_NAME_TAKEN)
-    SET(TOX_GROUP_JOIN_FAIL_PEER_LIMIT)
-    SET(TOX_GROUP_JOIN_FAIL_INVALID_PASSWORD)
-    SET(TOX_GROUP_JOIN_FAIL_UNKNOWN)
+    SET(TOX_GROUP_JOIN_FAIL_NAME_TAKEN);
+    SET(TOX_GROUP_JOIN_FAIL_PEER_LIMIT);
+    SET(TOX_GROUP_JOIN_FAIL_INVALID_PASSWORD);
+    SET(TOX_GROUP_JOIN_FAIL_UNKNOWN);
 
     // enum TOX_GROUP_MOD_EVENT
-    SET(TOX_GROUP_MOD_EVENT_KICK)
-    SET(TOX_GROUP_MOD_EVENT_BAN)
-    SET(TOX_GROUP_MOD_EVENT_OBSERVER)
-    SET(TOX_GROUP_MOD_EVENT_USER)
-    SET(TOX_GROUP_MOD_EVENT_MODERATOR)
+    SET(TOX_GROUP_MOD_EVENT_KICK);
+    SET(TOX_GROUP_MOD_EVENT_BAN);
+    SET(TOX_GROUP_MOD_EVENT_OBSERVER);
+    SET(TOX_GROUP_MOD_EVENT_USER);
+    SET(TOX_GROUP_MOD_EVENT_MODERATOR);
 
     // enum TOX_GROUP_ROLE
-    SET(TOX_GROUP_ROLE_FOUNDER)
-    SET(TOX_GROUP_ROLE_MODERATOR)
-    SET(TOX_GROUP_ROLE_USER)
-    SET(TOX_GROUP_ROLE_OBSERVER)
+    SET(TOX_GROUP_ROLE_FOUNDER);
+    SET(TOX_GROUP_ROLE_MODERATOR);
+    SET(TOX_GROUP_ROLE_USER);
+    SET(TOX_GROUP_ROLE_OBSERVER);
 
 #undef SET
 
