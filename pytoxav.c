@@ -230,7 +230,7 @@ static void callback_video_receive_frame(ToxAV* av, uint32_t friend_number, uint
     ustride = abs(ustride);
     vstride = abs(vstride);
 
-    yuv420_to_bgr(width, height, y, u, v, ystride, ustride, rgb);
+    yuv420_to_bgr(width, height, y, u, v, ystride, ustride, vstride, rgb);
 
     PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TCS, friend_number, width, height, rgb);
 
@@ -543,6 +543,26 @@ static PyObject* ToxAV_toxav_audio_send_frame(ToxCoreAV* self, PyObject* args)
 
     if (PyArg_ParseTuple(args, "Is#KBI", &friend_number, &pcm, &pcm_len, &sample_count, &channels, &sampling_rate) == false)
         return NULL;
+
+    if (!(channels == 1 || channels == 2)) {
+        PyErr_SetString(ToxAVException, "Invalid channels count - supported values are 1 and 2.");
+        return NULL;
+    }
+
+    if (!(sampling_rate == 8000 || sampling_rate == 12000 || sampling_rate == 16000 || sampling_rate == 24000 || sampling_rate == 48000)) {
+        PyErr_SetString(ToxAVException, "Invalid sampling_rate - supported values are 8K, 12K, 16K, 24K and 48K.");
+        return NULL;
+    }
+
+    uint32_t sampling_rate_ms = sampling_rate / 1000;
+    if (!(sample_count == sampling_rate_ms * 2 + sampling_rate_ms / 2 ||
+          sample_count == sampling_rate_ms * 5  ||
+          sample_count == sampling_rate_ms * 10 ||
+          sample_count == sampling_rate_ms * 20 ||
+          sample_count == sampling_rate_ms * 40 ||
+          sample_count == sampling_rate_ms * 60)) {
+        PyErr_SetString(ToxAVException, "Invalid sample_count - supported values are 2.5, 5, 10, 20, 40 and 60 ms of data per frame.");
+    }
 
     if (pcm_len != sample_count * channels * 2) {
         PyErr_SetString(ToxAVException, "Invalid pcm size - must be sample_count * channels * 2 bytes.");
