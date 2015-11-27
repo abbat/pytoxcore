@@ -232,28 +232,41 @@ static void callback_audio_receive_frame(ToxAV* av, uint32_t friend_number, cons
 
 static void callback_video_receive_frame(ToxAV* av, uint32_t friend_number, uint16_t width, uint16_t height, const uint8_t* y, const uint8_t* u, const uint8_t* v, int32_t ystride, int32_t ustride, int32_t vstride, void* self)
 {
-    ystride = abs(ystride);
-    ustride = abs(ustride);
-    vstride = abs(vstride);
-
-    uint8_t* data = malloc(width * height * 3);
-    if (data == NULL)
-        return;
-
     ToxCoreAV* av_self = (ToxCoreAV*)self;
 
-    if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_BGR)
-        yuv420_to_bgr(width, height, y, u, v, ystride, ustride, vstride, data);
-    else if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_RGB)
-        yuv420_to_rgb(width, height, y, u, v, ystride, ustride, vstride, data);
-    else {
-        free(data);
-        return;
+    uint32_t ystride_abs = abs(ystride);
+    uint32_t ustride_abs = abs(ustride);
+    uint32_t vstride_abs = abs(vstride);
+
+    if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_BGR ||
+        av_self->format == TOXAV_VIDEO_FRAME_FORMAT_RGB) {
+
+        size_t size = width * height * 3;
+        if (av_self->rgb_size != size || av_self->rgb == NULL) {
+            uint8_t* rgb = realloc(av_self->rgb, size);
+            if (rgb != NULL) {
+                av_self->rgb      = rgb;
+                av_self->rgb_size = size;
+            } else
+                return;
+        }
+
+        if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_BGR)
+            yuv420_to_bgr(width, height, y, u, v, ystride_abs, ustride_abs, vstride_abs, av_self->rgb);
+        else if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_RGB)
+            yuv420_to_rgb(width, height, y, u, v, ystride_abs, ustride_abs, vstride_abs, av_self->rgb);
+
+        PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TCS, friend_number, width, height, av_self->rgb);
+    } else if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_YUV420) {
+        uint32_t width_half  = width / 2;
+        uint32_t height_half = height / 2;
+
+        uint32_t y_len = MAX(width,      ystride_abs) * height;
+        uint32_t u_len = MAX(width_half, ustride_abs) * height_half;
+        uint32_t v_len = MAX(width_half, vstride_abs) * height_half;
+
+        PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TCS BUF_TCS BUF_TCS "III", friend_number, width, height, y, y_len, u, u_len, v, v_len, ystride, ustride, vstride);
     }
-
-    PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TCS, friend_number, width, height, data);
-
-    free(data);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -317,6 +330,12 @@ static PyObject* ToxAV_toxav_kill(ToxCoreAV* self, PyObject* args)
     if (self->frame != NULL) {
         vpx_img_free(self->frame);
         self->frame = NULL;
+    }
+
+    if (self->rgb != NULL) {
+        free(self->rgb);
+        self->rgb      = NULL;
+        self->rgb_size = 0;
     }
 
     Py_RETURN_NONE;
@@ -535,6 +554,8 @@ static PyObject* ToxAV_toxav_video_frame_format_set(ToxCoreAV* self, PyObject* a
         self->format = TOXAV_VIDEO_FRAME_FORMAT_BGR;
     else if (format == TOXAV_VIDEO_FRAME_FORMAT_RGB)
         self->format = TOXAV_VIDEO_FRAME_FORMAT_RGB;
+    else if (format == TOXAV_VIDEO_FRAME_FORMAT_YUV420)
+        self->format = TOXAV_VIDEO_FRAME_FORMAT_YUV420;
     else {
         PyErr_SetString(ToxAVException, "Unknown video frame format.");
         return NULL;
@@ -976,10 +997,12 @@ static PyObject* ToxAV_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
 {
     ToxCoreAV* self = (ToxCoreAV*)type->tp_alloc(type, 0);
 
-    self->av     = NULL;
-    self->core   = NULL;
-    self->frame  = NULL;
-    self->format = TOXAV_VIDEO_FRAME_FORMAT_BGR;
+    self->av       = NULL;
+    self->core     = NULL;
+    self->frame    = NULL;
+    self->format   = TOXAV_VIDEO_FRAME_FORMAT_BGR;
+    self->rgb      = NULL;
+    self->rgb_size = 0;
 
     if (init_helper(self, NULL) == -1)
         return NULL;
@@ -1087,6 +1110,7 @@ void ToxAV_install_dict(void)
     // enum TOXAV_VIDEO_FRAME_FORMAT
     SET(TOXAV_VIDEO_FRAME_FORMAT_BGR);
     SET(TOXAV_VIDEO_FRAME_FORMAT_RGB);
+    SET(TOXAV_VIDEO_FRAME_FORMAT_YUV420);
 
 #undef SET
 

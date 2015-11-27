@@ -24,7 +24,8 @@
 //----------------------------------------------------------------------------------------------
 typedef enum {
     TOXAV_VIDEO_FRAME_FORMAT_BGR,
-    TOXAV_VIDEO_FRAME_FORMAT_RGB
+    TOXAV_VIDEO_FRAME_FORMAT_RGB,
+    TOXAV_VIDEO_FRAME_FORMAT_YUV420
 } TOXAV_VIDEO_FRAME_FORMAT;
 //----------------------------------------------------------------------------------------------
 typedef struct {
@@ -33,6 +34,8 @@ typedef struct {
     ToxCore*                 core;
     vpx_image_t*             frame;
     TOXAV_VIDEO_FRAME_FORMAT format;
+    uint8_t*                 rgb;
+    size_t                   rgb_size;
 } ToxCoreAV;
 //----------------------------------------------------------------------------------------------
 extern PyTypeObject ToxAVType;
