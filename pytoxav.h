@@ -22,11 +22,17 @@
 //----------------------------------------------------------------------------------------------
 #include "pytoxcore.h"
 //----------------------------------------------------------------------------------------------
+typedef enum {
+    TOXAV_VIDEO_FRAME_FORMAT_BGR,
+    TOXAV_VIDEO_FRAME_FORMAT_RGB
+} TOXAV_VIDEO_FRAME_FORMAT;
+//----------------------------------------------------------------------------------------------
 typedef struct {
     PyObject_HEAD
-    ToxAV*       av;
-    ToxCore*     core;
-    vpx_image_t* frame;
+    ToxAV*                   av;
+    ToxCore*                 core;
+    vpx_image_t*             frame;
+    TOXAV_VIDEO_FRAME_FORMAT format;
 } ToxCoreAV;
 //----------------------------------------------------------------------------------------------
 extern PyTypeObject ToxAVType;
