@@ -813,8 +813,10 @@ PyMethodDef ToxAV_methods[] = {
     },
     {
         "toxav_video_receive_frame_cb", (PyCFunction)ToxAV_callback_stub, METH_VARARGS,
-        "toxav_video_receive_frame_cb(friend_number, width, height, data)\n"
-        "This event is triggered when a video data received."
+        "toxav_video_receive_frame_cb(friend_number, width, height, rgb)\n"
+        "toxav_video_receive_frame_cb(friend_number, width, height, y, u, v, ystride, ustride, vstride)\n"
+        "This event is triggered when a video data received. "
+        "First for RGB/BGR video frame format, second for YUV420"
     },
 
     //
@@ -945,14 +947,14 @@ static int init_helper(ToxCoreAV* self, PyObject* args)
     ToxAV_toxav_kill(self, NULL);
 
     PyObject* pycore = NULL;
-    if (PyArg_ParseTuple(args, "O", &pycore) == false) {
-        PyErr_SetString(ToxAVException, "You must supply a ToxCore as param.");
+    if (args == NULL || PyArg_ParseTuple(args, "O", &pycore) == false) {
+        PyErr_SetString(ToxAVException, "You must supply a ToxCore as constructor argument.");
         return -1;
     }
 
     ToxCore* core = (ToxCore*)pycore;
     if (PyObject_TypeCheck(core, &ToxCoreType) == false) {
-        PyErr_SetString(ToxAVException, "Param must be a ToxCore instance.");
+        PyErr_SetString(ToxAVException, "Constructor argument must be a ToxCore instance.");
         return -1;
     }
 
@@ -1004,7 +1006,7 @@ static PyObject* ToxAV_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
     self->rgb      = NULL;
     self->rgb_size = 0;
 
-    if (init_helper(self, NULL) == -1)
+    if (init_helper(self, args) == -1)
         return NULL;
 
     return (PyObject*)self;
