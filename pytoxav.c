@@ -315,6 +315,12 @@ static PyObject* ToxAV_toxav_kill(ToxCoreAV* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxAV_toxav_get_tox(ToxCoreAV* self, PyObject* args)
+{
+    return (PyObject*)self->core;
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxAV_toxav_iteration_interval(ToxCoreAV* self, PyObject* args)
 {
     CHECK_TOXAV(self);
@@ -796,7 +802,11 @@ PyMethodDef ToxAV_methods[] = {
         "notifying peers. After calling this function, no other functions may be "
         "called and the av pointer becomes invalid."
     },
-    // TODO: toxav_get_tox
+    {
+        "toxav_get_tox", (PyCFunction)ToxAV_toxav_get_tox, METH_NOARGS,
+        "toxav_get_tox()\n"
+        "Returns the Tox instance the A/V object was created for."
+    },
     {
         "toxav_iteration_interval", (PyCFunction)ToxAV_toxav_iteration_interval, METH_NOARGS,
         "toxav_iteration_interval()\n"
@@ -881,12 +891,15 @@ static int init_helper(ToxCoreAV* self, PyObject* args)
 
     PyObject* pycore = NULL;
     if (PyArg_ParseTuple(args, "O", &pycore) == false) {
-        PyErr_SetString(ToxAVException, "You must supply a ToxCore param");
+        PyErr_SetString(ToxAVException, "You must supply a ToxCore as param.");
         return -1;
     }
 
-    // TODO: Check arg class name - must be instance of ToxCore
     ToxCore* core = (ToxCore*)pycore;
+    if (PyObject_TypeCheck(core, &ToxCoreType) == false) {
+        PyErr_SetString(ToxAVException, "Param must be a ToxCore instance.");
+        return -1;
+    }
 
     TOXAV_ERR_NEW error;
     ToxAV* av = toxav_new(core->tox, &error);
