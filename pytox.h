@@ -32,7 +32,7 @@
 #include <vpx/vpx_image.h>
 //----------------------------------------------------------------------------------------------
 #if PY_MAJOR_VERSION < 3
-    #define BUF_TCS "t#"
+    #define BUF_TCS "s#"
 #else
     #define BUF_TCS "y#"
 #endif

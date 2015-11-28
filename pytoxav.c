@@ -256,7 +256,7 @@ static void callback_video_receive_frame(ToxAV* av, uint32_t friend_number, uint
         else if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_RGB)
             yuv420_to_rgb(width, height, y, u, v, ystride_abs, ustride_abs, vstride_abs, av_self->rgb);
 
-        PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TCS, friend_number, width, height, av_self->rgb);
+        PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TCS, friend_number, width, height, av_self->rgb, av_self->rgb_size);
     } else if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_YUV420) {
         uint32_t width_half  = width / 2;
         uint32_t height_half = height / 2;
