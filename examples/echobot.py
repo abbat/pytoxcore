@@ -302,7 +302,7 @@ class EchoBot(ToxCore):
 
             interval = self.tox_iteration_interval()
 
-            time.sleep(interval / 1000.0)
+            time.sleep(float(interval) / 1000.0)
 
             savetime += interval
             if savetime > save_interval:
