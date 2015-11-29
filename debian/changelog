@@ -2,7 +2,7 @@ python-toxcore (0.0.13) unstable; urgency=low
 
   * Add ToxAV.
 
- -- Anton Batenev <abbat@rene.tower>  Sun, 29 Nov 2015 04:11:02 +0300
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sun, 29 Nov 2015 04:11:02 +0300
 
 python-toxcore (0.0.12) unstable; urgency=low
 
