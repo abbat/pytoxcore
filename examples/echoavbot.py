@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__title__    = "avbot"
-__version__  = "0.0.12"
+__title__    = "echoavbot"
+__version__  = "0.0.13"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
