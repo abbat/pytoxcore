@@ -24,13 +24,15 @@
 //----------------------------------------------------------------------------------------------
 #include <Python.h>
 #include <stdio.h>
-#include <arpa/inet.h>
+#include <stdlib.h>
 #include <tox/tox.h>
 #include <tox/toxav.h>
+#include <sys/param.h>
+#include <arpa/inet.h>
 #include <vpx/vpx_image.h>
 //----------------------------------------------------------------------------------------------
 #if PY_MAJOR_VERSION < 3
-    #define BUF_TCS "t#"
+    #define BUF_TCS "s#"
 #else
     #define BUF_TCS "y#"
 #endif

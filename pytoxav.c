@@ -232,20 +232,41 @@ static void callback_audio_receive_frame(ToxAV* av, uint32_t friend_number, cons
 
 static void callback_video_receive_frame(ToxAV* av, uint32_t friend_number, uint16_t width, uint16_t height, const uint8_t* y, const uint8_t* u, const uint8_t* v, int32_t ystride, int32_t ustride, int32_t vstride, void* self)
 {
-    uint8_t* rgb = malloc(width * height * 3);
-    if (rgb == NULL)
-        return;
+    ToxCoreAV* av_self = (ToxCoreAV*)self;
 
-    // TODO: Choose bgr / rbg
-    ystride = abs(ystride);
-    ustride = abs(ustride);
-    vstride = abs(vstride);
+    uint32_t ystride_abs = abs(ystride);
+    uint32_t ustride_abs = abs(ustride);
+    uint32_t vstride_abs = abs(vstride);
 
-    yuv420_to_bgr(width, height, y, u, v, ystride, ustride, vstride, rgb);
+    if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_BGR ||
+        av_self->format == TOXAV_VIDEO_FRAME_FORMAT_RGB) {
 
-    PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TCS, friend_number, width, height, rgb);
+        size_t size = width * height * 3;
+        if (av_self->rgb_size != size || av_self->rgb == NULL) {
+            uint8_t* rgb = realloc(av_self->rgb, size);
+            if (rgb != NULL) {
+                av_self->rgb      = rgb;
+                av_self->rgb_size = size;
+            } else
+                return;
+        }
 
-    free(rgb);
+        if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_BGR)
+            yuv420_to_bgr(width, height, y, u, v, ystride_abs, ustride_abs, vstride_abs, av_self->rgb);
+        else if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_RGB)
+            yuv420_to_rgb(width, height, y, u, v, ystride_abs, ustride_abs, vstride_abs, av_self->rgb);
+
+        PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TCS, friend_number, width, height, av_self->rgb, av_self->rgb_size);
+    } else if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_YUV420) {
+        uint32_t width_half  = width / 2;
+        uint32_t height_half = height / 2;
+
+        uint32_t y_len = MAX(width,      ystride_abs) * height;
+        uint32_t u_len = MAX(width_half, ustride_abs) * height_half;
+        uint32_t v_len = MAX(width_half, vstride_abs) * height_half;
+
+        PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TCS BUF_TCS BUF_TCS "III", friend_number, width, height, y, y_len, u, u_len, v, v_len, ystride, ustride, vstride);
+    }
 }
 //----------------------------------------------------------------------------------------------
 
@@ -311,7 +332,19 @@ static PyObject* ToxAV_toxav_kill(ToxCoreAV* self, PyObject* args)
         self->frame = NULL;
     }
 
+    if (self->rgb != NULL) {
+        free(self->rgb);
+        self->rgb      = NULL;
+        self->rgb_size = 0;
+    }
+
     Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxAV_toxav_get_tox(ToxCoreAV* self, PyObject* args)
+{
+    return (PyObject*)self->core;
 }
 //----------------------------------------------------------------------------------------------
 
@@ -504,6 +537,29 @@ static PyObject* ToxAV_toxav_bit_rate_set(ToxCoreAV* self, PyObject* args)
 
     if (result == false || success == false)
         return NULL;
+
+    Py_RETURN_NONE;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxAV_toxav_video_frame_format_set(ToxCoreAV* self, PyObject* args)
+{
+    CHECK_TOXAV(self);
+
+    uint32_t format;
+    if (PyArg_ParseTuple(args, "I", &format) == false)
+        return NULL;
+
+    if (format == TOXAV_VIDEO_FRAME_FORMAT_BGR)
+        self->format = TOXAV_VIDEO_FRAME_FORMAT_BGR;
+    else if (format == TOXAV_VIDEO_FRAME_FORMAT_RGB)
+        self->format = TOXAV_VIDEO_FRAME_FORMAT_RGB;
+    else if (format == TOXAV_VIDEO_FRAME_FORMAT_YUV420)
+        self->format = TOXAV_VIDEO_FRAME_FORMAT_YUV420;
+    else {
+        PyErr_SetString(ToxAVException, "Unknown video frame format.");
+        return NULL;
+    }
 
     Py_RETURN_NONE;
 }
@@ -757,8 +813,10 @@ PyMethodDef ToxAV_methods[] = {
     },
     {
         "toxav_video_receive_frame_cb", (PyCFunction)ToxAV_callback_stub, METH_VARARGS,
-        "toxav_video_receive_frame_cb(friend_number, width, height, data)\n"
-        "This event is triggered when a video data received."
+        "toxav_video_receive_frame_cb(friend_number, width, height, rgb)\n"
+        "toxav_video_receive_frame_cb(friend_number, width, height, y, u, v, ystride, ustride, vstride)\n"
+        "This event is triggered when a video data received. "
+        "First for RGB/BGR video frame format, second for YUV420"
     },
 
     //
@@ -796,7 +854,11 @@ PyMethodDef ToxAV_methods[] = {
         "notifying peers. After calling this function, no other functions may be "
         "called and the av pointer becomes invalid."
     },
-    // TODO: toxav_get_tox
+    {
+        "toxav_get_tox", (PyCFunction)ToxAV_toxav_get_tox, METH_NOARGS,
+        "toxav_get_tox()\n"
+        "Returns the Tox instance the A/V object was created for."
+    },
     {
         "toxav_iteration_interval", (PyCFunction)ToxAV_toxav_iteration_interval, METH_NOARGS,
         "toxav_iteration_interval()\n"
@@ -836,6 +898,11 @@ PyMethodDef ToxAV_methods[] = {
         "toxav_bit_rate_set", (PyCFunction)ToxAV_toxav_bit_rate_set, METH_VARARGS,
         "toxav_bit_rate_set(friend_number, audio_bit_rate, video_bit_rate)\n"
         "Set the bit rate to be used in subsequent audio/video frames."
+    },
+    {
+        "toxav_video_frame_format_set", (PyCFunction)ToxAV_toxav_video_frame_format_set, METH_VARARGS,
+        "toxav_video_frame_format_set(format)\n"
+        "Set the video frame format passed to toxav_video_receive_frame_cb."
     },
     {
         "toxav_audio_send_frame", (PyCFunction)ToxAV_toxav_audio_send_frame, METH_VARARGS,
@@ -880,13 +947,16 @@ static int init_helper(ToxCoreAV* self, PyObject* args)
     ToxAV_toxav_kill(self, NULL);
 
     PyObject* pycore = NULL;
-    if (PyArg_ParseTuple(args, "O", &pycore) == false) {
-        PyErr_SetString(ToxAVException, "You must supply a ToxCore param");
+    if (args == NULL || PyArg_ParseTuple(args, "O", &pycore) == false) {
+        PyErr_SetString(ToxAVException, "You must supply a ToxCore as constructor argument.");
         return -1;
     }
 
-    // TODO: Check arg class name - must be instance of ToxCore
     ToxCore* core = (ToxCore*)pycore;
+    if (PyObject_TypeCheck(core, &ToxCoreType) == false) {
+        PyErr_SetString(ToxAVException, "Constructor argument must be a ToxCore instance.");
+        return -1;
+    }
 
     TOXAV_ERR_NEW error;
     ToxAV* av = toxav_new(core->tox, &error);
@@ -929,11 +999,14 @@ static PyObject* ToxAV_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
 {
     ToxCoreAV* self = (ToxCoreAV*)type->tp_alloc(type, 0);
 
-    self->av    = NULL;
-    self->core  = NULL;
-    self->frame = NULL;
+    self->av       = NULL;
+    self->core     = NULL;
+    self->frame    = NULL;
+    self->format   = TOXAV_VIDEO_FRAME_FORMAT_BGR;
+    self->rgb      = NULL;
+    self->rgb_size = 0;
 
-    if (init_helper(self, NULL) == -1)
+    if (init_helper(self, args) == -1)
         return NULL;
 
     return (PyObject*)self;
@@ -1035,6 +1108,11 @@ void ToxAV_install_dict(void)
     SET(TOXAV_CALL_CONTROL_UNMUTE_AUDIO);
     SET(TOXAV_CALL_CONTROL_HIDE_VIDEO);
     SET(TOXAV_CALL_CONTROL_SHOW_VIDEO);
+
+    // enum TOXAV_VIDEO_FRAME_FORMAT
+    SET(TOXAV_VIDEO_FRAME_FORMAT_BGR);
+    SET(TOXAV_VIDEO_FRAME_FORMAT_RGB);
+    SET(TOXAV_VIDEO_FRAME_FORMAT_YUV420);
 
 #undef SET
 

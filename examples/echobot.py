@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "echobot"
-__version__  = "0.0.12"
+__version__  = "0.0.13"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -302,7 +302,7 @@ class EchoBot(ToxCore):
 
             interval = self.tox_iteration_interval()
 
-            time.sleep(interval / 1000.0)
+            time.sleep(float(interval) / 1000.0)
 
             savetime += interval
             if savetime > save_interval:

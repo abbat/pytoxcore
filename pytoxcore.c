@@ -1392,7 +1392,7 @@ static PyObject* ToxCore_tox_file_seek(ToxCore* self, PyObject* args)
             PyErr_SetString(ToxCoreException, "File was not in a state where it could be seeked.");
             break;
         case TOX_ERR_FILE_SEEK_INVALID_POSITION:
-            PyErr_SetString(ToxCoreException, "Seek position was invalid");
+            PyErr_SetString(ToxCoreException, "Seek position was invalid.");
             break;
         case TOX_ERR_FILE_SEEK_SENDQ:
             PyErr_SetString(ToxCoreException, "Packet queue is full.");
@@ -3889,7 +3889,7 @@ static int init_helper(ToxCore* self, PyObject* args)
         if (PyDict_Check(pyopts) == true)
             init_options(pyopts, &options);
         else if (pyopts != Py_None) {
-            PyErr_SetString(ToxCoreException, "You must supply a Tox_Options param as a dict");
+            PyErr_SetString(ToxCoreException, "You must supply a Tox_Options param as a dict.");
             return -1;
         }
     }
