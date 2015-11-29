@@ -4,8 +4,10 @@ compiler:
   - gcc
 
 install:
-  - curl -L http://download.opensuse.org/repositories/home:antonbatenev:tox/xUbuntu_14.04/Release.key | sudo apt-key add -
-  - echo 'deb http://download.opensuse.org/repositories/home:/antonbatenev:/tox/xUbuntu_14.04/ /' | sudo tee -a /etc/apt/sources.list
+  - curl -L http://download.opensuse.org/repositories/home:antonbatenev:tox/xUbuntu_12.04/Release.key | sudo apt-key add -
+  - curl -L http://download.opensuse.org/repositories/home:antonbatenev:tox:precise/xUbuntu_12.04/Release.key | sudo apt-key add -
+  - echo 'deb http://download.opensuse.org/repositories/home:/antonbatenev:/tox/xUbuntu_12.04/ /' | sudo tee -a /etc/apt/sources.list
+  - echo 'deb http://download.opensuse.org/repositories/home:/antonbatenev:/tox:/precise/xUbuntu_12.04/ /' | sudo tee -a /etc/apt/sources.list
   - sudo apt-get update -qq
   - sudo apt-get install python-dev tox-libsodium-dev tox-libtoxcore-dev libvpx-dev libopus-dev
 
