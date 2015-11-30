@@ -1,3 +1,11 @@
+python-toxcore (0.0.14) unstable; urgency=low
+
+  * Switch to static tox-libvpx from tox.pkg project
+    (https://github.com/abbat/tox.pkg);
+  * Fix homepage in debian/control.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Mon, 30 Nov 2015 12:59:39 +0300
+
 python-toxcore (0.0.13) unstable; urgency=low
 
   * Add ToxAV.
