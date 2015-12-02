@@ -1,8 +1,8 @@
 Source: python-toxcore
 Section: python
 Priority: optional
-Build-Depends: debhelper (>= 8.0.0), dpkg-dev (>= 1.16.1), python-dev, python-setuptools, libopus-dev,
- tox-libvpx-dev, tox-libsodium-dev, tox-libtoxcore-dev
+Build-Depends: debhelper (>= 8.0.0), dpkg-dev (>= 1.16.1), python-dev, python-setuptools,
+ tox-libvpx-dev, tox-libopus-dev, tox-libsodium-dev, tox-libtoxcore-dev
 Maintainer: Anton Batenev <antonbatenev@yandex.ru>
 Standards-Version: 3.9.4
 Homepage: https://github.com/abbat/pytoxcore

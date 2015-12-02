@@ -1,3 +1,10 @@
+python-toxcore (0.0.15) unstable; urgency=low
+
+  * Switch to static tox-libopus from tox.pkg project
+    (https://github.com/abbat/tox.pkg);
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Wed, 02 Dec 2015 19:03:35 +0300
+
 python-toxcore (0.0.14) unstable; urgency=low
 
   * Switch to static tox-libvpx from tox.pkg project

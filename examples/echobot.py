@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "echobot"
-__version__  = "0.0.14"
+__version__  = "0.0.15"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
