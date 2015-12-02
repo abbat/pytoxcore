@@ -6,7 +6,7 @@ License:        GPL-3
 Group:          Applications/Internet
 URL:            https://github.com/abbat/pytoxcore
 BuildRequires:  python-devel
-BuildRequires:  tox-libvpx-devel, tox-libopus-dev, tox-libsodium-devel, tox-libtoxcore-devel
+BuildRequires:  tox-libvpx-devel, tox-libopus-devel, tox-libsodium-devel, tox-libtoxcore-devel
 Source0:        https://build.opensuse.org/source/home:antonbatenev:tox/%{name}/%{name}_%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
