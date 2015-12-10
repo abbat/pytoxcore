@@ -25,6 +25,14 @@
         return NULL;                                             \
     }
 //----------------------------------------------------------------------------------------------
+#define TOXAV_LOCK(self)                         \
+    pthread_mutex_lock((self)->mutex);           \
+    PyThreadState* _save_ = PyEval_SaveThread();
+//----------------------------------------------------------------------------------------------
+#define TOXAV_UNLOCK(self)               \
+    PyEval_RestoreThread(_save_);        \
+    pthread_mutex_unlock((self)->mutex);
+//----------------------------------------------------------------------------------------------
 PyObject* ToxAVException;
 //----------------------------------------------------------------------------------------------
 
@@ -210,18 +218,10 @@ static pthread_mutex_t* mutex_alloc(void)
 }
 //----------------------------------------------------------------------------------------------
 
-static void mutex_free(pthread_mutex_t** mutex)
+static void mutex_free(pthread_mutex_t* mutex)
 {
-    pthread_mutex_t* m = *mutex;
-
-    if (m == NULL)
-        return;
-
-    pthread_mutex_destroy(m);
-
-    free(m);
-
-    *mutex = NULL;
+    pthread_mutex_destroy(mutex);
+    free(mutex);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -273,9 +273,7 @@ static void callback_video_receive_frame(ToxAV* av, uint32_t friend_number, uint
     if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_BGR ||
         av_self->format == TOXAV_VIDEO_FRAME_FORMAT_RGB) {
 
-        pthread_mutex_lock(av_self->rgb_mutex);
-
-        PyThreadState* _save = PyEval_SaveThread();
+        TOXAV_LOCK(av_self);
 
         size_t size = width * height * 3;
         if (av_self->rgb_size != size || av_self->rgb == NULL) {
@@ -284,8 +282,7 @@ static void callback_video_receive_frame(ToxAV* av, uint32_t friend_number, uint
                 av_self->rgb      = rgb;
                 av_self->rgb_size = size;
             } else {
-                PyEval_RestoreThread(_save);
-                pthread_mutex_unlock(av_self->rgb_mutex);
+                TOXAV_UNLOCK(av_self);
                 return;
             }
         }
@@ -295,11 +292,9 @@ static void callback_video_receive_frame(ToxAV* av, uint32_t friend_number, uint
         else if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_RGB)
             yuv420_to_rgb(width, height, y, u, v, ystride_abs, ustride_abs, vstride_abs, av_self->rgb);
 
-        PyEval_RestoreThread(_save);
+        TOXAV_UNLOCK(av_self);
 
         PyObject_CallMethod((PyObject*)self, "toxav_video_receive_frame_cb", "III" BUF_TCS, friend_number, width, height, av_self->rgb, av_self->rgb_size);
-
-        pthread_mutex_unlock(av_self->rgb_mutex);
     } else if (av_self->format == TOXAV_VIDEO_FRAME_FORMAT_YUV420) {
         uint32_t width_half  = width / 2;
         uint32_t height_half = height / 2;
@@ -381,8 +376,10 @@ static PyObject* ToxAV_toxav_kill(ToxCoreAV* self, PyObject* args)
         self->rgb_size = 0;
     }
 
-    mutex_free(&self->frame_mutex);
-    mutex_free(&self->rgb_mutex);
+    if (self->mutex != NULL) {
+        mutex_free(self->mutex);
+        self->mutex = NULL;
+    }
 
     Py_RETURN_NONE;
 }
@@ -687,8 +684,12 @@ static PyObject* ToxAV_toxav_audio_send_frame(ToxCoreAV* self, PyObject* args)
         return NULL;
     }
 
+    TOXAV_LOCK(self);
+
     TOXAV_ERR_SEND_FRAME error;
     bool result = toxav_audio_send_frame(self->av, friend_number, (int16_t*)pcm, sample_count, channels, sampling_rate, &error);
+
+    TOXAV_UNLOCK(self);
 
     return parse_TOXAV_ERR_SEND_FRAME(result, error);
 }
@@ -736,8 +737,12 @@ static PyObject* ToxAV_toxav_video_send_yuv420_frame(ToxCoreAV* self, PyObject* 
         return NULL;
     }
 
+    TOXAV_LOCK(self);
+
     TOXAV_ERR_SEND_FRAME error;
     bool result = toxav_video_send_frame(self->av, friend_number, width, height, y, u, v, &error);
+
+    TOXAV_UNLOCK(self);
 
     return parse_TOXAV_ERR_SEND_FRAME(result, error);
 }
@@ -771,19 +776,13 @@ static PyObject* ToxAV_toxav_video_send_bgr_frame(ToxCoreAV* self, PyObject* arg
         return NULL;
     }
 
-    pthread_mutex_lock(self->frame_mutex);
-
-    PyThreadState* _save = PyEval_SaveThread();
+    TOXAV_LOCK(self);
 
     self->frame = vpx_image_realloc(self->frame, width, height);
 
     if (self->frame == NULL) {
-        PyEval_RestoreThread(_save);
-
-        pthread_mutex_unlock(self->frame_mutex);
-
+        TOXAV_UNLOCK(self);
         PyErr_SetString(ToxAVException, "A resource allocation error occurred while trying to allocate image frame.");
-
         return NULL;
     }
 
@@ -792,9 +791,7 @@ static PyObject* ToxAV_toxav_video_send_bgr_frame(ToxCoreAV* self, PyObject* arg
     TOXAV_ERR_SEND_FRAME error;
     bool result = toxav_video_send_frame(self->av, friend_number, self->frame->d_w, self->frame->d_h, self->frame->planes[0], self->frame->planes[1], self->frame->planes[2], &error);
 
-    PyEval_RestoreThread(_save);
-
-    pthread_mutex_unlock(self->frame_mutex);
+    TOXAV_UNLOCK(self);
 
     return parse_TOXAV_ERR_SEND_FRAME(result, error);
 }
@@ -828,19 +825,13 @@ static PyObject* ToxAV_toxav_video_send_rgb_frame(ToxCoreAV* self, PyObject* arg
         return NULL;
     }
 
-    pthread_mutex_lock(self->frame_mutex);
-
-    PyThreadState* _save = PyEval_SaveThread();
+    TOXAV_LOCK(self);
 
     self->frame = vpx_image_realloc(self->frame, width, height);
 
     if (self->frame == NULL) {
-        PyEval_RestoreThread(_save);
-
-        pthread_mutex_unlock(self->frame_mutex);
-
+        TOXAV_UNLOCK(self);
         PyErr_SetString(ToxAVException, "A resource allocation error occurred while trying to allocate image frame.");
-
         return NULL;
     }
 
@@ -849,9 +840,7 @@ static PyObject* ToxAV_toxav_video_send_rgb_frame(ToxCoreAV* self, PyObject* arg
     TOXAV_ERR_SEND_FRAME error;
     bool result = toxav_video_send_frame(self->av, friend_number, self->frame->d_w, self->frame->d_h, self->frame->planes[0], self->frame->planes[1], self->frame->planes[2], &error);
 
-    PyEval_RestoreThread(_save);
-
-    pthread_mutex_unlock(self->frame_mutex);
+    TOXAV_UNLOCK(self);
 
     return parse_TOXAV_ERR_SEND_FRAME(result, error);
 }
@@ -1057,6 +1046,10 @@ static int init_helper(ToxCoreAV* self, PyObject* args)
 
     Py_INCREF(self->core);
 
+    self->mutex = mutex_alloc();
+    if (self->mutex == NULL)
+        return -1;
+
     toxav_callback_call(av, callback_call, self);
     toxav_callback_call_state(av, callback_call_state, self);
     toxav_callback_bit_rate_status(av, callback_bit_rate_status, self);
@@ -1071,22 +1064,13 @@ static PyObject* ToxAV_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
 {
     ToxCoreAV* self = (ToxCoreAV*)type->tp_alloc(type, 0);
 
-    self->av          = NULL;
-    self->core        = NULL;
-    self->frame       = NULL;
-    self->frame_mutex = NULL;
-    self->format      = TOXAV_VIDEO_FRAME_FORMAT_BGR;
-    self->rgb         = NULL;
-    self->rgb_mutex   = NULL;
-    self->rgb_size    = 0;
-
-    self->frame_mutex = mutex_alloc();
-    if (self->frame_mutex == NULL)
-        return NULL;
-
-    self->rgb_mutex = mutex_alloc();
-    if (self->rgb_mutex == NULL)
-        return NULL;
+    self->av       = NULL;
+    self->core     = NULL;
+    self->frame    = NULL;
+    self->format   = TOXAV_VIDEO_FRAME_FORMAT_BGR;
+    self->rgb      = NULL;
+    self->rgb_size = 0;
+    self->mutex    = NULL;
 
     if (init_helper(self, args) == -1)
         return NULL;

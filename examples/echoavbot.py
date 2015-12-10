@@ -39,6 +39,7 @@ class EchoAVBot(ToxAV):
         self.core.verbose("stopping...")
         self.running = False
         self.iterate_thread.join()
+        self.toxav_kill();
         self.core.verbose("stopped")
 
 
@@ -147,5 +148,3 @@ if __name__ == "__main__":
         bot.run()
     except KeyboardInterrupt:
         bot.save_file()
-
-    botav.stop()
