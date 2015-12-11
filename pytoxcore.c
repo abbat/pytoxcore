@@ -155,91 +155,121 @@ static void callback_friend_lossless_packet(Tox* tox, uint32_t friend_number, co
 
 static void callback_group_peer_name(Tox* tox, uint32_t groupnumber, uint32_t peer_id, const uint8_t* name, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_peer_name_cb", "IIs#", groupnumber, peer_id, name, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_peer_status(Tox* tox, uint32_t groupnumber, uint32_t peer_id, TOX_USER_STATUS status, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_peer_status_cb", "III", groupnumber, peer_id, status);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_topic(Tox* tox, uint32_t groupnumber, uint32_t peer_id, const uint8_t* topic, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_topic_cb", "IIs#", groupnumber, peer_id, topic, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_privacy_state(Tox* tox, uint32_t groupnumber, TOX_GROUP_PRIVACY_STATE privacy_state, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_privacy_state_cb", "II", groupnumber, privacy_state);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_peer_limit(Tox* tox, uint32_t groupnumber, uint32_t peer_limit, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_peer_limit_cb", "II", groupnumber, peer_limit);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_password(Tox* tox, uint32_t groupnumber, const uint8_t* password, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_password_cb", "Is#", groupnumber, password, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_message(Tox* tox, uint32_t groupnumber, uint32_t peer_id, TOX_MESSAGE_TYPE type, const uint8_t* message, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_message_cb", "IIIs#", groupnumber, peer_id, type, message, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_private_message(Tox* tox, uint32_t groupnumber, uint32_t peer_id, const uint8_t* message, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_private_message_cb", "IIs#", groupnumber, peer_id, message, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_invite(Tox* tox, uint32_t friend_number, const uint8_t* invite_data, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_invite_cb", "I" BUF_TCS, friend_number, invite_data, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_peer_join(Tox* tox, uint32_t groupnumber, uint32_t peer_id, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_peer_join_cb", "II", groupnumber, peer_id);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_peer_exit(Tox* tox, uint32_t groupnumber, uint32_t peer_id, const uint8_t* part_message, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_peer_exit_cb", "IIs#", groupnumber, peer_id, part_message, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_self_join(Tox* tox, uint32_t groupnumber, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_self_join_cb", "I", groupnumber);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_join_fail(Tox* tox, uint32_t groupnumber, TOX_GROUP_JOIN_FAIL fail_type, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_join_fail_cb", "II", groupnumber, fail_type);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_moderation(Tox* tox, uint32_t groupnumber, uint32_t source_peer_number, uint32_t target_peer_number, TOX_GROUP_MOD_EVENT mod_type, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_moderation_cb", "IIII", groupnumber, source_peer_number, target_peer_number, mod_type);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_group_custom_packet(Tox* tox, uint32_t groupnumber, uint32_t peer_id, const uint8_t* data, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_group_custom_packet_cb", "II" BUF_TCS, groupnumber, peer_id, data, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
