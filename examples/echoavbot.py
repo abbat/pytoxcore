@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "echoavbot"
-__version__  = "0.0.15"
+__version__  = "0.0.16"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
 import threading
 
 from echobot import *
-from pytoxcore import ToxAV
+from pytoxcore import ToxAV, ToxAVException
 
 
 class EchoAVBot(ToxAV):

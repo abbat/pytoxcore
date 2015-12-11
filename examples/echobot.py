@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "echobot"
-__version__  = "0.0.15"
+__version__  = "0.0.16"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -11,7 +11,7 @@ import os
 import time
 import re
 
-from pytoxcore import ToxCore
+from pytoxcore import ToxCore, ToxCoreException
 
 
 # PEP-8
