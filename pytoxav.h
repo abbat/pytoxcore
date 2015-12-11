@@ -33,10 +33,11 @@ typedef struct {
     ToxAV*                   av;
     ToxCore*                 core;
     vpx_image_t*             frame;
+    pthread_mutex_t*         frame_mutex;
     TOXAV_VIDEO_FRAME_FORMAT format;
     uint8_t*                 rgb;
+    pthread_mutex_t*         rgb_mutex;
     size_t                   rgb_size;
-    pthread_mutex_t*         mutex;
 } ToxCoreAV;
 //----------------------------------------------------------------------------------------------
 extern PyTypeObject ToxAVType;
