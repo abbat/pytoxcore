@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "echoavbot"
-__version__  = "0.0.13"
+__version__  = "0.0.16"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
 import threading
 
 from echobot import *
-from pytoxcore import ToxAV
+from pytoxcore import ToxAV, ToxAVException
 
 
 class EchoAVBot(ToxAV):
@@ -39,6 +39,7 @@ class EchoAVBot(ToxAV):
         self.core.verbose("stopping...")
         self.running = False
         self.iterate_thread.join()
+        self.toxav_kill();
         self.core.verbose("stopped")
 
 
@@ -111,7 +112,10 @@ class EchoAVBot(ToxAV):
             sampling_rate (int) -- Частота дискретизации
         """
         if self.running:
-            self.toxav_audio_send_frame(friend_number, pcm, sample_count, channels, sampling_rate)
+            try:
+                self.toxav_audio_send_frame(friend_number, pcm, sample_count, channels, sampling_rate)
+            except ToxAVException as e:
+                 self.core.verbose("ToxAVException: {0}".format(e))
 
 
     def toxav_video_receive_frame_cb(self, friend_number, width, height, bgr):
@@ -126,7 +130,10 @@ class EchoAVBot(ToxAV):
             bgr           (str) -- Данные в формате BGR (см. toxav_video_frame_format_set)
         """
         if self.running:
-            self.toxav_video_send_bgr_frame(friend_number, width, height, bgr)
+            try:
+                self.toxav_video_send_bgr_frame(friend_number, width, height, bgr)
+            except ToxAVException as e:
+                 self.core.verbose("ToxAVException: {0}".format(e))
 
 
 if __name__ == "__main__":
@@ -146,6 +153,7 @@ if __name__ == "__main__":
     try:
         bot.run()
     except KeyboardInterrupt:
-        bot.save_file()
+        pass
 
     botav.stop()
+    bot.save_file()

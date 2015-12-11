@@ -1,3 +1,26 @@
+python-toxcore (0.0.16) unstable; urgency=low
+
+  * Fix ToxAV GIL deadlock;
+  * GIL release/lock to improve multithread speed;
+  * Fix examples.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Fri, 11 Dec 2015 22:48:20 +0300
+
+python-toxcore (0.0.15) unstable; urgency=low
+
+  * Switch to static tox-libopus from tox.pkg project
+    (https://github.com/abbat/tox.pkg);
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Wed, 02 Dec 2015 19:03:35 +0300
+
+python-toxcore (0.0.14) unstable; urgency=low
+
+  * Switch to static tox-libvpx from tox.pkg project
+    (https://github.com/abbat/tox.pkg);
+  * Fix homepage in debian/control.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Mon, 30 Nov 2015 12:59:39 +0300
+
 python-toxcore (0.0.13) unstable; urgency=low
 
   * Add ToxAV.

@@ -30,7 +30,9 @@ PyObject* ToxCoreException;
 
 static void callback_self_connection_status(Tox* tox, TOX_CONNECTION connection_status, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_self_connection_status_cb", "I", connection_status);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -41,85 +43,113 @@ static void callback_friend_request(Tox* tox, const uint8_t* public_key, const u
 
     bytes_to_hex_string(public_key, TOX_PUBLIC_KEY_SIZE, buf);
 
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_friend_request_cb", "ss#", buf, message, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_message(Tox* tox, uint32_t friend_number, TOX_MESSAGE_TYPE type, const uint8_t* message, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_friend_message_cb", "Is#", friend_number, message, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_name(Tox* tox, uint32_t friend_number, const uint8_t* name, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_friend_name_cb", "Is#", friend_number, name, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_status_message(Tox* tox, uint32_t friend_number, const uint8_t* message, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_friend_status_message_cb", "Is#", friend_number, message, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_status(Tox* tox, uint32_t friend_number, TOX_USER_STATUS status, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_friend_status_cb", "II", friend_number, status);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_read_receipt(Tox* tox, uint32_t friend_number, uint32_t message_id, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_friend_read_receipt_cb", "II", friend_number, message_id);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_connection_status(Tox* tox, uint32_t friend_number, TOX_CONNECTION connection_status, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_friend_connection_status_cb", "II", friend_number, connection_status);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_typing(Tox* tox, uint32_t friend_number, bool is_typing, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_friend_typing_cb", "II", friend_number, is_typing);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_file_chunk_request(Tox* tox, uint32_t friend_number, uint32_t file_number, uint64_t position, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_file_chunk_request_cb", "IIKK", friend_number, file_number, position, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_file_recv(Tox* tox, uint32_t friend_number, uint32_t file_number, uint32_t kind, uint64_t file_size, const uint8_t* filename, size_t filename_length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_file_recv_cb", "IIIKs#", friend_number, file_number, kind, file_size, filename, filename_length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_file_recv_control(Tox* tox, uint32_t friend_number, uint32_t file_number, TOX_FILE_CONTROL control, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_file_recv_control_cb", "III", friend_number, file_number, control);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_file_recv_chunk(Tox* tox, uint32_t friend_number, uint32_t file_number, uint64_t position, const uint8_t* data, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_file_recv_chunk_cb", "IIK" BUF_TCS, friend_number, file_number, position, data, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_lossy_packet(Tox* tox, uint32_t friend_number, const uint8_t* data, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_friend_lossy_packet_cb", "I" BUF_TCS, friend_number, data, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
 static void callback_friend_lossless_packet(Tox* tox, uint32_t friend_number, const uint8_t* data, size_t length, void* self)
 {
+    PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_friend_lossless_packet_cb", "I" BUF_TCS, friend_number, data, length);
+    PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -397,11 +427,10 @@ static PyObject* ToxCore_tox_self_get_secret_key(ToxCore* self, PyObject* args)
 
 static PyObject* ToxCore_tox_kill(ToxCore* self, PyObject* args)
 {
-    CHECK_TOX(self);
-
-    tox_kill(self->tox);
-
-    self->tox = NULL;
+    if (self->tox != NULL) {
+        tox_kill(self->tox);
+        self->tox = NULL;
+    }
 
     Py_RETURN_NONE;
 }
@@ -486,8 +515,12 @@ static PyObject* ToxCore_tox_bootstrap(ToxCore* self, PyObject* args)
 
     hex_string_to_bytes(public_key_hex, TOX_PUBLIC_KEY_SIZE, public_key);
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_BOOTSTRAP error;
     bool result = tox_bootstrap(self->tox, address, port, public_key, &error);
+
+    PyEval_RestoreThread(gil);
 
     return parse_TOX_ERR_BOOTSTRAP(result, error);
 }
@@ -515,8 +548,12 @@ static PyObject* ToxCore_tox_add_tcp_relay(ToxCore* self, PyObject* args)
 
     hex_string_to_bytes(public_key_hex, TOX_PUBLIC_KEY_SIZE, public_key);
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_BOOTSTRAP error;
     bool result = tox_add_tcp_relay(self->tox, address, port, public_key, &error);
+
+    PyEval_RestoreThread(gil);
 
     return parse_TOX_ERR_BOOTSTRAP(result, error);
 }
@@ -593,8 +630,12 @@ static PyObject* ToxCore_tox_friend_add(ToxCore* self, PyObject* args)
 
     hex_string_to_bytes(address_hex, TOX_ADDRESS_SIZE, address);
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_FRIEND_ADD error;
     uint32_t friend_number = tox_friend_add(self->tox, address, message, message_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     return parse_TOX_ERR_FRIEND_ADD(friend_number, error);
 }
@@ -619,8 +660,12 @@ static PyObject* ToxCore_tox_friend_add_norequest(ToxCore* self, PyObject* args)
 
     hex_string_to_bytes(public_key_hex, TOX_PUBLIC_KEY_SIZE, public_key);
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_FRIEND_ADD error;
     uint32_t friend_number = tox_friend_add_norequest(self->tox, public_key, &error);
+
+    PyEval_RestoreThread(gil);
 
     return parse_TOX_ERR_FRIEND_ADD(friend_number, error);
 }
@@ -635,8 +680,12 @@ static PyObject* ToxCore_tox_friend_delete(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "I", &friend_number) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_FRIEND_DELETE error;
     bool result = tox_friend_delete(self->tox, friend_number, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -762,8 +811,12 @@ static PyObject* ToxCore_tox_friend_send_message(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "Iis#", &friend_number, &type, &message, &message_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_FRIEND_SEND_MESSAGE error = 0;
     uint32_t message_id = tox_friend_send_message(self->tox, friend_number, type, message, message_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -807,8 +860,12 @@ static PyObject* ToxCore_tox_self_set_name(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "s#", &name, &name_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_SET_INFO error;
     bool result = tox_self_set_name(self->tox, name, name_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -877,8 +934,12 @@ static PyObject* ToxCore_tox_self_set_status_message(ToxCore* self, PyObject* ar
     if (PyArg_ParseTuple(args, "s#", &status_message, &status_message_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_SET_INFO error;
     bool result = tox_self_set_status_message(self->tox, status_message, status_message_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -909,7 +970,11 @@ static PyObject* ToxCore_tox_self_set_status(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "I", &status) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     tox_self_set_status(self->tox, status);
+
+    PyEval_RestoreThread(gil);
 
     Py_RETURN_NONE;
 }
@@ -1002,8 +1067,12 @@ static PyObject* ToxCore_tox_self_set_typing(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "II", &friend_number, &typing) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_SET_TYPING error;
     bool result = tox_self_set_typing(self->tox, friend_number, typing, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
 
@@ -1168,8 +1237,12 @@ static PyObject* ToxCore_tox_file_send(ToxCore* self, PyObject* args)
     } else
         hex_string_to_bytes(file_id_hex, TOX_FILE_ID_LENGTH, file_id_buf);
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_FILE_SEND error;
     uint32_t file_number = tox_file_send(self->tox, friend_number, kind, file_size, file_id, filename, filename_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -1211,8 +1284,12 @@ static PyObject* ToxCore_tox_file_control(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "III", &friend_number, &file_number, &control) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_FILE_CONTROL error;
     bool result = tox_file_control(self->tox, friend_number, file_number, control, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -1262,8 +1339,12 @@ static PyObject* ToxCore_tox_file_send_chunk(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "IIKs#", &friend_number, &file_number, &position, &data, &length) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_FILE_SEND_CHUNK error;
     bool result = tox_file_send_chunk(self->tox, friend_number, file_number, position, data, length, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -1371,8 +1452,12 @@ static PyObject* ToxCore_tox_file_seek(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "IIK", &friend_number, &file_number, &position) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_FILE_SEEK error;
     bool result = tox_file_seek(self->tox, friend_number, file_number, position, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -1489,7 +1574,9 @@ static PyObject* ToxCore_tox_iterate(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
 
+    PyThreadState* gil = PyEval_SaveThread();
     tox_iterate(self->tox);
+    PyEval_RestoreThread(gil);
 
     if (PyErr_Occurred() != NULL)
         return NULL;
@@ -1546,8 +1633,12 @@ static PyObject* ToxCore_tox_friend_send_lossy_packet(ToxCore* self, PyObject* a
     if (PyArg_ParseTuple(args, "Is#", &friend_number, &data, &data_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_FRIEND_CUSTOM_PACKET error;
     bool result = tox_friend_send_lossy_packet(self->tox, friend_number, data, data_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     return parse_TOX_ERR_FRIEND_CUSTOM_PACKET(result, error);
 }
@@ -1564,8 +1655,12 @@ static PyObject* ToxCore_tox_friend_send_lossless_packet(ToxCore* self, PyObject
     if (PyArg_ParseTuple(args, "Is#", &friend_number, &data, &data_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_FRIEND_CUSTOM_PACKET error;
     bool result = tox_friend_send_lossless_packet(self->tox, friend_number, data, data_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     return parse_TOX_ERR_FRIEND_CUSTOM_PACKET(result, error);
 }
@@ -3872,10 +3967,7 @@ static void init_options(PyObject* pyopts, struct Tox_Options* tox_opts)
 
 static int init_helper(ToxCore* self, PyObject* args)
 {
-    if (self->tox != NULL) {
-        tox_kill(self->tox);
-        self->tox = NULL;
-    }
+    ToxCore_tox_kill(self, NULL);
 
     PyObject* pyopts = NULL;
 
@@ -3996,10 +4088,7 @@ static int ToxCore_init(ToxCore* self, PyObject* args, PyObject* kwds)
 
 static int ToxCore_dealloc(ToxCore* self)
 {
-    if (self->tox != NULL) {
-        tox_kill(self->tox);
-        self->tox = NULL;
-    }
+    ToxCore_tox_kill(self, NULL);
 
     return 0;
 }
