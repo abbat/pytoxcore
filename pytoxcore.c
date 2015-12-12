@@ -1707,8 +1707,12 @@ static PyObject* ToxCore_tox_group_new(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "Is#", &privacy_state, &group_name, &group_name_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_NEW error;
     uint32_t result = tox_group_new(self->tox, privacy_state, group_name, group_name_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -1762,8 +1766,12 @@ static PyObject* ToxCore_tox_group_join(ToxCore* self, PyObject* args)
     uint8_t chat_id[TOX_GROUP_CHAT_ID_SIZE];
     hex_string_to_bytes(chat_id_hex, TOX_GROUP_CHAT_ID_SIZE, chat_id);
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_JOIN error;
     uint32_t result = tox_group_join(self->tox, chat_id, password, password_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -1797,8 +1805,12 @@ static PyObject* ToxCore_tox_group_reconnect(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "I", &groupnumber) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_RECONNECT error;
     bool result = tox_group_reconnect(self->tox, groupnumber, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -1828,8 +1840,12 @@ static PyObject* ToxCore_tox_group_leave(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "Is#", &groupnumber, &message, &message_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_LEAVE error;
     bool result = tox_group_leave(self->tox, groupnumber, message, message_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -1868,8 +1884,12 @@ static PyObject* ToxCore_tox_group_self_set_name(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "Is#", &groupnumber, &name, &name_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_SELF_NAME_SET error;
     bool result = tox_group_self_set_name(self->tox, groupnumber, name, name_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -1966,8 +1986,12 @@ static PyObject* ToxCore_tox_group_self_set_status(ToxCore* self, PyObject* args
     if (PyArg_ParseTuple(args, "II", &groupnumber, &status) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_SELF_STATUS_SET error;
     bool result = tox_group_self_set_status(self->tox, groupnumber, status, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -2213,8 +2237,12 @@ static PyObject* ToxCore_tox_group_set_topic(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "Is#", &groupnumber, &topic, &topic_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_TOPIC_SET error;
     bool result = tox_group_set_topic(self->tox, groupnumber, topic, topic_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -2467,8 +2495,12 @@ static PyObject* ToxCore_tox_group_send_message(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "IIs#", &groupnumber, &type, &message, &message_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_SEND_MESSAGE error;
     bool result = tox_group_send_message(self->tox, groupnumber, type, message, message_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -2514,8 +2546,12 @@ static PyObject* ToxCore_tox_group_send_private_message(ToxCore* self, PyObject*
     if (PyArg_ParseTuple(args, "IIs#", &groupnumber, &peer_id, &message, &message_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_SEND_PRIVATE_MESSAGE error;
     bool result = tox_group_send_private_message(self->tox, groupnumber, peer_id, message, message_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -2559,8 +2595,12 @@ static PyObject* ToxCore_tox_group_invite_friend(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "II", &groupnumber, &friend_number) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_INVITE_FRIEND error;
     bool result = tox_group_invite_friend(self->tox, groupnumber, friend_number, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -2600,8 +2640,12 @@ static PyObject* ToxCore_tox_group_invite_accept(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "s#s#", &invite_data, &invite_data_len, &password, &password_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_INVITE_ACCEPT error;
     uint32_t result = tox_group_invite_accept(self->tox, invite_data, invite_data_len, password, password_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -2637,8 +2681,12 @@ static PyObject* ToxCore_tox_group_founder_set_password(ToxCore* self, PyObject*
     if (PyArg_ParseTuple(args, "Is#", &groupnumber, &password, &password_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_FOUNDER_SET_PASSWORD error;
     bool result = tox_group_founder_set_password(self->tox, groupnumber, password, password_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -2676,8 +2724,12 @@ static PyObject* ToxCore_tox_group_founder_set_privacy_state(ToxCore* self, PyOb
     if (PyArg_ParseTuple(args, "II", &groupnumber, &privacy_state) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_FOUNDER_SET_PRIVACY_STATE error;
     bool result = tox_group_founder_set_privacy_state(self->tox, groupnumber, privacy_state, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -2718,8 +2770,12 @@ static PyObject* ToxCore_tox_group_founder_set_peer_limit(ToxCore* self, PyObjec
     if (PyArg_ParseTuple(args, "II", &groupnumber, &max_peers) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_FOUNDER_SET_PEER_LIMIT error;
     bool result = tox_group_founder_set_peer_limit(self->tox, groupnumber, max_peers, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -2792,8 +2848,12 @@ static PyObject* ToxCore_tox_group_mod_set_role(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "III", &groupnumber, &peer_id, &role) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_MOD_SET_ROLE error;
     bool result = tox_group_mod_set_role(self->tox, groupnumber, peer_id, role, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -2835,8 +2895,12 @@ static PyObject* ToxCore_tox_group_mod_remove_peer(ToxCore* self, PyObject* args
     if (PyArg_ParseTuple(args, "III", &groupnumber, &peer_id, &set_ban) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_MOD_REMOVE_PEER error;
     bool result = tox_group_mod_remove_peer(self->tox, groupnumber, peer_id, set_ban, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -2877,8 +2941,12 @@ static PyObject* ToxCore_tox_group_mod_remove_ban(ToxCore* self, PyObject* args)
     if (PyArg_ParseTuple(args, "II", &groupnumber, &ban_id) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_MOD_REMOVE_BAN error;
     bool result = tox_group_mod_remove_ban(self->tox, groupnumber, ban_id, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
@@ -3065,8 +3133,12 @@ static PyObject* ToxCore_tox_group_send_custom_packet(ToxCore* self, PyObject* a
     if (PyArg_ParseTuple(args, "IIs#", &groupnumber, &lossless, &data, &data_len) == false)
         return NULL;
 
+    PyThreadState* gil = PyEval_SaveThread();
+
     TOX_ERR_GROUP_SEND_CUSTOM_PACKET error;
     bool result = tox_group_send_custom_packet(self->tox, groupnumber, lossless, data, data_len, &error);
+
+    PyEval_RestoreThread(gil);
 
     bool success = false;
     switch (error) {
