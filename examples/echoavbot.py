@@ -115,7 +115,7 @@ class EchoAVBot(ToxAV):
             try:
                 self.toxav_audio_send_frame(friend_number, pcm, sample_count, channels, sampling_rate)
             except ToxAVException as e:
-                 self.core.verbose("ToxAVException: {0}".format(e))
+                self.core.verbose("ToxAVException: {0}".format(e))
 
 
     def toxav_video_receive_frame_cb(self, friend_number, width, height, bgr):
@@ -133,7 +133,7 @@ class EchoAVBot(ToxAV):
             try:
                 self.toxav_video_send_bgr_frame(friend_number, width, height, bgr)
             except ToxAVException as e:
-                 self.core.verbose("ToxAVException: {0}".format(e))
+                self.core.verbose("ToxAVException: {0}".format(e))
 
 
 if __name__ == "__main__":
