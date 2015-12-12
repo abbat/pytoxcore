@@ -96,7 +96,6 @@ class EchoAVBot(ToxAV):
         if self.running:
             friend_name = self.core.tox_friend_get_name(friend_number)
             self.core.verbose("Friend {0}/{1} change audio bitrate = {2} and video bitrate = {3}".format(friend_name, friend_number, audio_bit_rate, video_bit_rate))
-            self.toxav_bit_rate_set(friend_number, audio_bit_rate, video_bit_rate)
 
 
     def toxav_audio_receive_frame_cb(self, friend_number, pcm, sample_count, channels, sampling_rate):
