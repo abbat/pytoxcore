@@ -709,7 +709,7 @@ static PyObject* ToxAV_toxav_audio_send_frame(ToxCoreAV* self, PyObject* args)
         PyErr_SetString(ToxAVException, "Invalid sample_count - supported values are 2.5, 5, 10, 20, 40 and 60 ms of data per frame.");
     }
 
-    if (pcm_len != sample_count * channels * 2) {
+    if ((size_t)pcm_len != sample_count * channels * 2) {
         PyErr_SetString(ToxAVException, "Invalid pcm size - must be sample_count * channels * 2 bytes.");
         return NULL;
     }
