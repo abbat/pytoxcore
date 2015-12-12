@@ -66,7 +66,7 @@ class EchoAVBot(ToxAV):
         if self.running:
             friend_name = self.core.tox_friend_get_name(friend_number)
             self.core.verbose("Friend {0}/{1} call with audio = {2} and video = {3}".format(friend_name, friend_number, audio_enabled, video_enabled))
-            self.toxav_answer(friend_number, 16, 64)
+            self.toxav_answer(friend_number, 32, 5000)
 
 
     def toxav_call_state_cb(self, friend_number, state):
