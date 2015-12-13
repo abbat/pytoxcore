@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "echoavbot"
-__version__  = "0.0.16"
+__version__  = "0.0.17"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -66,7 +66,7 @@ class EchoAVBot(ToxAV):
         if self.running:
             friend_name = self.core.tox_friend_get_name(friend_number)
             self.core.verbose("Friend {0}/{1} call with audio = {2} and video = {3}".format(friend_name, friend_number, audio_enabled, video_enabled))
-            self.toxav_answer(friend_number, 16, 64)
+            self.toxav_answer(friend_number, 32, 5000)
 
 
     def toxav_call_state_cb(self, friend_number, state):
@@ -96,7 +96,6 @@ class EchoAVBot(ToxAV):
         if self.running:
             friend_name = self.core.tox_friend_get_name(friend_number)
             self.core.verbose("Friend {0}/{1} change audio bitrate = {2} and video bitrate = {3}".format(friend_name, friend_number, audio_bit_rate, video_bit_rate))
-            self.toxav_bit_rate_set(friend_number, audio_bit_rate, video_bit_rate)
 
 
     def toxav_audio_receive_frame_cb(self, friend_number, pcm, sample_count, channels, sampling_rate):
@@ -115,7 +114,7 @@ class EchoAVBot(ToxAV):
             try:
                 self.toxav_audio_send_frame(friend_number, pcm, sample_count, channels, sampling_rate)
             except ToxAVException as e:
-                 self.core.verbose("ToxAVException: {0}".format(e))
+                self.core.verbose("ToxAVException: {0}".format(e))
 
 
     def toxav_video_receive_frame_cb(self, friend_number, width, height, bgr):
@@ -133,7 +132,7 @@ class EchoAVBot(ToxAV):
             try:
                 self.toxav_video_send_bgr_frame(friend_number, width, height, bgr)
             except ToxAVException as e:
-                 self.core.verbose("ToxAVException: {0}".format(e))
+                self.core.verbose("ToxAVException: {0}".format(e))
 
 
 if __name__ == "__main__":

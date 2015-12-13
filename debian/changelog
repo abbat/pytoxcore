@@ -1,3 +1,9 @@
+python-toxcore (0.0.17) unstable; urgency=low
+
+  * Fix callback_file_recv utf-8 decode error on python3.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sat, 12 Dec 2015 22:28:02 +0300
+
 python-toxcore (0.0.16) unstable; urgency=low
 
   * Fix ToxAV GIL deadlock;

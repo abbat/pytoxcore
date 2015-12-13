@@ -116,7 +116,12 @@ static void callback_file_chunk_request(Tox* tox, uint32_t friend_number, uint32
 static void callback_file_recv(Tox* tox, uint32_t friend_number, uint32_t file_number, uint32_t kind, uint64_t file_size, const uint8_t* filename, size_t filename_length, void* self)
 {
     PyGILState_STATE gil = PyGILState_Ensure();
-    PyObject_CallMethod((PyObject*)self, "tox_file_recv_cb", "IIIKs#", friend_number, file_number, kind, file_size, filename, filename_length);
+
+    if (kind == TOX_FILE_KIND_DATA)
+        PyObject_CallMethod((PyObject*)self, "tox_file_recv_cb", "IIIKs#", friend_number, file_number, kind, file_size, filename, filename_length);
+    else if (kind == TOX_FILE_KIND_AVATAR)
+        PyObject_CallMethod((PyObject*)self, "tox_file_recv_cb", "IIIKs#", friend_number, file_number, kind, file_size, NULL, 0);
+
     PyGILState_Release(gil);
 }
 //----------------------------------------------------------------------------------------------
