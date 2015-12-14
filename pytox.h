@@ -28,6 +28,7 @@
 #include <pthread.h>
 #include <tox/tox.h>
 #include <tox/toxav.h>
+#include <tox/toxdns.h>
 #include <sys/param.h>
 #include <arpa/inet.h>
 #include <vpx/vpx_image.h>

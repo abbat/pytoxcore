@@ -18,6 +18,7 @@
  */
 //----------------------------------------------------------------------------------------------
 #include "pytoxav.h"
+#include "pytoxdns.h"
 //----------------------------------------------------------------------------------------------
 
 void bytes_to_hex_string(const uint8_t* digest, int length, uint8_t* hex_digest)
@@ -138,6 +139,23 @@ PyMODINIT_FUNC initpytoxcore(void)
 
     ToxAVException = PyErr_NewException("pytoxcore.ToxAVException", NULL, NULL);
     PyModule_AddObject(module, "ToxAVException", (PyObject*)ToxAVException);
+
+    //
+    // initialize pytoxdns
+    //
+
+    ToxDNS_install_dict();
+
+    if (PyType_Ready(&ToxDNSType) < 0) {
+        fprintf(stderr, "Invalid PyTypeObject 'ToxDNSType'\n");
+        goto error;
+    }
+
+    Py_INCREF(&ToxDNSType);
+    PyModule_AddObject(module, "ToxDNS", (PyObject*)&ToxDNSType);
+
+    ToxDNSException = PyErr_NewException("pytoxcore.ToxDNSException", NULL, NULL);
+    PyModule_AddObject(module, "ToxDNSException", (PyObject*)ToxDNSException);
 
 #if PY_MAJOR_VERSION >= 3
     return module;
