@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "avbot"
-__version__  = "0.0.17"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
