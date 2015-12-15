@@ -17,34 +17,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 //----------------------------------------------------------------------------------------------
-#ifndef _pytoxav_h_
-#define _pytoxav_h_
+#ifndef _pytoxdns_h_
+#define _pytoxdns_h_
 //----------------------------------------------------------------------------------------------
 #include "pytoxcore.h"
 //----------------------------------------------------------------------------------------------
-typedef enum {
-    TOXAV_VIDEO_FRAME_FORMAT_BGR,
-    TOXAV_VIDEO_FRAME_FORMAT_RGB,
-    TOXAV_VIDEO_FRAME_FORMAT_YUV420
-} TOXAV_VIDEO_FRAME_FORMAT;
-//----------------------------------------------------------------------------------------------
 typedef struct {
     PyObject_HEAD
-    ToxAV*                   av;
-    ToxCore*                 core;
-    vpx_image_t*             frame;
-    pthread_mutex_t*         frame_mutex;
-    TOXAV_VIDEO_FRAME_FORMAT format;
-    uint8_t*                 rgb;
-    pthread_mutex_t*         rgb_mutex;
-    size_t                   rgb_size;
-} ToxCoreAV;
+    void*    dns;
+} ToxDNS;
 //----------------------------------------------------------------------------------------------
-extern PyTypeObject ToxAVType;
+extern PyTypeObject ToxDNSType;
 //----------------------------------------------------------------------------------------------
-extern PyObject* ToxAVException;
+extern PyObject* ToxDNSException;
 //----------------------------------------------------------------------------------------------
-void ToxAV_install_dict(void);
+void ToxDNS_install_dict(void);
 //----------------------------------------------------------------------------------------------
-#endif   // _pytoxav_h_
+#endif   // _pytoxdns_h_
 //----------------------------------------------------------------------------------------------

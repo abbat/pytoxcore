@@ -1187,7 +1187,7 @@ PyTypeObject ToxAVType = {
     0,                                          /* tp_dictoffset     */
     (initproc)ToxAV_init,                       /* tp_init           */
     0,                                          /* tp_alloc          */
-    ToxAV_new,                                  /* tp_new            */
+    ToxAV_new                                   /* tp_new            */
 };
 //----------------------------------------------------------------------------------------------
 

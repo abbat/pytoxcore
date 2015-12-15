@@ -4244,7 +4244,7 @@ PyTypeObject ToxCoreType = {
     0,                                          /* tp_dictoffset     */
     (initproc)ToxCore_init,                     /* tp_init           */
     0,                                          /* tp_alloc          */
-    ToxCore_new,                                /* tp_new            */
+    ToxCore_new                                 /* tp_new            */
 };
 //----------------------------------------------------------------------------------------------
 

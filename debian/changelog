@@ -1,3 +1,9 @@
+python-toxcore (0.0.18) unstable; urgency=low
+
+  * Add core ToxDNS.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Tue, 15 Dec 2015 10:45:47 +0300
+
 python-toxcore (0.0.17) unstable; urgency=low
 
   * Fix callback_file_recv utf-8 decode error on python3.
