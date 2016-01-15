@@ -1,12 +1,13 @@
 Name:           python-toxcore
-Version:        0.0.18
+Version:        0.0.19
 Release:        1
 Summary:        Python binding for ToxCore
 License:        GPL-3
 Group:          Applications/Internet
 URL:            https://github.com/abbat/pytoxcore
 BuildRequires:  python-devel
-BuildRequires:  tox-libvpx-devel, tox-libopus-devel, tox-libsodium-devel, tox-libtoxcore-devel
+BuildRequires:  libvpx-devel, libopus-devel, libsodium-devel
+BuildRequires:  tox-libtoxcore-devel
 Source0:        https://build.opensuse.org/source/home:antonbatenev:tox/%{name}/%{name}_%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
@@ -39,5 +40,5 @@ python setup.py install --prefix=%{buildroot}/usr
 
 
 %changelog
-* Tue Dec 15 2015 Anton Batenev <antonbatenev@yandex.ru> - 0.0.18-1
+* Tue Jan 15 2015 Anton Batenev <antonbatenev@yandex.ru> - 0.0.19-1
 - Initial
