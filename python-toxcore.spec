@@ -20,7 +20,11 @@ raise exception instead of returning error code.
 
 
 %build
+%if 0%{?suse_version}
+CFLAGS="-Wl,-Bsymbolic-functions -fno-strict-aliasing" python setup.py build
+%else
 CFLAGS="-Wl,-Bsymbolic-functions" python setup.py build
+%endif
 
 
 %install
