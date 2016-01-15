@@ -15,7 +15,7 @@ setup(
             define_macros      = [],
             include_dirs       = ["/usr/tox/include"],
             library_dirs       = ["/usr/tox/lib"],
-            extra_compile_args = ["-Wall", "-Wno-declaration-after-statement"],
+            extra_compile_args = ["-Wall", "-Werror", "-Wno-declaration-after-statement"],
             libraries          = ["toxcore", "toxav", "toxdns", "sodium", "vpx", "opus", "rt"]
         )
     ]
