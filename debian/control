@@ -4,7 +4,7 @@ Priority: optional
 Build-Depends: debhelper (>= 8.0.0), dpkg-dev (>= 1.16.1), python-dev, python-setuptools,
  libvpx-dev | tox-libvpx-dev,
  libopus-dev | tox-libopus-dev,
- libsodium-dev | tox-libsodium-dev,
+ libsodium-dev (>= 0.5.0) | tox-libsodium-dev,
  tox-libtoxcore-dev
 Maintainer: Anton Batenev <antonbatenev@yandex.ru>
 Standards-Version: 3.9.4
