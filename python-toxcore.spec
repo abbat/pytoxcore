@@ -6,10 +6,16 @@ License:        GPL-3
 Group:          Applications/Internet
 URL:            https://github.com/abbat/pytoxcore
 BuildRequires:  python-devel
-BuildRequires:  libvpx-devel, libopus-devel, libsodium-devel >= 0.5.0
+BuildRequires:  libvpx-devel, libsodium-devel >= 0.5.0
 BuildRequires:  tox-libtoxcore-devel
 Source0:        https://build.opensuse.org/source/home:antonbatenev:tox/%{name}/%{name}_%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+
+%if 0%{?suse_version}
+BuildRequires:  libopus-devel
+%else
+BuildRequires:  opus-devel
+%endif
 
 %description
 PyToxCore provides a Pythonic binding, i.e Object-oriented instead of C style,
