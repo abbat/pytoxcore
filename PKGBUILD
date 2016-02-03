@@ -8,8 +8,8 @@ pkgdesc="Python binding for ToxCore"
 arch=('i686' 'x86_64')
 url="https://github.com/abbat/pytoxcore"
 license=('GPL-3')
-depends=('python' 'libvpx' 'opus' 'libsodium' 'toxcore')
-makedepends=('git' 'python' 'libvpx' 'opus' 'libsodium' 'toxcore')
+depends=('python' 'toxcore')
+makedepends=('git' 'python' 'toxcore')
 source=("https://build.opensuse.org/source/home:antonbatenev:tox/${pkgname}/${pkgname}_${pkgver}.tar.bz2")
 sha512sums=('SKIP')
 
