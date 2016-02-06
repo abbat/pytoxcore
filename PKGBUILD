@@ -3,7 +3,7 @@
 _pkgname=pytoxcore
 pkgname=python-toxcore
 pkgver=0.0.19
-pkgrel=1
+pkgrel=2
 pkgdesc="Python binding for ToxCore"
 arch=('i686' 'x86_64')
 url="https://github.com/abbat/pytoxcore"

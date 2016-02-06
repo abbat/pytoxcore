@@ -16,3 +16,12 @@ Architecture: any
 Description: Python binding for ToxCore
  PyToxCore provides a Pythonic binding, i.e Object-oriented instead of C style,
  raise exception instead of returning error code.
+
+Package: python-toxcore-dbg
+Section: debug
+Priority: extra
+Depends: python-toxcore (= ${binary:Version}), ${misc:Depends}
+Architecture: any
+Description: Debug symbols for python-toxcore
+ PyToxCore provides a Pythonic binding, i.e Object-oriented instead of C style,
+ raise exception instead of returning error code.
