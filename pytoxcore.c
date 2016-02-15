@@ -224,7 +224,7 @@ static PyObject* ToxCore_tox_options_default(ToxCore* self, PyObject* args)
     PyDict_SetItemString(dict, "proxy_type", obj_proxy_type);
     Py_DECREF(obj_proxy_type);
 
-    PyObject* obj_proxy_host = (options.proxy_host == NULL ? Py_None : PYSTRING_FromString(options.proxy_host));
+    PyObject* obj_proxy_host = (options.proxy_host == NULL ? PyNone_New() : PYSTRING_FromString(options.proxy_host));
     PyDict_SetItemString(dict, "proxy_host", obj_proxy_host);
     Py_DECREF(obj_proxy_host);
 
@@ -248,7 +248,7 @@ static PyObject* ToxCore_tox_options_default(ToxCore* self, PyObject* args)
     PyDict_SetItemString(dict, "savedata_type", obj_savedata_type);
     Py_DECREF(obj_savedata_type);
 
-    PyObject* obj_savedata_data = (options.savedata_data == NULL ? Py_None : PYBYTES_FromStringAndSize((const char*)options.savedata_data, options.savedata_length));
+    PyObject* obj_savedata_data = (options.savedata_data == NULL ? PyNone_New() : PYBYTES_FromStringAndSize((const char*)options.savedata_data, options.savedata_length));
     PyDict_SetItemString(dict, "savedata_data", obj_savedata_data);
     Py_DECREF(obj_savedata_data);
 
@@ -2045,10 +2045,9 @@ static PyObject* pyopts_get_val(PyObject* pyopts, const char* key)
     if (pykey == NULL)
         return NULL;
 
-    if (PyDict_Contains(pyopts, pykey) == false) {
-        Py_INCREF(Py_None);
-        pyval = Py_None;
-    } else
+    if (PyDict_Contains(pyopts, pykey) == false)
+        pyval = PyNone_New();
+    else
         pyval = PyObject_GetItem(pyopts, pykey);
 
     Py_DECREF(pykey);
@@ -2256,10 +2255,9 @@ static int init_helper(ToxCore* self, PyObject* args)
     tox_options_default(&options);
 
     if (pyopts != NULL) {
-        if (PyDict_Check(pyopts) == true) {
-            if (init_options(pyopts, &options) == false)
-                return -1;
-        } else if (pyopts != Py_None) {
+        if (PyDict_Check(pyopts) == true && init_options(pyopts, &options) == false)
+            return -1;
+        else if (pyopts != Py_None) {
             PyErr_SetString(ToxCoreException, "You must supply a Tox_Options param as a dict.");
             return -1;
         }
