@@ -1,3 +1,12 @@
+python-toxcore (0.1.0) unstable; urgency=low
+
+  * Add explict savedata_type to init options (fix #5);
+  * Fix incorrect Py_None refcounting;
+  * More accuracy init checks;
+  * Fix package dependencies.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Mon, 15 Feb 2016 18:21:38 +0300
+
 python-toxcore (0.0.19) unstable; urgency=low
 
   * Link with system libs where possible.
