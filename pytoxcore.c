@@ -2036,135 +2036,207 @@ PyMethodDef ToxCore_methods[] = {
 };
 //----------------------------------------------------------------------------------------------
 
-static bool init_options(PyObject* pyopts, struct Tox_Options* tox_opts)
+static PyObject* pyopts_get_val(PyObject* pyopts, const char* key)
 {
-    char*      buf = NULL;
-    Py_ssize_t sz  = 0;
-    PyObject*  p   = NULL;
-    PyObject*  key = NULL;
+    PyObject* pykey;
+    PyObject* pyval;
 
-    key = PYSTRING_FromString("ipv6_enabled");
-    if (PyDict_Contains(pyopts, key) == true)
-        p = PyObject_GetItem(pyopts, key);
-    else
-        p = NULL;
-    Py_DECREF(key);
-    if (p != NULL && p != Py_None)
-        tox_opts->ipv6_enabled = (p == Py_True);
-    Py_XDECREF(p);
+    pykey = PYSTRING_FromString(key);
+    if (pykey == NULL)
+        return NULL;
 
-    key = PYSTRING_FromString("udp_enabled");
-    if (PyDict_Contains(pyopts, key) == true)
-        p = PyObject_GetItem(pyopts, key);
-    else
-        p = NULL;
-    Py_DECREF(key);
-    if (p != NULL && p != Py_None)
-        tox_opts->udp_enabled = p == Py_True;
-    Py_XDECREF(p);
+    if (PyDict_Contains(pyopts, pykey) == false) {
+        Py_INCREF(Py_None);
+        pyval = Py_None;
+    } else
+        pyval = PyObject_GetItem(pyopts, pykey);
 
-    key = PYSTRING_FromString("proxy_type");
-    if (PyDict_Contains(pyopts, key) == true)
-        p = PyObject_GetItem(pyopts, key);
-    else
-        p = NULL;
-    Py_DECREF(key);
-    if (p != NULL && p != Py_None)
-        tox_opts->proxy_type = PyLong_AsLong(p);
-    Py_XDECREF(p);
+    Py_DECREF(pykey);
 
-    key = PYSTRING_FromString("proxy_port");
-    if (PyDict_Contains(pyopts, key) == true)
-        p = PyObject_GetItem(pyopts, key);
-    else
-        p = NULL;
-    Py_DECREF(key);
-    if (p != NULL && p != Py_None)
-        tox_opts->proxy_port = PyLong_AsLong(p);
-    Py_XDECREF(p);
+    return pyval;
+}
+//----------------------------------------------------------------------------------------------
 
-    key = PYSTRING_FromString("start_port");
-    if (PyDict_Contains(pyopts, key) == true)
-        p = PyObject_GetItem(pyopts, key);
-    else
-        p = NULL;
-    Py_DECREF(key);
-    if (p != NULL && p != Py_None)
-        tox_opts->start_port = PyLong_AsLong(p);
-    Py_XDECREF(p);
+static bool pyopts_get_bool(PyObject* pyopts, const char* key, bool* val)
+{
+    PyObject* pyval;
 
-    key = PYSTRING_FromString("end_port");
-    if (PyDict_Contains(pyopts, key) == true)
-        p = PyObject_GetItem(pyopts, key);
-    else
-        p = NULL;
-    Py_DECREF(key);
-    if (p != NULL && p != Py_None)
-        tox_opts->end_port = PyLong_AsLong(p);
-    Py_XDECREF(p);
+    pyval = pyopts_get_val(pyopts, key);
+    if (pyval == NULL)
+        return false;
 
-    key = PYSTRING_FromString("tcp_port");
-    if (PyDict_Contains(pyopts, key) == true)
-        p = PyObject_GetItem(pyopts, key);
-    else
-        p = NULL;
-    Py_DECREF(key);
-    if (p != NULL && p != Py_None)
-        tox_opts->tcp_port = PyLong_AsLong(p);
-    Py_XDECREF(p);
+    if (pyval != Py_None)
+        *val = (pyval == Py_True);
 
-    key = PYSTRING_FromString("savedata_type");
-    if (PyDict_Contains(pyopts, key) == true)
-        p = PyObject_GetItem(pyopts, key);
-    else
-        p = NULL;
-    Py_DECREF(key);
-    if (p != NULL && p != Py_None)
-        tox_opts->savedata_type = PyLong_AsLong(p);
-    Py_XDECREF(p);
+    Py_DECREF(pyval);
 
-    key = PYSTRING_FromString("proxy_host");
-    if (PyDict_Contains(pyopts, key) == true)
-        p = PyObject_GetItem(pyopts, key);
-    else
-        p = NULL;
-    Py_DECREF(key);
-    if (p != NULL && p != Py_None) {
-        PyStringUnicode_AsStringAndSize(p, &buf, &sz);
-        if (sz > 0) {
-            tox_opts->proxy_host = calloc(1, sz);
-            if (tox_opts->proxy_host == NULL) {
-                Py_XDECREF(p);
+    return true;
+}
+//----------------------------------------------------------------------------------------------
+
+static bool pyopts_get_long(PyObject* pyopts, const char* key, long* val)
+{
+    PyObject* pyval;
+
+    pyval = pyopts_get_val(pyopts, key);
+    if (pyval == NULL)
+        return false;
+
+    if (pyval != Py_None)
+        *val = PyLong_AsLong(pyval);
+
+    Py_DECREF(pyval);
+
+    return true;
+}
+//----------------------------------------------------------------------------------------------
+
+static bool pyopts_get_string(PyObject* pyopts, const char* key, char** val)
+{
+    char*      src;
+    Py_ssize_t src_len;
+    char*      dst;
+    PyObject*  pyval;
+
+    pyval = pyopts_get_val(pyopts, key);
+    if (pyval == NULL)
+        return false;
+
+    if (pyval != Py_None) {
+        PyStringUnicode_AsStringAndSize(pyval, &src, &src_len);
+        if (src_len > 0) {
+            dst = calloc(1, src_len);
+            if (dst == NULL) {
+                Py_DECREF(pyval);
                 PyErr_SetString(ToxCoreException, "Can not allocate memory.");
                 return false;
             }
-            memcpy((void*)tox_opts->proxy_host, buf, sz);
+
+            memcpy(dst, src, src_len);
+
+            *val = dst;
         }
     }
-    Py_XDECREF(p);
 
-    if (tox_opts->savedata_type == TOX_SAVEDATA_TYPE_TOX_SAVE || tox_opts->savedata_type == TOX_SAVEDATA_TYPE_SECRET_KEY) {
-        key = PYSTRING_FromString("savedata_data");
-        if (PyDict_Contains(pyopts, key) == true)
-            p = PyObject_GetItem(pyopts, key);
-        else
-            p = NULL;
-        Py_DECREF(key);
-        if (p != NULL && p != Py_None) {
-            PyBytes_AsStringAndSize(p, &buf, &sz);
-            if (sz > 0) {
-                tox_opts->savedata_data = calloc(1, sz);
-                if (tox_opts->savedata_data == NULL) {
-                    Py_XDECREF(p);
-                    free((char*)tox_opts->proxy_host);
-                    PyErr_SetString(ToxCoreException, "Can not allocate memory.");
-                    return false;
-                }
-                memcpy((void*)tox_opts->savedata_data, buf, sz);
-                tox_opts->savedata_length = sz;
+    Py_DECREF(pyval);
+
+    return true;
+}
+//----------------------------------------------------------------------------------------------
+
+static bool pyopts_get_bytes(PyObject* pyopts, const char* key, uint8_t** val, size_t* val_len)
+{
+    char*      src;
+    Py_ssize_t src_len;
+    uint8_t*   dst;
+    PyObject*  pyval;
+
+    pyval = pyopts_get_val(pyopts, key);
+    if (pyval == NULL)
+        return false;
+
+    if (pyval != Py_None) {
+        PyBytes_AsStringAndSize(pyval, &src, &src_len);
+        if (src_len > 0) {
+            dst = calloc(1, src_len);
+            if (dst == NULL) {
+                Py_DECREF(pyval);
+                PyErr_SetString(ToxCoreException, "Can not allocate memory.");
+                return false;
             }
+
+            memcpy(dst, src, src_len);
+
+            *val     = dst;
+            *val_len = src_len;
         }
-        Py_XDECREF(p);
+    }
+
+    Py_DECREF(pyval);
+
+    return true;
+}
+//----------------------------------------------------------------------------------------------
+
+static bool pyopts_get_port(PyObject* pyopts, const char* key, uint16_t* val, const char* error)
+{
+    long lval = *val;
+
+    if (pyopts_get_long(pyopts, key, &lval) == false)
+        return false;
+
+    if (lval > 65535) {
+        PyErr_SetString(ToxCoreException, error);
+        return false;
+    }
+
+    *val = lval;
+
+    return true;
+}
+//----------------------------------------------------------------------------------------------
+
+static bool pyopts_get_TOX_PROXY_TYPE(PyObject* pyopts, const char* key, TOX_PROXY_TYPE* val)
+{
+    long lval = *val;
+
+    if (pyopts_get_long(pyopts, key, &lval) == false)
+        return false;
+
+    *val = lval;
+
+    return true;
+}
+//----------------------------------------------------------------------------------------------
+
+static bool pyopts_get_TOX_SAVEDATA_TYPE(PyObject* pyopts, const char* key, TOX_SAVEDATA_TYPE* val)
+{
+    long lval = *val;
+
+    if (pyopts_get_long(pyopts, key, &lval) == false)
+        return false;
+
+    *val = lval;
+
+    return true;
+}
+//----------------------------------------------------------------------------------------------
+
+static bool init_options(PyObject* pyopts, struct Tox_Options* tox_opts)
+{
+    if (pyopts_get_bool(pyopts, "ipv6_enabled", &tox_opts->ipv6_enabled) == false)
+        return false;
+
+    if (pyopts_get_bool(pyopts, "udp_enabled", &tox_opts->udp_enabled) == false)
+        return false;
+
+    if (pyopts_get_TOX_PROXY_TYPE(pyopts, "proxy_type", &tox_opts->proxy_type) == false)
+        return false;
+
+    if (tox_opts->proxy_type != TOX_PROXY_TYPE_NONE &&
+        pyopts_get_port(pyopts, "proxy_port", &tox_opts->proxy_port, "Invalid proxy_port.") == false)
+        return false;
+
+    if (pyopts_get_port(pyopts, "start_port", &tox_opts->start_port, "Invalid start_port.") == false)
+        return false;
+
+    if (pyopts_get_port(pyopts, "end_port", &tox_opts->end_port, "Invalid end_port.") == false)
+        return false;
+
+    if (pyopts_get_port(pyopts, "tcp_port", &tox_opts->tcp_port, "Invalid tcp_port.") == false)
+        return false;
+
+    if (pyopts_get_TOX_SAVEDATA_TYPE(pyopts, "savedata_type", &tox_opts->savedata_type) == false)
+        return false;
+
+    if (tox_opts->proxy_type != TOX_PROXY_TYPE_NONE &&
+        pyopts_get_string(pyopts, "proxy_host", (char**)(&tox_opts->proxy_host)) == false)
+        return false;
+
+    if (tox_opts->savedata_type != TOX_SAVEDATA_TYPE_NONE &&
+        pyopts_get_bytes(pyopts, "savedata_data", (uint8_t**)(&tox_opts->savedata_data), &tox_opts->savedata_length) == false) {
+        free((char*)tox_opts->proxy_host);
+        return false;
     }
 
     return true;
