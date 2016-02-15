@@ -235,6 +235,7 @@ class EchoBot(ToxCore):
         if os.path.isfile(self.options.save_file):
             self.debug("Load data from file: {0}".format(self.options.save_file))
             with open(self.options.save_file, "rb") as f:
+                tox_opts["savedata_type"] = ToxCore.TOX_SAVEDATA_TYPE_TOX_SAVE
                 tox_opts["savedata_data"] = f.read()
 
         super(EchoBot, self).__init__(tox_opts)

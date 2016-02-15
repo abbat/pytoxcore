@@ -63,18 +63,10 @@ void hex_string_to_bytes(uint8_t* hexstr, int length, uint8_t* bytes)
 }
 //----------------------------------------------------------------------------------------------
 
-void PyStringUnicode_AsStringAndSize(PyObject* object, char** str, Py_ssize_t* len)
+PyObject* PyNone_New(void)
 {
-#if PY_MAJOR_VERSION < 3
-    PyString_AsStringAndSize(object, str, len);
-#else
-    #if PY_MINOR_VERSION == 2
-        *str = PyUnicode_AS_DATA(object);
-        *len = PyUnicode_GET_DATA_SIZE(object);
-    #else
-        *str = PyUnicode_AsUTF8AndSize(object, len);
-    #endif
-#endif
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 //----------------------------------------------------------------------------------------------
 

@@ -18,5 +18,8 @@ override_dh_auto_build:
 override_dh_auto_install:
 	python setup.py install --install-layout=deb --prefix=debian/tmp/usr
 
+override_dh_strip:
+	dh_strip --dbg-package=python-toxcore-dbg
+
 %:
 	dh $@ ${WITH_PYTHON2}

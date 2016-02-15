@@ -2,7 +2,7 @@ from distutils.core import setup, Extension
 
 setup(
     name         = "pytoxcore",
-    version      = "0.0.18",
+    version      = "0.1.0",
     description  = 'Python binding for ToxCore',
     author       = 'Anton Batenev',
     author_email = 'antonbatenev@yandex.ru',
@@ -15,7 +15,7 @@ setup(
             define_macros      = [],
             include_dirs       = ["/usr/tox/include"],
             library_dirs       = ["/usr/tox/lib"],
-            extra_compile_args = ["-Wall", "-Wno-declaration-after-statement"],
+            extra_compile_args = ["-Wall", "-Werror", "-Wno-declaration-after-statement"],
             libraries          = ["toxcore", "toxav", "toxdns", "sodium", "vpx", "opus", "rt"]
         )
     ]

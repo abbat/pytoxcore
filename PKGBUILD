@@ -2,14 +2,14 @@
 
 _pkgname=pytoxcore
 pkgname=python-toxcore
-pkgver=0.0.18
-pkgrel=1
+pkgver=0.1.0
+pkgrel=2
 pkgdesc="Python binding for ToxCore"
 arch=('i686' 'x86_64')
 url="https://github.com/abbat/pytoxcore"
 license=('GPL-3')
-depends=('python' 'libvpx' 'opus' 'libsodium')
-makedepends=('tox-libtoxcore' 'python' 'libvpx' 'opus' 'libsodium')
+depends=('python' 'toxcore')
+makedepends=('git' 'python' 'toxcore')
 source=("https://build.opensuse.org/source/home:antonbatenev:tox/${pkgname}/${pkgname}_${pkgver}.tar.bz2")
 sha512sums=('SKIP')
 
