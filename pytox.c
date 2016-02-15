@@ -70,21 +70,6 @@ PyObject* PyNone_New(void)
 }
 //----------------------------------------------------------------------------------------------
 
-void PyStringUnicode_AsStringAndSize(PyObject* object, char** str, Py_ssize_t* len)
-{
-#if PY_MAJOR_VERSION < 3
-    PyString_AsStringAndSize(object, str, len);
-#else
-    #if PY_MINOR_VERSION == 2
-        *str = PyUnicode_AS_DATA(object);
-        *len = PyUnicode_GET_DATA_SIZE(object);
-    #else
-        *str = PyUnicode_AsUTF8AndSize(object, len);
-    #endif
-#endif
-}
-//----------------------------------------------------------------------------------------------
-
 #if PY_MAJOR_VERSION >= 3
 struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,

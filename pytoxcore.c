@@ -2102,7 +2102,17 @@ static bool pyopts_get_string(PyObject* pyopts, const char* key, char** val)
         return false;
 
     if (pyval != Py_None) {
-        PyStringUnicode_AsStringAndSize(pyval, &src, &src_len);
+        #if PY_MAJOR_VERSION < 3
+            PyString_AsStringAndSize(pyval, &src, &src_len);
+        #else
+            #if PY_MINOR_VERSION == 2
+                src     = PyUnicode_AS_DATA(pyval);
+                src_len = PyUnicode_GET_DATA_SIZE(pyval);
+            #else
+                src = PyUnicode_AsUTF8AndSize(pyval, &len);
+            #endif
+        #endif
+
         if (src_len > 0) {
             dst = calloc(1, src_len);
             if (dst == NULL) {
@@ -2255,9 +2265,10 @@ static int init_helper(ToxCore* self, PyObject* args)
     tox_options_default(&options);
 
     if (pyopts != NULL) {
-        if (PyDict_Check(pyopts) == true && init_options(pyopts, &options) == false)
-            return -1;
-        else if (pyopts != Py_None) {
+        if (PyDict_Check(pyopts) == true) {
+            if (init_options(pyopts, &options) == false)
+                return -1;
+        } else if (pyopts != Py_None) {
             PyErr_SetString(ToxCoreException, "You must supply a Tox_Options param as a dict.");
             return -1;
         }
