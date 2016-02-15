@@ -2,7 +2,7 @@
 
 _pkgname=pytoxcore
 pkgname=python-toxcore
-pkgver=0.1.0
+pkgver=0.1.1
 pkgrel=2
 pkgdesc="Python binding for ToxCore"
 arch=('i686' 'x86_64')

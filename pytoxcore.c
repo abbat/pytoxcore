@@ -2109,7 +2109,7 @@ static bool pyopts_get_string(PyObject* pyopts, const char* key, char** val)
                 src     = PyUnicode_AS_DATA(pyval);
                 src_len = PyUnicode_GET_DATA_SIZE(pyval);
             #else
-                src = PyUnicode_AsUTF8AndSize(pyval, &len);
+                src = PyUnicode_AsUTF8AndSize(pyval, &src_len);
             #endif
         #endif
 
