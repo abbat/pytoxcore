@@ -244,6 +244,10 @@ static PyObject* ToxCore_tox_options_default(ToxCore* self, PyObject* args)
     PyDict_SetItemString(dict, "tcp_port", obj_tcp_port);
     Py_DECREF(obj_tcp_port);
 
+    PyObject* obj_savedata_type = PyLong_FromUnsignedLong(options.savedata_type);
+    PyDict_SetItemString(dict, "savedata_type", obj_savedata_type);
+    Py_DECREF(obj_savedata_type);
+
     PyObject* obj_savedata_data = (options.savedata_data == NULL ? Py_None : PYBYTES_FromStringAndSize((const char*)options.savedata_data, options.savedata_length));
     PyDict_SetItemString(dict, "savedata_data", obj_savedata_data);
     Py_DECREF(obj_savedata_data);
@@ -2032,64 +2036,12 @@ PyMethodDef ToxCore_methods[] = {
 };
 //----------------------------------------------------------------------------------------------
 
-static void init_options(PyObject* pyopts, struct Tox_Options* tox_opts)
+static bool init_options(PyObject* pyopts, struct Tox_Options* tox_opts)
 {
     char*      buf = NULL;
     Py_ssize_t sz  = 0;
     PyObject*  p   = NULL;
     PyObject*  key = NULL;
-
-    key = PYSTRING_FromString("savedata_data");
-    if (PyDict_Contains(pyopts, key) == true)
-        p = PyObject_GetItem(pyopts, key);
-    else
-        p = NULL;
-    Py_DECREF(key);
-    if (p != NULL && p != Py_None) {
-        PyBytes_AsStringAndSize(p, &buf, &sz);
-        if (sz > 0) {
-            tox_opts->savedata_data = calloc(1, sz);
-            memcpy((void*)tox_opts->savedata_data, buf, sz);
-            tox_opts->savedata_length = sz;
-            tox_opts->savedata_type = TOX_SAVEDATA_TYPE_TOX_SAVE;
-        }
-    }
-    Py_XDECREF(p);
-
-    key = PYSTRING_FromString("proxy_host");
-    if (PyDict_Contains(pyopts, key) == true)
-        p = PyObject_GetItem(pyopts, key);
-    else
-        p = NULL;
-    Py_DECREF(key);
-    if (p != NULL && p != Py_None) {
-        PyStringUnicode_AsStringAndSize(p, &buf, &sz);
-        if (sz > 0) {
-            tox_opts->proxy_host = calloc(1, sz);
-            memcpy((void*)tox_opts->proxy_host, buf, sz);
-        }
-    }
-    Py_XDECREF(p);
-
-    key = PYSTRING_FromString("proxy_port");
-    if (PyDict_Contains(pyopts, key) == true)
-        p = PyObject_GetItem(pyopts, key);
-    else
-        p = NULL;
-    Py_DECREF(key);
-    if (p != NULL && p != Py_None)
-        tox_opts->proxy_port = PyLong_AsLong(p);
-    Py_XDECREF(p);
-
-    key = PYSTRING_FromString("proxy_type");
-    if (PyDict_Contains(pyopts, key) == true)
-        p = PyObject_GetItem(pyopts, key);
-    else
-        p = NULL;
-    Py_DECREF(key);
-    if (p != NULL && p != Py_None)
-        tox_opts->proxy_type = PyLong_AsLong(p);
-    Py_XDECREF(p);
 
     key = PYSTRING_FromString("ipv6_enabled");
     if (PyDict_Contains(pyopts, key) == true)
@@ -2109,6 +2061,26 @@ static void init_options(PyObject* pyopts, struct Tox_Options* tox_opts)
     Py_DECREF(key);
     if (p != NULL && p != Py_None)
         tox_opts->udp_enabled = p == Py_True;
+    Py_XDECREF(p);
+
+    key = PYSTRING_FromString("proxy_type");
+    if (PyDict_Contains(pyopts, key) == true)
+        p = PyObject_GetItem(pyopts, key);
+    else
+        p = NULL;
+    Py_DECREF(key);
+    if (p != NULL && p != Py_None)
+        tox_opts->proxy_type = PyLong_AsLong(p);
+    Py_XDECREF(p);
+
+    key = PYSTRING_FromString("proxy_port");
+    if (PyDict_Contains(pyopts, key) == true)
+        p = PyObject_GetItem(pyopts, key);
+    else
+        p = NULL;
+    Py_DECREF(key);
+    if (p != NULL && p != Py_None)
+        tox_opts->proxy_port = PyLong_AsLong(p);
     Py_XDECREF(p);
 
     key = PYSTRING_FromString("start_port");
@@ -2140,6 +2112,62 @@ static void init_options(PyObject* pyopts, struct Tox_Options* tox_opts)
     if (p != NULL && p != Py_None)
         tox_opts->tcp_port = PyLong_AsLong(p);
     Py_XDECREF(p);
+
+    key = PYSTRING_FromString("savedata_type");
+    if (PyDict_Contains(pyopts, key) == true)
+        p = PyObject_GetItem(pyopts, key);
+    else
+        p = NULL;
+    Py_DECREF(key);
+    if (p != NULL && p != Py_None)
+        tox_opts->savedata_type = PyLong_AsLong(p);
+    Py_XDECREF(p);
+
+    key = PYSTRING_FromString("proxy_host");
+    if (PyDict_Contains(pyopts, key) == true)
+        p = PyObject_GetItem(pyopts, key);
+    else
+        p = NULL;
+    Py_DECREF(key);
+    if (p != NULL && p != Py_None) {
+        PyStringUnicode_AsStringAndSize(p, &buf, &sz);
+        if (sz > 0) {
+            tox_opts->proxy_host = calloc(1, sz);
+            if (tox_opts->proxy_host == NULL) {
+                Py_XDECREF(p);
+                PyErr_SetString(ToxCoreException, "Can not allocate memory.");
+                return false;
+            }
+            memcpy((void*)tox_opts->proxy_host, buf, sz);
+        }
+    }
+    Py_XDECREF(p);
+
+    if (tox_opts->savedata_type == TOX_SAVEDATA_TYPE_TOX_SAVE || tox_opts->savedata_type == TOX_SAVEDATA_TYPE_SECRET_KEY) {
+        key = PYSTRING_FromString("savedata_data");
+        if (PyDict_Contains(pyopts, key) == true)
+            p = PyObject_GetItem(pyopts, key);
+        else
+            p = NULL;
+        Py_DECREF(key);
+        if (p != NULL && p != Py_None) {
+            PyBytes_AsStringAndSize(p, &buf, &sz);
+            if (sz > 0) {
+                tox_opts->savedata_data = calloc(1, sz);
+                if (tox_opts->savedata_data == NULL) {
+                    Py_XDECREF(p);
+                    free((char*)tox_opts->proxy_host);
+                    PyErr_SetString(ToxCoreException, "Can not allocate memory.");
+                    return false;
+                }
+                memcpy((void*)tox_opts->savedata_data, buf, sz);
+                tox_opts->savedata_length = sz;
+            }
+        }
+        Py_XDECREF(p);
+    }
+
+    return true;
 }
 //----------------------------------------------------------------------------------------------
 
@@ -2156,9 +2184,10 @@ static int init_helper(ToxCore* self, PyObject* args)
     tox_options_default(&options);
 
     if (pyopts != NULL) {
-        if (PyDict_Check(pyopts) == true)
-            init_options(pyopts, &options);
-        else if (pyopts != Py_None) {
+        if (PyDict_Check(pyopts) == true) {
+            if (init_options(pyopts, &options) == false)
+                return -1;
+        } else if (pyopts != Py_None) {
             PyErr_SetString(ToxCoreException, "You must supply a Tox_Options param as a dict.");
             return -1;
         }
@@ -2166,6 +2195,9 @@ static int init_helper(ToxCore* self, PyObject* args)
 
     TOX_ERR_NEW error = 0;
     Tox* tox = tox_new(&options, &error);
+
+    free((char*)options.proxy_host);
+    free((uint8_t*)options.savedata_data);
 
     bool success = false;
     switch (error) {
@@ -2355,6 +2387,11 @@ void ToxCore_install_dict(void)
     SET(TOX_PROXY_TYPE_NONE);
     SET(TOX_PROXY_TYPE_HTTP);
     SET(TOX_PROXY_TYPE_SOCKS5);
+
+    // enum TOX_SAVEDATA_TYPE
+    SET(TOX_SAVEDATA_TYPE_NONE);
+    SET(TOX_SAVEDATA_TYPE_TOX_SAVE);
+    SET(TOX_SAVEDATA_TYPE_SECRET_KEY);
 
     // enum TOX_CONNECTION
     SET(TOX_CONNECTION_NONE);
