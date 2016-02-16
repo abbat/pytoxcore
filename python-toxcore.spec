@@ -46,5 +46,5 @@ python setup.py install --prefix=%{buildroot}/usr
 
 
 %changelog
-* Mon Feb 15 2015 Anton Batenev <antonbatenev@yandex.ru> - 0.1.1-1
+* Mon Feb 15 2016 Anton Batenev <antonbatenev@yandex.ru> - 0.1.1-1
 - Initial
