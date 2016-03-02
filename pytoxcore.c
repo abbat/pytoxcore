@@ -39,8 +39,6 @@ static void callback_self_connection_status(Tox* tox, TOX_CONNECTION connection_
 static void callback_friend_request(Tox* tox, const uint8_t* public_key, const uint8_t* message, size_t length, void* self)
 {
     uint8_t buf[TOX_PUBLIC_KEY_SIZE * 2 + 1];
-    memset(buf, 0, sizeof(uint8_t) * (TOX_PUBLIC_KEY_SIZE * 2 + 1));
-
     bytes_to_hex_string(public_key, TOX_PUBLIC_KEY_SIZE, buf);
 
     PyGILState_STATE gil = PyGILState_Ensure();
@@ -261,12 +259,9 @@ static PyObject* ToxCore_tox_self_get_address(ToxCore* self, PyObject* args)
     CHECK_TOX(self);
 
     uint8_t address[TOX_ADDRESS_SIZE];
-    uint8_t address_hex[TOX_ADDRESS_SIZE * 2 + 1];
-
-    memset(address_hex, 0, sizeof(uint8_t) * (TOX_ADDRESS_SIZE * 2 + 1));
-
     tox_self_get_address(self->tox, address);
 
+    uint8_t address_hex[TOX_ADDRESS_SIZE * 2 + 1];
     bytes_to_hex_string(address, TOX_ADDRESS_SIZE, address_hex);
 
     return PYSTRING_FromString((const char*)address_hex);
@@ -307,8 +302,6 @@ static PyObject* ToxCore_tox_self_get_nospam(ToxCore* self, PyObject* args)
     uint32_t result = tox_self_get_nospam(self->tox);
 
     uint8_t result_hex[sizeof(uint32_t) * 2 + 1];
-    memset(result_hex, 0, sizeof(uint8_t) * (sizeof(uint32_t) * 2 + 1));
-
     bytes_to_hex_string((const uint8_t*)(&result), sizeof(uint32_t), result_hex);
 
     return PYSTRING_FromString((const char*)result_hex);
@@ -323,8 +316,6 @@ static PyObject* ToxCore_tox_self_get_public_key(ToxCore* self, PyObject* args)
     tox_self_get_public_key(self->tox, public_key);
 
     uint8_t public_key_hex[TOX_PUBLIC_KEY_SIZE * 2 + 1];
-    memset(public_key_hex, 0, sizeof(uint8_t) * (TOX_PUBLIC_KEY_SIZE * 2 + 1));
-
     bytes_to_hex_string(public_key, TOX_PUBLIC_KEY_SIZE, public_key_hex);
 
     return PYSTRING_FromString((const char*)public_key_hex);
@@ -339,8 +330,6 @@ static PyObject* ToxCore_tox_self_get_secret_key(ToxCore* self, PyObject* args)
     tox_self_get_secret_key(self->tox, secret_key);
 
     uint8_t secret_key_hex[TOX_SECRET_KEY_SIZE * 2 + 1];
-    memset(secret_key_hex, 0, sizeof(uint8_t) * (TOX_SECRET_KEY_SIZE * 2 + 1));
-
     bytes_to_hex_string(secret_key, TOX_SECRET_KEY_SIZE, secret_key_hex);
 
     return PYSTRING_FromString((const char*)secret_key_hex);
@@ -1140,8 +1129,6 @@ static PyObject* ToxCore_tox_friend_get_public_key(ToxCore* self, PyObject* args
         return NULL;
 
     uint8_t public_key_hex[TOX_PUBLIC_KEY_SIZE * 2 + 1];
-    memset(public_key_hex, 0, sizeof(uint8_t) * (TOX_PUBLIC_KEY_SIZE * 2 + 1));
-
     bytes_to_hex_string(public_key, TOX_PUBLIC_KEY_SIZE, public_key_hex);
 
     return PYSTRING_FromString((const char*)public_key_hex);
@@ -1331,8 +1318,6 @@ static PyObject* ToxCore_tox_self_get_dht_id(ToxCore* self, PyObject* args)
     tox_self_get_dht_id(self->tox, dht_id);
 
     uint8_t dht_id_hex[TOX_PUBLIC_KEY_SIZE * 2 + 1];
-    memset(dht_id_hex, 0, sizeof(uint8_t) * (TOX_PUBLIC_KEY_SIZE * 2 + 1));
-
     bytes_to_hex_string(dht_id, TOX_PUBLIC_KEY_SIZE, dht_id_hex);
 
     return PYSTRING_FromString((const char*)dht_id_hex);
@@ -1465,9 +1450,6 @@ static PyObject* ToxCore_tox_file_get_file_id(ToxCore* self, PyObject* args)
         return NULL;
 
     uint8_t file_id_hex[TOX_FILE_ID_LENGTH * 2 + 1];
-
-    memset(file_id_hex, 0, sizeof(uint8_t) * (TOX_FILE_ID_LENGTH * 2 + 1));
-
     bytes_to_hex_string(file_id, TOX_FILE_ID_LENGTH, file_id_hex);
 
     return PYSTRING_FromString((const char*)file_id_hex);
@@ -1490,9 +1472,6 @@ static PyObject* ToxCore_tox_hash(ToxCore* self, PyObject* args)
         return NULL;
 
     uint8_t hash_hex[TOX_HASH_LENGTH * 2 + 1];
-
-    memset(hash_hex, 0, sizeof(uint8_t) * (TOX_HASH_LENGTH * 2 + 1));
-
     bytes_to_hex_string(hash, TOX_FILE_ID_LENGTH, hash_hex);
 
     return PYSTRING_FromString((const char*)hash_hex);
@@ -1613,13 +1592,9 @@ static PyObject* ToxCore_tox_keypair_new(ToxCore* self, PyObject* args)
     crypto_box_keypair(public_key, secret_key);
 
     uint8_t public_key_hex[TOX_PUBLIC_KEY_SIZE * 2 + 1];
-    memset(public_key_hex, 0, sizeof(uint8_t) * (TOX_PUBLIC_KEY_SIZE * 2 + 1));
-
     bytes_to_hex_string(public_key, TOX_PUBLIC_KEY_SIZE, public_key_hex);
 
     uint8_t secret_key_hex[TOX_SECRET_KEY_SIZE * 2 + 1];
-    memset(secret_key_hex, 0, sizeof(uint8_t) * (TOX_SECRET_KEY_SIZE * 2 + 1));
-
     bytes_to_hex_string(secret_key, TOX_SECRET_KEY_SIZE, secret_key_hex);
 
     // Py_BuildValue("ss", public_key_hex, secret_key_hex);
@@ -1654,8 +1629,6 @@ static PyObject* ToxCore_tox_public_key_restore(ToxCore* self, PyObject* args)
     crypto_scalarmult_base(public_key, secret_key);
 
     uint8_t public_key_hex[TOX_PUBLIC_KEY_SIZE * 2 + 1];
-    memset(public_key_hex, 0, sizeof(uint8_t) * (TOX_PUBLIC_KEY_SIZE * 2 + 1));
-
     bytes_to_hex_string(public_key, TOX_PUBLIC_KEY_SIZE, public_key_hex);
 
     return PYSTRING_FromString((const char*)public_key_hex);
@@ -1667,8 +1640,6 @@ static PyObject* ToxCore_tox_nospam_new(ToxCore* self, PyObject* args)
     uint32_t result = randombytes_random();
 
     uint8_t result_hex[sizeof(uint32_t) * 2 + 1];
-    memset(result_hex, 0, sizeof(uint8_t) * (sizeof(uint32_t) * 2 + 1));
-
     bytes_to_hex_string((const uint8_t*)(&result), sizeof(uint32_t), result_hex);
 
     return PYSTRING_FromString((const char*)result_hex);
@@ -1727,8 +1698,6 @@ static PyObject* ToxCore_tox_address_new(ToxCore* self, PyObject* args)
     memcpy(address + TOX_PUBLIC_KEY_SIZE + sizeof(nospam), &hash, sizeof(uint16_t));
 
     uint8_t address_hex[TOX_ADDRESS_SIZE * 2 + 1];
-    memset(address_hex, 0, sizeof(uint8_t) * (TOX_ADDRESS_SIZE * 2 + 1));
-
     bytes_to_hex_string(address, TOX_ADDRESS_SIZE, address_hex);
 
     return PYSTRING_FromString((const char*)address_hex);

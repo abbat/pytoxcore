@@ -21,17 +21,19 @@
 #include "pytoxdns.h"
 //----------------------------------------------------------------------------------------------
 
-void bytes_to_hex_string(const uint8_t* digest, int length, uint8_t* hex_digest)
+void bytes_to_hex_string(const uint8_t* digest, size_t length, uint8_t* hex_digest)
 {
     hex_digest[2 * length] = 0;
 
-    int i;
-    int j;
+    size_t i;
+    size_t j;
     for (i = j = 0; i < length; i++) {
         char c;
+
         c = (digest[i] >> 4) & 0xF;
-        c = (c > 9) ? c + 'A'- 10 : c + '0';
+        c = (c > 9) ? c + 'A' - 10 : c + '0';
         hex_digest[j++] = c;
+
         c = (digest[i] & 0xF);
         c = (c > 9) ? c + 'A' - 10 : c + '0';
         hex_digest[j++] = c;
@@ -55,9 +57,9 @@ static int hex_char_to_int(char c)
 }
 //----------------------------------------------------------------------------------------------
 
-bool hex_string_to_bytes(uint8_t* hexstr, int length, uint8_t* bytes)
+bool hex_string_to_bytes(const uint8_t* hexstr, size_t length, uint8_t* bytes)
 {
-    int i;
+    size_t i;
     for (i = 0; i < length; i++) {
         int i1 = hex_char_to_int(hexstr[2 * i]);
         if (i1 == -1)

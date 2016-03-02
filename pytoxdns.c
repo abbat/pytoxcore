@@ -69,8 +69,6 @@ static PyObject* ToxDNS_tox_decrypt_dns3_TXT(ToxDNS* self, PyObject* args)
     }
 
     uint8_t tox_id_hex[TOX_FRIEND_ADDRESS_SIZE * 2 + 1];
-    memset(tox_id_hex, 0, sizeof(uint8_t) * (TOX_FRIEND_ADDRESS_SIZE * 2 + 1));
-
     bytes_to_hex_string(tox_id, TOX_FRIEND_ADDRESS_SIZE, tox_id_hex);
 
     return PYSTRING_FromString((const char*)tox_id_hex);
