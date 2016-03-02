@@ -21,17 +21,19 @@
 #include "pytoxdns.h"
 //----------------------------------------------------------------------------------------------
 
-void bytes_to_hex_string(const uint8_t* digest, int length, uint8_t* hex_digest)
+void bytes_to_hex_string(const uint8_t* digest, size_t length, uint8_t* hex_digest)
 {
     hex_digest[2 * length] = 0;
 
-    int i;
-    int j;
+    size_t i;
+    size_t j;
     for (i = j = 0; i < length; i++) {
         char c;
+
         c = (digest[i] >> 4) & 0xF;
-        c = (c > 9) ? c + 'A'- 10 : c + '0';
+        c = (c > 9) ? c + 'A' - 10 : c + '0';
         hex_digest[j++] = c;
+
         c = (digest[i] & 0xF);
         c = (c > 9) ? c + 'A' - 10 : c + '0';
         hex_digest[j++] = c;
@@ -49,17 +51,28 @@ static int hex_char_to_int(char c)
     else if (c >= 'a' && c <= 'f')
         val = c - 'a' + 10;
     else
-        val = 0;
+        val = -1;
 
     return val;
 }
 //----------------------------------------------------------------------------------------------
 
-void hex_string_to_bytes(uint8_t* hexstr, int length, uint8_t* bytes)
+bool hex_string_to_bytes(const uint8_t* hexstr, size_t length, uint8_t* bytes)
 {
-    int i;
-    for (i = 0; i < length; i++)
-        bytes[i] = (hex_char_to_int(hexstr[2 * i]) << 4) | (hex_char_to_int(hexstr[2 * i + 1]));
+    size_t i;
+    for (i = 0; i < length; i++) {
+        int i1 = hex_char_to_int(hexstr[2 * i]);
+        if (i1 == -1)
+            return false;
+
+        int i2 = hex_char_to_int(hexstr[2 * i + 1]);
+        if (i2 == -1)
+            return false;
+
+        bytes[i] = (i1 << 4) | i2;
+    }
+
+    return true;
 }
 //----------------------------------------------------------------------------------------------
 
@@ -96,6 +109,9 @@ PyMODINIT_FUNC initpytoxcore(void)
 #endif
 
     if (module == NULL)
+        goto error;
+
+    if (sodium_init() == -1)
         goto error;
 
     //

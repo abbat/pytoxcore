@@ -1,3 +1,16 @@
+python-toxcore (0.1.3) unstable; urgency=low
+
+  * Remove unnecessary memset for bytes_to_hex_string.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Wed, 02 Mar 2016 20:28:31 +0300
+
+python-toxcore (0.1.2) unstable; urgency=low
+
+  * Add new non api functions to work without tox_savedata;
+  * Add strict check to arguments in hex format.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Wed, 02 Mar 2016 17:35:07 +0300
+
 python-toxcore (0.1.1) unstable; urgency=low
 
   * Fix build for python > 3.2

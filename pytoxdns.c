@@ -69,8 +69,6 @@ static PyObject* ToxDNS_tox_decrypt_dns3_TXT(ToxDNS* self, PyObject* args)
     }
 
     uint8_t tox_id_hex[TOX_FRIEND_ADDRESS_SIZE * 2 + 1];
-    memset(tox_id_hex, 0, sizeof(uint8_t) * (TOX_FRIEND_ADDRESS_SIZE * 2 + 1));
-
     bytes_to_hex_string(tox_id, TOX_FRIEND_ADDRESS_SIZE, tox_id_hex);
 
     return PYSTRING_FromString((const char*)tox_id_hex);
@@ -140,7 +138,10 @@ static int init_helper(ToxDNS* self, PyObject* args)
     }
 
     uint8_t key[TOX_CLIENT_ID_SIZE];
-    hex_string_to_bytes(key_hex, TOX_CLIENT_ID_SIZE, key);
+    if (hex_string_to_bytes(key_hex, TOX_CLIENT_ID_SIZE, key) == false) {
+        PyErr_SetString(ToxDNSException, "Invalid key hex value.");
+        return -1;
+    }
 
     void* dns = tox_dns3_new(key);
     if (dns == NULL) {
