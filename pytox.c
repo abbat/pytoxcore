@@ -49,17 +49,28 @@ static int hex_char_to_int(char c)
     else if (c >= 'a' && c <= 'f')
         val = c - 'a' + 10;
     else
-        val = 0;
+        val = -1;
 
     return val;
 }
 //----------------------------------------------------------------------------------------------
 
-void hex_string_to_bytes(uint8_t* hexstr, int length, uint8_t* bytes)
+bool hex_string_to_bytes(uint8_t* hexstr, int length, uint8_t* bytes)
 {
     int i;
-    for (i = 0; i < length; i++)
-        bytes[i] = (hex_char_to_int(hexstr[2 * i]) << 4) | (hex_char_to_int(hexstr[2 * i + 1]));
+    for (i = 0; i < length; i++) {
+        int i1 = hex_char_to_int(hexstr[2 * i]);
+        if (i1 == -1)
+            return false;
+
+        int i2 = hex_char_to_int(hexstr[2 * i + 1]);
+        if (i2 == -1)
+            return false;
+
+        bytes[i] = (i1 << 4) | i2;
+    }
+
+    return true;
 }
 //----------------------------------------------------------------------------------------------
 

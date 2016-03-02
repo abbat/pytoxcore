@@ -53,7 +53,7 @@
 PyObject* PyNone_New(void);
 //----------------------------------------------------------------------------------------------
 void bytes_to_hex_string(const uint8_t* digest, int length, uint8_t* hex_digest);
-void hex_string_to_bytes(uint8_t* hexstr, int length, uint8_t* bytes);
+bool hex_string_to_bytes(uint8_t* hexstr, int length, uint8_t* bytes);
 //----------------------------------------------------------------------------------------------
 #endif   // _pytox_h_
 //----------------------------------------------------------------------------------------------

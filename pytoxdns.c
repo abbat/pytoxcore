@@ -140,7 +140,10 @@ static int init_helper(ToxDNS* self, PyObject* args)
     }
 
     uint8_t key[TOX_CLIENT_ID_SIZE];
-    hex_string_to_bytes(key_hex, TOX_CLIENT_ID_SIZE, key);
+    if (hex_string_to_bytes(key_hex, TOX_CLIENT_ID_SIZE, key) == false) {
+        PyErr_SetString(ToxDNSException, "Invalid key hex value.");
+        return -1;
+    }
 
     void* dns = tox_dns3_new(key);
     if (dns == NULL) {
