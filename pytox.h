@@ -25,6 +25,7 @@
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sodium.h>
 #include <pthread.h>
 #include <tox/tox.h>
 #include <tox/toxav.h>

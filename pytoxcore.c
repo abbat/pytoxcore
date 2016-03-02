@@ -1585,6 +1585,155 @@ static PyObject* ToxCore_tox_friend_send_lossless_packet(ToxCore* self, PyObject
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_keypair_new(ToxCore* self, PyObject* args)
+{
+    uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
+    uint8_t secret_key[TOX_SECRET_KEY_SIZE];
+
+    crypto_box_keypair(public_key, secret_key);
+
+    uint8_t public_key_hex[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+    memset(public_key_hex, 0, sizeof(uint8_t) * (TOX_PUBLIC_KEY_SIZE * 2 + 1));
+
+    bytes_to_hex_string(public_key, TOX_PUBLIC_KEY_SIZE, public_key_hex);
+
+    uint8_t secret_key_hex[TOX_SECRET_KEY_SIZE * 2 + 1];
+    memset(secret_key_hex, 0, sizeof(uint8_t) * (TOX_SECRET_KEY_SIZE * 2 + 1));
+
+    bytes_to_hex_string(secret_key, TOX_SECRET_KEY_SIZE, secret_key_hex);
+
+    // Py_BuildValue("ss", public_key_hex, secret_key_hex);
+    PyObject* result = PyTuple_New(2);
+    PyTuple_SetItem(result, 0, PYSTRING_FromString((const char*)public_key_hex));
+    PyTuple_SetItem(result, 1, PYSTRING_FromString((const char*)secret_key_hex));
+
+    return result;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_public_key_restore(ToxCore* self, PyObject* args)
+{
+    uint8_t*   secret_key_hex;
+    Py_ssize_t secret_key_hex_len;
+
+    if (PyArg_ParseTuple(args, "s#", &secret_key_hex, &secret_key_hex_len) == false)
+        return NULL;
+
+    if (secret_key_hex_len != TOX_SECRET_KEY_SIZE * 2) {
+        PyErr_SetString(ToxCoreException, "secret_key must be hex string of TOX_SECRET_KEY_SIZE bytes length.");
+        return NULL;
+    }
+
+    uint8_t secret_key[TOX_SECRET_KEY_SIZE];
+    hex_string_to_bytes(secret_key_hex, TOX_SECRET_KEY_SIZE, secret_key);
+
+    uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
+    crypto_scalarmult_base(public_key, secret_key);
+
+    uint8_t public_key_hex[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+    memset(public_key_hex, 0, sizeof(uint8_t) * (TOX_PUBLIC_KEY_SIZE * 2 + 1));
+
+    bytes_to_hex_string(public_key, TOX_PUBLIC_KEY_SIZE, public_key_hex);
+
+    return PYSTRING_FromString((const char*)public_key_hex);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_nospam_new(ToxCore* self, PyObject* args)
+{
+    uint32_t result = randombytes_random();
+
+    uint8_t result_hex[sizeof(uint32_t) * 2 + 1];
+    memset(result_hex, 0, sizeof(uint8_t) * (sizeof(uint32_t) * 2 + 1));
+
+    bytes_to_hex_string((const uint8_t*)(&result), sizeof(uint32_t), result_hex);
+
+    return PYSTRING_FromString((const char*)result_hex);
+}
+//----------------------------------------------------------------------------------------------
+
+static uint16_t checksum(const uint8_t* data, size_t len)
+{
+    size_t i;
+    uint16_t result = 0;
+    uint8_t* hash   = (uint8_t*)(&result);
+    for (i = 0; i < len; i++)
+        hash[i % 2] ^= data[i];
+
+    return result;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_address_new(ToxCore* self, PyObject* args)
+{
+    uint8_t*   public_key_hex;
+    Py_ssize_t public_key_hex_len;
+    uint8_t*   nospam_hex;
+    Py_ssize_t nospam_hex_len;
+
+    if (PyArg_ParseTuple(args, "s#s#", &public_key_hex, &public_key_hex_len, &nospam_hex, &nospam_hex_len) == false)
+        return NULL;
+
+    if (public_key_hex_len != TOX_PUBLIC_KEY_SIZE * 2) {
+        PyErr_SetString(ToxCoreException, "public_key must be hex string of TOX_PUBLIC_KEY_SIZE bytes length.");
+        return NULL;
+    }
+
+    if (nospam_hex_len != sizeof(uint32_t) * 2) {
+        PyErr_SetString(ToxCoreException, "nospam must be hex string of 4 bytes length.");
+        return NULL;
+    }
+
+    uint32_t nospam;
+    hex_string_to_bytes(nospam_hex, sizeof(uint32_t), (uint8_t*)(&nospam));
+
+    uint8_t public_key[TOX_PUBLIC_KEY_SIZE];
+    hex_string_to_bytes(public_key_hex, TOX_PUBLIC_KEY_SIZE, public_key);
+
+    uint8_t address[TOX_ADDRESS_SIZE];
+    memcpy(address, public_key, TOX_PUBLIC_KEY_SIZE);
+    memcpy(address + TOX_PUBLIC_KEY_SIZE, &nospam, sizeof(nospam));
+
+    uint16_t hash = checksum(address, TOX_PUBLIC_KEY_SIZE + sizeof(nospam));
+    memcpy(address + TOX_PUBLIC_KEY_SIZE + sizeof(nospam), &hash, sizeof(uint16_t));
+
+    uint8_t address_hex[TOX_ADDRESS_SIZE * 2 + 1];
+    memset(address_hex, 0, sizeof(uint8_t) * (TOX_ADDRESS_SIZE * 2 + 1));
+
+    bytes_to_hex_string(address, TOX_ADDRESS_SIZE, address_hex);
+
+    return PYSTRING_FromString((const char*)address_hex);
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_address_check(ToxCore* self, PyObject* args)
+{
+    uint8_t*   address_hex;
+    Py_ssize_t address_hex_len;
+
+    if (PyArg_ParseTuple(args, "s#", &address_hex, &address_hex_len) == false)
+        return NULL;
+
+    if (address_hex_len != TOX_ADDRESS_SIZE * 2) {
+        PyErr_SetString(ToxCoreException, "address must be hex string of TOX_ADDRESS_SIZE bytes length.");
+        return NULL;
+    }
+
+    uint8_t address[TOX_ADDRESS_SIZE];
+    hex_string_to_bytes(address_hex, TOX_ADDRESS_SIZE, address);
+
+    uint16_t src_hash;
+    memcpy(&src_hash, address + TOX_PUBLIC_KEY_SIZE + sizeof(uint32_t), sizeof(src_hash));
+
+    uint16_t real_hash = checksum(address, TOX_PUBLIC_KEY_SIZE + sizeof(uint32_t));
+
+    if (src_hash != real_hash)
+        Py_RETURN_FALSE;
+
+    Py_RETURN_TRUE;
+}
+//----------------------------------------------------------------------------------------------
+
 PyMethodDef ToxCore_methods[] = {
     //
     // callbacks
@@ -2030,6 +2179,37 @@ PyMethodDef ToxCore_methods[] = {
         "Lossless packet behaviour is comparable to TCP (reliability, arrive in order) "
         "but with packets instead of a stream."
     },
+
+    //
+    // non api methods
+    //
+
+    {
+        "tox_keypair_new", (PyCFunction)ToxCore_tox_keypair_new, METH_NOARGS | METH_STATIC,
+        "tox_keypair_new()\n"
+        "Return new (public_key, secret_key) tuple."
+    },
+    {
+        "tox_public_key_restore", (PyCFunction)ToxCore_tox_public_key_restore, METH_VARARGS | METH_STATIC,
+        "tox_public_key_restore(secret_key)\n"
+        "Restore public key from secret key."
+    },
+    {
+        "tox_nospam_new", (PyCFunction)ToxCore_tox_nospam_new, METH_NOARGS | METH_STATIC,
+        "tox_nospam_new()\n"
+        "Return new nospam value."
+    },
+    {
+        "tox_address_new", (PyCFunction)ToxCore_tox_address_new, METH_VARARGS | METH_STATIC,
+        "tox_address_new(public_key, nospam)\n"
+        "Create address from public key and nospam value."
+    },
+    {
+        "tox_address_check", (PyCFunction)ToxCore_tox_address_check, METH_VARARGS | METH_STATIC,
+        "tox_address_check(address)\n"
+        "Check address hash, return True if checksum valid."
+    },
+
     {
         NULL
     }

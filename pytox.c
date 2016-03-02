@@ -98,6 +98,9 @@ PyMODINIT_FUNC initpytoxcore(void)
     if (module == NULL)
         goto error;
 
+    if (sodium_init() == -1)
+        goto error;
+
     //
     // initialize pytoxcore
     //
