@@ -1759,10 +1759,12 @@ static PyObject* ToxCore_tox_address_check(ToxCore* self, PyObject* args)
 
     uint16_t real_hash = checksum(address, TOX_PUBLIC_KEY_SIZE + sizeof(uint32_t));
 
-    if (src_hash != real_hash)
-        Py_RETURN_FALSE;
+    if (src_hash != real_hash) {
+        PyErr_SetString(ToxCoreException, "Invalid address checksum.");
+        return NULL;
+    }
 
-    Py_RETURN_TRUE;
+    Py_RETURN_NONE;
 }
 //----------------------------------------------------------------------------------------------
 
@@ -2239,7 +2241,7 @@ PyMethodDef ToxCore_methods[] = {
     {
         "tox_address_check", (PyCFunction)ToxCore_tox_address_check, METH_VARARGS | METH_STATIC,
         "tox_address_check(address)\n"
-        "Check address hash, return True if checksum valid."
+        "Throws exception if address is invalid."
     },
 
     {
