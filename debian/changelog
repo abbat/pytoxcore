@@ -1,3 +1,22 @@
+python-toxcore (0.2.1) unstable; urgency=low
+
+  * Fix memleak in tox_sendfile;
+  * Extend tox_sendfile_cb / tox_recvfile_cb;
+  * Remove filebot example;
+  * Rewrite echobot example using tox_sendfile / tox_recvfile.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sun, 22 May 2016 01:37:57 +0300
+
+python-toxcore (0.2.0) unstable; urgency=low
+
+  * Add non api tox_sendfile method;
+  * Add non api tox_recvfile method;
+  * Extend README with non-api methods;
+  * Add filebot example;
+  * Remove garbage from examples.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sat, 21 May 2016 22:42:41 +0300
+
 python-toxcore (0.1.3) unstable; urgency=low
 
   * Remove unnecessary memset for bytes_to_hex_string.

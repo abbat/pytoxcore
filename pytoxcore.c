@@ -27,9 +27,292 @@
 //----------------------------------------------------------------------------------------------
 PyObject* ToxCoreException;
 //----------------------------------------------------------------------------------------------
+typedef enum {
+    TOX_SENDFILE_COMPLETED,   // completed successfully
+    TOX_SENDFILE_TIMEOUT,     // send file timeout
+    TOX_SENDFILE_ERROR        // other error
+} TOX_SENDFILE_STATUS;
+//----------------------------------------------------------------------------------------------
+typedef enum {
+    TOX_RECVFILE_COMPLETED,   // completed successfully
+    TOX_RECVFILE_TIMEOUT,     // send file timeout
+    TOX_RECVFILE_ERROR        // other error
+} TOX_RECVFILE_STATUS;
+//----------------------------------------------------------------------------------------------
+typedef enum {
+    TOX_FILE_BUCKET_SEND,   // send_files bucket
+    TOX_FILE_BUCKET_RECV    // recv_files bucket
+} TOX_FILE_BUCKET;
+//----------------------------------------------------------------------------------------------
+
+static void* syserror(int err)
+{
+    PyErr_SetString(ToxCoreException, strerror(err));
+    return NULL;
+}
+//----------------------------------------------------------------------------------------------
+
+static ToxFile* toxfile_alloc(const char* path, size_t path_len, const uint8_t* filename, size_t filename_len, int* err)
+{
+    ToxFile* item = malloc(sizeof(ToxFile));
+    if (item == NULL) {
+        *err = errno;
+        return NULL;
+    }
+
+    memset(item, 0, sizeof(ToxFile));
+    item->fd = -1;
+
+    item->path = malloc(path_len + 1);
+    if (item->path == NULL) {
+        *err = errno;
+        goto ERROR;
+    }
+
+    memcpy(item->path, path, path_len);
+    item->path[path_len] = 0;
+    item->path_len = path_len;
+
+    item->filename = malloc(filename_len + 1);
+    if (item->filename == NULL) {
+        *err = errno;
+        goto ERROR;
+    }
+
+    memcpy(item->filename, filename, filename_len);
+    item->filename[filename_len] = 0;
+    item->filename_len = filename_len;
+
+    return item;
+
+ERROR:
+
+    free(item->path);
+    free(item->filename);
+    free(item);
+
+    return NULL;
+}
+//----------------------------------------------------------------------------------------------
+
+static void toxfile_free(ToxFile* item)
+{
+    if (item != NULL) {
+        if (item->fd != -1)
+            close(item->fd);
+
+        free(item->path);
+        free(item->filename);
+        free(item);
+    }
+}
+//----------------------------------------------------------------------------------------------
+
+static ToxFileBucket* toxfile_bucket(ToxCore* self, TOX_FILE_BUCKET bucket)
+{
+    ToxFileBucket* result;
+    switch (bucket) {
+        case TOX_FILE_BUCKET_SEND: result = &self->send_files; break;
+        case TOX_FILE_BUCKET_RECV: result = &self->recv_files; break;
+        default:
+            result = NULL;
+    }
+
+    return result;
+}
+//----------------------------------------------------------------------------------------------
+
+static bool toxfile_add(ToxCore* self, TOX_FILE_BUCKET file_bucket, ToxFile* item, int* err)
+{
+    ToxFileBucket* bucket = toxfile_bucket(self, file_bucket);
+    if (bucket == NULL)
+        return false;
+
+    if (bucket->index >= bucket->count) {
+        size_t new_count = (bucket->count == 0 ? 4 : bucket->count * 2);
+
+        ToxFile** files = realloc(bucket->files, new_count * sizeof(ToxFile*));
+        if (files == NULL) {
+            *err = errno;
+            return false;
+        }
+
+        bucket->count = new_count;
+        bucket->files = files;
+    }
+
+    bucket->files[bucket->index] = item;
+    bucket->index++;
+
+    return true;
+}
+//----------------------------------------------------------------------------------------------
+
+static ToxFile* toxfile_get(const ToxCore* self, TOX_FILE_BUCKET file_bucket, uint32_t friend_number, uint32_t file_number, size_t* index)
+{
+    const ToxFileBucket* bucket = toxfile_bucket((ToxCore*)self, file_bucket);
+    if (bucket == NULL)
+        return NULL;
+
+    size_t i;
+    for (i = 0; i < bucket->index; i++) {
+        ToxFile* item = bucket->files[i];
+        if (item != NULL && item->friend_number == friend_number && item->file_number == file_number) {
+            *index = i;
+            return item;
+        }
+    }
+
+    return NULL;
+}
+//----------------------------------------------------------------------------------------------
+
+static void toxfile_remove(ToxCore* self, TOX_FILE_BUCKET file_bucket, size_t index)
+{
+    ToxFileBucket* bucket = toxfile_bucket(self, file_bucket);
+    if (bucket == NULL)
+        return;
+
+    toxfile_free(bucket->files[index]);
+
+    while (index < bucket->index - 1) {
+        bucket->files[index] = bucket->files[index + 1];
+        index++;
+    }
+
+    bucket->index--;
+}
+//----------------------------------------------------------------------------------------------
+
+static void toxfile_compact(ToxFileBucket* bucket)
+{
+    if (bucket->index == 0)
+        return;
+
+    size_t i = 0;
+    size_t j = 0;
+
+    bool can_move = (bucket->files[j] == NULL ? false : true);
+
+    while (i < bucket->index) {
+        ToxFile* item = bucket->files[i];
+        if (item != NULL && can_move == true) {
+            bucket->files[j] = item;
+            bucket->files[i] = NULL;
+            j++;
+        } else if (can_move == false) {
+            j = i;
+            can_move = true;
+        }
+
+        i++;
+    }
+
+    if (can_move == true)
+        bucket->index = j;
+}
+//----------------------------------------------------------------------------------------------
+
+static void toxfile_purge_bucket(ToxCore* self, TOX_FILE_BUCKET file_bucket, uint32_t friend_number)
+{
+    ToxFileBucket* bucket = toxfile_bucket(self, file_bucket);
+    if (bucket == NULL)
+        return;
+
+    bool need_compact = false;
+
+    size_t i = 0;
+    for (i = 0; i < bucket->index; i++) {
+        ToxFile* item = bucket->files[i];
+        if (item != NULL && item->friend_number == friend_number) {
+            toxfile_free(item);
+            need_compact = true;
+        }
+    }
+
+    if (need_compact == true)
+        toxfile_compact(bucket);
+}
+//----------------------------------------------------------------------------------------------
+
+static void toxfile_purge(ToxCore* self, uint32_t friend_number)
+{
+    toxfile_purge_bucket(self, TOX_FILE_BUCKET_SEND, friend_number);
+    toxfile_purge_bucket(self, TOX_FILE_BUCKET_RECV, friend_number);
+}
+//----------------------------------------------------------------------------------------------
+
+static void toxfile_purge_timeout_bucket(ToxCore* self, TOX_FILE_BUCKET file_bucket, time_t t)
+{
+    ToxFileBucket* bucket = toxfile_bucket(self, file_bucket);
+    if (bucket == NULL)
+        return;
+
+    bool need_compact = false;
+
+    size_t i = 0;
+    for (i = 0; i < bucket->index; i++) {
+        ToxFile* item = bucket->files[i];
+        if (item != NULL && (t - item->checkpoint) > item->timeout) {
+            tox_file_control(self->tox, item->friend_number, item->file_number, TOX_FILE_CONTROL_CANCEL, NULL);
+
+            switch (file_bucket) {
+                case TOX_FILE_BUCKET_SEND:
+                    PyObject_CallMethod((PyObject*)self, "tox_sendfile_cb", "IIs#s#I", item->friend_number, item->file_number, item->path, item->path_len, item->filename, item->filename_len, TOX_SENDFILE_TIMEOUT);
+                    break;
+                case TOX_FILE_BUCKET_RECV:
+                    PyObject_CallMethod((PyObject*)self, "tox_recvfile_cb", "IIs#s#I", item->friend_number, item->file_number, item->path, item->path_len, item->filename, item->filename_len, TOX_RECVFILE_TIMEOUT);
+                    break;
+            }
+
+            toxfile_free(item);
+
+            need_compact = true;
+        }
+    }
+
+    if (need_compact == true)
+        toxfile_compact(bucket);
+}
+//----------------------------------------------------------------------------------------------
+
+static void toxfile_purge_timeout(ToxCore* self, time_t t)
+{
+    toxfile_purge_timeout_bucket(self, TOX_FILE_BUCKET_SEND, t);
+    toxfile_purge_timeout_bucket(self, TOX_FILE_BUCKET_RECV, t);
+}
+//----------------------------------------------------------------------------------------------
+
+static void toxfile_clear_bucket(ToxCore* self, TOX_FILE_BUCKET file_bucket)
+{
+    ToxFileBucket* bucket = toxfile_bucket(self, file_bucket);
+    if (bucket == NULL)
+        return;
+
+    size_t i;
+    for (i = 0; i < bucket->index; i++)
+        toxfile_free(bucket->files[i]);
+
+    free(bucket->files);
+
+    bucket->files = NULL;
+    bucket->index = 0;
+    bucket->count = 0;
+}
+//----------------------------------------------------------------------------------------------
+
+static void toxfile_clear(ToxCore* self)
+{
+    toxfile_clear_bucket(self, TOX_FILE_BUCKET_SEND);
+    toxfile_clear_bucket(self, TOX_FILE_BUCKET_RECV);
+}
+//----------------------------------------------------------------------------------------------
 
 static void callback_self_connection_status(Tox* tox, TOX_CONNECTION connection_status, void* self)
 {
+    if (connection_status == TOX_CONNECTION_NONE)
+        toxfile_clear(self);
+
     PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_self_connection_status_cb", "I", connection_status);
     PyGILState_Release(gil);
@@ -89,6 +372,9 @@ static void callback_friend_read_receipt(Tox* tox, uint32_t friend_number, uint3
 
 static void callback_friend_connection_status(Tox* tox, uint32_t friend_number, TOX_CONNECTION connection_status, void* self)
 {
+    if (connection_status == TOX_CONNECTION_NONE)
+        toxfile_purge(self, friend_number);
+
     PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_friend_connection_status_cb", "II", friend_number, connection_status);
     PyGILState_Release(gil);
@@ -105,9 +391,73 @@ static void callback_friend_typing(Tox* tox, uint32_t friend_number, bool is_typ
 
 static void callback_file_chunk_request(Tox* tox, uint32_t friend_number, uint32_t file_number, uint64_t position, size_t length, void* self)
 {
+    size_t index;
+    ToxFile* item = toxfile_get(self, TOX_FILE_BUCKET_SEND, friend_number, file_number, &index);
+    if (item == NULL) {
+        PyGILState_STATE gil = PyGILState_Ensure();
+        PyObject_CallMethod((PyObject*)self, "tox_file_chunk_request_cb", "IIKK", friend_number, file_number, position, length);
+        PyGILState_Release(gil);
+        return;
+    }
+
+    uint8_t* data = NULL;
+
+    if (length == 0)
+        goto ERROR;
+
+    if (position + length > item->size)
+        goto ERROR;
+
+    if (item->offset != position) {
+        off_t offset = lseek(item->fd, position, SEEK_SET);
+        if (offset == -1 || offset != position)
+            goto ERROR;
+
+        item->offset = offset;
+    }
+
+    data = malloc(length);
+    if (data == NULL)
+        goto ERROR;
+
+    size_t completed = 0;
+    while (completed < length) {
+        ssize_t actual = read(item->fd, data + completed, length - completed);
+        if (actual == -1)
+            goto ERROR;
+
+        completed += actual;
+    }
+
+    TOX_ERR_FILE_SEND_CHUNK error;
+    bool result = tox_file_send_chunk(tox, friend_number, file_number, position, data, length, &error);
+
+    free(data);
+    data = NULL;
+
+    if (result == false || error != TOX_ERR_FILE_SEND_CHUNK_OK)
+        goto ERROR;
+
+    item->offset += length;
+    item->checkpoint = time(NULL);
+
+    return;
+
+ERROR:
+
+    free(data);
+
+    if (length != 0)
+        tox_file_control(tox, friend_number, file_number, TOX_FILE_CONTROL_CANCEL, NULL);
+
     PyGILState_STATE gil = PyGILState_Ensure();
-    PyObject_CallMethod((PyObject*)self, "tox_file_chunk_request_cb", "IIKK", friend_number, file_number, position, length);
+    if (length == 0)
+        PyObject_CallMethod((PyObject*)self, "tox_sendfile_cb", "IIs#s#I", friend_number, file_number, item->path, item->path_len, item->filename, item->filename_len, TOX_SENDFILE_COMPLETED);
+    else
+        PyObject_CallMethod((PyObject*)self, "tox_sendfile_cb", "IIs#s#I", friend_number, file_number, item->path, item->path_len, item->filename, item->filename_len, TOX_SENDFILE_ERROR);
     PyGILState_Release(gil);
+
+    toxfile_remove(self, TOX_FILE_BUCKET_SEND, index);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -126,6 +476,18 @@ static void callback_file_recv(Tox* tox, uint32_t friend_number, uint32_t file_n
 
 static void callback_file_recv_control(Tox* tox, uint32_t friend_number, uint32_t file_number, TOX_FILE_CONTROL control, void* self)
 {
+    if (control == TOX_FILE_CONTROL_CANCEL) {
+        size_t index;
+        ToxFile* item = toxfile_get(self, TOX_FILE_BUCKET_SEND, friend_number, file_number, &index);
+        if (item != NULL)
+            toxfile_remove(self, TOX_FILE_BUCKET_SEND, index);
+        else {
+            item = toxfile_get(self, TOX_FILE_BUCKET_RECV, friend_number, file_number, &index);
+            if (item != NULL)
+                toxfile_remove(self, TOX_FILE_BUCKET_RECV, index);
+        }
+    }
+
     PyGILState_STATE gil = PyGILState_Ensure();
     PyObject_CallMethod((PyObject*)self, "tox_file_recv_control_cb", "III", friend_number, file_number, control);
     PyGILState_Release(gil);
@@ -134,9 +496,56 @@ static void callback_file_recv_control(Tox* tox, uint32_t friend_number, uint32_
 
 static void callback_file_recv_chunk(Tox* tox, uint32_t friend_number, uint32_t file_number, uint64_t position, const uint8_t* data, size_t length, void* self)
 {
+    size_t index;
+    ToxFile* item = toxfile_get(self, TOX_FILE_BUCKET_RECV, friend_number, file_number, &index);
+    if (item == NULL) {
+        PyGILState_STATE gil = PyGILState_Ensure();
+        PyObject_CallMethod((PyObject*)self, "tox_file_recv_chunk_cb", "IIK" BUF_TCS, friend_number, file_number, position, data, length);
+        PyGILState_Release(gil);
+        return;
+    }
+
+    if (length == 0)
+        goto ERROR;
+
+    if (position + length > item->size)
+        goto ERROR;
+
+    if (item->offset != position) {
+        off_t offset = lseek(item->fd, position, SEEK_SET);
+        if (offset == -1 || offset != position)
+            goto ERROR;
+
+        item->offset = offset;
+    }
+
+    size_t completed = 0;
+    while (completed < length) {
+        ssize_t actual = write(item->fd, data + completed, length - completed);
+        if (actual == -1)
+            goto ERROR;
+
+        completed += actual;
+    }
+
+    item->offset += length;
+    item->checkpoint = time(NULL);
+
+    return;
+
+ERROR:
+
+    if (length != 0)
+        tox_file_control(tox, friend_number, file_number, TOX_FILE_CONTROL_CANCEL, NULL);
+
     PyGILState_STATE gil = PyGILState_Ensure();
-    PyObject_CallMethod((PyObject*)self, "tox_file_recv_chunk_cb", "IIK" BUF_TCS, friend_number, file_number, position, data, length);
+    if (length == 0)
+        PyObject_CallMethod((PyObject*)self, "tox_recvfile_cb", "IIs#s#I", friend_number, file_number, item->path, item->path_len, item->filename, item->filename_len, TOX_RECVFILE_COMPLETED);
+    else
+        PyObject_CallMethod((PyObject*)self, "tox_recvfile_cb", "IIs#s#I", friend_number, file_number, item->path, item->path_len, item->filename, item->filename_len, TOX_RECVFILE_ERROR);
     PyGILState_Release(gil);
+
+    toxfile_remove(self, TOX_FILE_BUCKET_RECV, index);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -462,6 +871,8 @@ static PyObject* ToxCore_tox_kill(ToxCore* self, PyObject* args)
         tox_kill(self->tox);
         self->tox = NULL;
     }
+
+    toxfile_clear(self);
 
     Py_RETURN_NONE;
 }
@@ -822,8 +1233,7 @@ static PyObject* ToxCore_tox_friend_get_connection_status(ToxCore* self, PyObjec
     TOX_ERR_FRIEND_QUERY error;
     TOX_CONNECTION connection_status = tox_friend_get_connection_status(self->tox, friend_number, &error);
 
-    bool success = parse_TOX_ERR_FRIEND_QUERY(error);
-    if (success == false)
+    if (parse_TOX_ERR_FRIEND_QUERY(error) == false)
         return NULL;
 
     return PyLong_FromUnsignedLong(connection_status);
@@ -961,9 +1371,7 @@ static PyObject* ToxCore_tox_friend_get_name(ToxCore* self, PyObject* args)
     TOX_ERR_FRIEND_QUERY error;
     bool result = tox_friend_get_name(self->tox, friend_number, name, &error);
 
-    bool success = parse_TOX_ERR_FRIEND_QUERY(error);
-
-    if (result == false || success == false)
+    if (parse_TOX_ERR_FRIEND_QUERY(error) == false || result == false)
         return NULL;
 
     return PYSTRING_FromString((const char*)name);
@@ -1041,9 +1449,7 @@ static PyObject* ToxCore_tox_friend_get_status_message(ToxCore* self, PyObject* 
     TOX_ERR_FRIEND_QUERY error;
     bool result = tox_friend_get_status_message(self->tox, friend_number, status_message, &error);
 
-    bool success = parse_TOX_ERR_FRIEND_QUERY(error);
-
-    if (result == false || success == false)
+    if (parse_TOX_ERR_FRIEND_QUERY(error) == false || result == false)
         return NULL;
 
     return PYSTRING_FromString((const char*)status_message);
@@ -1075,8 +1481,7 @@ static PyObject* ToxCore_tox_friend_get_status(ToxCore* self, PyObject* args)
     TOX_ERR_FRIEND_QUERY error;
     TOX_USER_STATUS status = tox_friend_get_status(self->tox, friend_number, &error);
 
-    bool success = parse_TOX_ERR_FRIEND_QUERY(error);
-    if (success == false)
+    if (parse_TOX_ERR_FRIEND_QUERY(error) == false)
         return NULL;
 
     return PyLong_FromUnsignedLong(status);
@@ -1095,8 +1500,7 @@ static PyObject* ToxCore_tox_friend_get_typing(ToxCore* self, PyObject* args)
     TOX_ERR_FRIEND_QUERY error;
     bool result = tox_friend_get_typing(self->tox, friend_number, &error);
 
-    bool success = parse_TOX_ERR_FRIEND_QUERY(error);
-    if (success == false)
+    if (parse_TOX_ERR_FRIEND_QUERY(error) == false)
         return NULL;
 
     return PyBool_FromLong(result);
@@ -1255,6 +1659,34 @@ static PyObject* ToxCore_tox_friend_get_public_key(ToxCore* self, PyObject* args
 }
 //----------------------------------------------------------------------------------------------
 
+static bool parse_TOX_ERR_FILE_SEND(TOX_ERR_FILE_SEND error)
+{
+    bool success = false;
+    switch (error) {
+        case TOX_ERR_FILE_SEND_OK:
+            success = true;
+            break;
+        case TOX_ERR_FILE_SEND_NULL:
+            PyErr_SetString(ToxCoreException, "One of the arguments to the function was NULL when it was not expected.");
+            break;
+        case TOX_ERR_FILE_SEND_FRIEND_NOT_FOUND:
+            PyErr_SetString(ToxCoreException, "The friend_number passed did not designate a valid friend.");
+            break;
+        case TOX_ERR_FILE_SEND_FRIEND_NOT_CONNECTED:
+            PyErr_SetString(ToxCoreException, "This client is currently not connected to the friend.");
+            break;
+        case TOX_ERR_FILE_SEND_NAME_TOO_LONG:
+            PyErr_SetString(ToxCoreException, "Filename length exceeded TOX_MAX_FILENAME_LENGTH bytes.");
+            break;
+        case TOX_ERR_FILE_SEND_TOO_MANY:
+            PyErr_SetString(ToxCoreException, "Too many ongoing transfers. The maximum number of concurrent file transfers is 256 per friend per direction (sending and receiving).");
+            break;
+    }
+
+    return success;
+}
+//----------------------------------------------------------------------------------------------
+
 static PyObject* ToxCore_tox_file_send(ToxCore* self, PyObject* args)
 {
     CHECK_TOX(self);
@@ -1290,53 +1722,15 @@ static PyObject* ToxCore_tox_file_send(ToxCore* self, PyObject* args)
 
     PyEval_RestoreThread(gil);
 
-    bool success = false;
-    switch (error) {
-        case TOX_ERR_FILE_SEND_OK:
-            success = true;
-            break;
-        case TOX_ERR_FILE_SEND_NULL:
-            PyErr_SetString(ToxCoreException, "One of the arguments to the function was NULL when it was not expected.");
-            break;
-        case TOX_ERR_FILE_SEND_FRIEND_NOT_FOUND:
-            PyErr_SetString(ToxCoreException, "The friend_number passed did not designate a valid friend.");
-            break;
-        case TOX_ERR_FILE_SEND_FRIEND_NOT_CONNECTED:
-            PyErr_SetString(ToxCoreException, "This client is currently not connected to the friend.");
-            break;
-        case TOX_ERR_FILE_SEND_NAME_TOO_LONG:
-            PyErr_SetString(ToxCoreException, "Filename length exceeded TOX_MAX_FILENAME_LENGTH bytes.");
-            break;
-        case TOX_ERR_FILE_SEND_TOO_MANY:
-            PyErr_SetString(ToxCoreException, "Too many ongoing transfers. The maximum number of concurrent file transfers is 256 per friend per direction (sending and receiving).");
-            break;
-    }
-
-    if (file_number == UINT32_MAX || success == false)
+    if (parse_TOX_ERR_FILE_SEND(error) == false || file_number == UINT32_MAX)
         return NULL;
 
     return PyLong_FromUnsignedLong(file_number);
 }
 //----------------------------------------------------------------------------------------------
 
-static PyObject* ToxCore_tox_file_control(ToxCore* self, PyObject* args)
+static bool parse_TOX_ERR_FILE_CONTROL(TOX_ERR_FILE_CONTROL error)
 {
-    CHECK_TOX(self);
-
-    uint32_t         friend_number;
-    uint32_t         file_number;
-    TOX_FILE_CONTROL control;
-
-    if (PyArg_ParseTuple(args, "III", &friend_number, &file_number, &control) == false)
-        return NULL;
-
-    PyThreadState* gil = PyEval_SaveThread();
-
-    TOX_ERR_FILE_CONTROL error;
-    bool result = tox_file_control(self->tox, friend_number, file_number, control, &error);
-
-    PyEval_RestoreThread(gil);
-
     bool success = false;
     switch (error) {
         case TOX_ERR_FILE_CONTROL_OK:
@@ -1365,7 +1759,29 @@ static PyObject* ToxCore_tox_file_control(ToxCore* self, PyObject* args)
             break;
     }
 
-    if (result == false || success == false)
+    return success;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_file_control(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t         friend_number;
+    uint32_t         file_number;
+    TOX_FILE_CONTROL control;
+
+    if (PyArg_ParseTuple(args, "III", &friend_number, &file_number, &control) == false)
+        return NULL;
+
+    PyThreadState* gil = PyEval_SaveThread();
+
+    TOX_ERR_FILE_CONTROL error;
+    bool result = tox_file_control(self->tox, friend_number, file_number, control, &error);
+
+    PyEval_RestoreThread(gil);
+
+    if (parse_TOX_ERR_FILE_CONTROL(error) == false || result == false)
         return NULL;
 
     Py_RETURN_NONE;
@@ -1618,6 +2034,13 @@ static PyObject* ToxCore_tox_iterate(ToxCore* self, PyObject* args)
 
     if (PyErr_Occurred() != NULL)
         return NULL;
+
+    static uint8_t interval = 0;
+    if (interval % 20 == 0) { // ~ 1 sec
+        toxfile_purge_timeout(self, time(NULL));
+        interval = 0;
+    } else
+        interval++;
 
     Py_RETURN_NONE;
 }
@@ -3327,6 +3750,196 @@ static PyObject* ToxCore_tox_address_check(ToxCore* self, PyObject* args)
 }
 //----------------------------------------------------------------------------------------------
 
+static PyObject* ToxCore_tox_sendfile(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t   friend_number;
+    uint32_t   kind;
+    char*      path;
+    Py_ssize_t path_len;
+    uint8_t*   filename;
+    Py_ssize_t filename_len;
+    uint32_t   timeout;
+
+    if (PyArg_ParseTuple(args, "IIs#s#I", &friend_number, &kind, &path, &path_len, &filename, &filename_len, &timeout) == false)
+        return NULL;
+
+    PyThreadState* gil = PyEval_SaveThread();
+
+    int      err     = 0;
+    ToxFile* item    = NULL;
+    uint8_t* data    = NULL;
+    uint8_t* file_id = NULL;
+    uint8_t  file_id_buf[TOX_FILE_ID_LENGTH];
+
+    struct stat info;
+    if (stat(path, &info) != 0) {
+        err = errno;
+        goto ERROR;
+    }
+
+    if (S_ISREG(info.st_mode) == 0) {
+        PyEval_RestoreThread(gil);
+        PyErr_SetString(ToxCoreException, "File not found.");
+        return NULL;
+    }
+
+    item = toxfile_alloc(path, path_len, filename, filename_len, &err);
+    if (item == NULL)
+        goto ERROR;
+
+    item->size = info.st_size;
+    item->fd   = open(path, O_RDONLY);
+    if (item->fd == -1) {
+        err = errno;
+        goto ERROR;
+    }
+
+    if (kind == TOX_FILE_KIND_AVATAR) {
+        data = malloc(info.st_size);
+        if (data == NULL) {
+            err = errno;
+            goto ERROR;
+        }
+
+        while (item->offset < item->size) {
+            ssize_t actual = read(item->fd, data + item->offset, item->size - item->offset);
+            if (actual == -1) {
+                err = errno;
+                goto ERROR;
+            }
+
+            item->offset += actual;
+        }
+
+        if (tox_hash(file_id_buf, data, item->size) == false)
+            goto ERROR;
+
+        free(data);
+
+        data    = NULL;
+        file_id = file_id_buf;
+
+        if (lseek(item->fd, 0, SEEK_SET) == -1) {
+            err = errno;
+            goto ERROR;
+        }
+
+        item->offset = 0;
+    }
+
+    TOX_ERR_FILE_SEND error;
+    uint32_t          file_number;
+
+    if (kind == TOX_FILE_KIND_AVATAR)
+        file_number = tox_file_send(self->tox, friend_number, kind, item->size, file_id, NULL, 0, &error);
+    else
+        file_number = tox_file_send(self->tox, friend_number, kind, item->size, file_id, filename, filename_len, &error);
+
+    PyEval_RestoreThread(gil);
+    gil = NULL;
+
+    if (parse_TOX_ERR_FILE_SEND(error) == false || file_number == UINT32_MAX)
+        goto ERROR;
+
+    item->checkpoint    = time(NULL);
+    item->timeout       = timeout;
+    item->friend_number = friend_number;
+    item->file_number   = file_number;
+
+    if (toxfile_add(self, TOX_FILE_BUCKET_SEND, item, &err) == false) {
+        tox_file_control(self->tox, friend_number, file_number, TOX_FILE_CONTROL_CANCEL, NULL);
+        goto ERROR;
+    }
+
+    return PyLong_FromUnsignedLong(file_number);
+
+ERROR:
+
+    free(data);
+
+    toxfile_free(item);
+
+    if (gil != NULL)
+        PyEval_RestoreThread(gil);
+
+    if (err != 0)
+        return syserror(err);
+
+    return NULL;
+}
+//----------------------------------------------------------------------------------------------
+
+static PyObject* ToxCore_tox_recvfile(ToxCore* self, PyObject* args)
+{
+    CHECK_TOX(self);
+
+    uint32_t   friend_number;
+    uint32_t   file_number;
+    uint64_t   file_size;
+    char*      path;
+    Py_ssize_t path_len;
+    uint8_t*   filename;
+    Py_ssize_t filename_len;
+    uint32_t   timeout;
+
+    if (PyArg_ParseTuple(args, "IIKs#s#I", &friend_number, &file_number, &file_size, &path, &path_len, &filename, &filename_len, &timeout) == false)
+        return NULL;
+
+    PyThreadState* gil = PyEval_SaveThread();
+
+    int      err  = 0;
+    ToxFile* item = NULL;
+
+    item = toxfile_alloc(path, path_len, filename, filename_len, &err);
+    if (item == NULL)
+        goto ERROR;
+
+    item->size = file_size;
+    item->fd   = open(path, O_CREAT | O_TRUNC | O_APPEND | O_WRONLY, 0644);
+    if (item->fd == -1) {
+        err = errno;
+        goto ERROR;
+    }
+
+    TOX_ERR_FILE_CONTROL error;
+    bool result = tox_file_control(self->tox, friend_number, file_number, TOX_FILE_CONTROL_RESUME, &error);
+
+    PyEval_RestoreThread(gil);
+    gil = NULL;
+
+    if (parse_TOX_ERR_FILE_CONTROL(error) == false || result == false)
+        goto ERROR;
+
+    item->checkpoint    = time(NULL);
+    item->timeout       = timeout;
+    item->friend_number = friend_number;
+    item->file_number   = file_number;
+
+    if (toxfile_add(self, TOX_FILE_BUCKET_RECV, item, &err) == false) {
+        tox_file_control(self->tox, friend_number, file_number, TOX_FILE_CONTROL_CANCEL, NULL);
+        goto ERROR;
+    }
+
+    Py_RETURN_NONE;
+
+ERROR:
+
+    toxfile_free(item);
+
+    if (gil != NULL) {
+        tox_file_control(self->tox, friend_number, file_number, TOX_FILE_CONTROL_CANCEL, NULL);
+        PyEval_RestoreThread(gil);
+    }
+
+    if (err != 0)
+        return syserror(err);
+
+    return NULL;
+}
+//----------------------------------------------------------------------------------------------
+
 PyMethodDef ToxCore_methods[] = {
     //
     // callbacks
@@ -3492,6 +4105,21 @@ PyMethodDef ToxCore_methods[] = {
         "tox_group_custom_packet_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
         "tox_group_custom_packet_cb(groupnumber, peer_id, data)\n"
         "This event is triggered when custom packet received."
+    },
+
+    //
+    // non-api callbacks
+    //
+
+    {
+        "tox_sendfile_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_sendfile_cb(friend_number, file_number, path, filename, status)\n"
+        "This event is triggered when tox_sendfile call finished."
+    },
+    {
+        "tox_recvfile_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
+        "tox_recvfile_cb(friend_number, file_number, path, filename, status)\n"
+        "This event is triggered when tox_recvfile call finished."
     },
 
     //
@@ -4142,6 +4770,16 @@ PyMethodDef ToxCore_methods[] = {
         "tox_address_check(address)\n"
         "Throws exception if address is invalid."
     },
+    {
+        "tox_sendfile", (PyCFunction)ToxCore_tox_sendfile, METH_VARARGS,
+        "tox_sendfile(friend_number, kind, path, filename, timeout)\n"
+        "Send file to a friend like system sendfile."
+    },
+    {
+        "tox_recvfile", (PyCFunction)ToxCore_tox_recvfile, METH_VARARGS,
+        "tox_recvfile(friend_number, file_number, file_size, path, filename, timeout)\n"
+        "Receive file from a friend and store it to path."
+    },
 
     {
         NULL
@@ -4477,6 +5115,9 @@ static PyObject* ToxCore_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
 
     self->tox = NULL;
 
+    memset(&self->send_files, 0, sizeof(ToxFileBucket));
+    memset(&self->recv_files, 0, sizeof(ToxFileBucket));
+
     if (init_helper(self, NULL) == -1)
         return NULL;
 
@@ -4653,6 +5294,16 @@ void ToxCore_install_dict(void)
     SET(TOX_GROUP_ROLE_MODERATOR);
     SET(TOX_GROUP_ROLE_USER);
     SET(TOX_GROUP_ROLE_OBSERVER);
+
+    // non-api for tox_sendfile
+    SET(TOX_SENDFILE_COMPLETED);
+    SET(TOX_SENDFILE_TIMEOUT);
+    SET(TOX_SENDFILE_ERROR);
+
+    // non-api for tox_recvfile
+    SET(TOX_RECVFILE_COMPLETED);
+    SET(TOX_RECVFILE_TIMEOUT);
+    SET(TOX_RECVFILE_ERROR);
 
 #undef SET
 

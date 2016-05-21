@@ -250,6 +250,8 @@ class ToxDNSResolver(object):
 if __name__ == "__main__":
     resolver = ToxDNSResolver()
 
-    print(resolver.tox1_request("tox@toxme.io"))
-    print(resolver.tox3_request("tox@toxme.io"))
-    print(resolver.tox_request("tox@toxme.io"))
+    # к сожланию единственный работающий ToxDNS (toxme.io) был убит владельцем
+    # (см. https://github.com/Antox/Antox/issues/193)
+    #print(resolver.tox1_request("tox@toxme.io"))
+    #print(resolver.tox3_request("tox@toxme.io"))
+    #print(resolver.tox_request("tox@toxme.io"))

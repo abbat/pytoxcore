@@ -194,22 +194,6 @@ class EchoBotOptions(object):
         return options
 
 
-class EchoBotFile(object):
-    """
-    Описатель файла
-    """
-    def __init__(self):
-        self.fd       = None
-        self.write    = False
-        self.read     = False
-        self.size     = 0
-        self.position = 0
-        self.path     = ""
-        self.name     = ""
-        self.id       = ""
-        self.kind     = ToxCore.TOX_FILE_KIND_DATA
-
-
 class EchoBot(ToxCore):
     """
     Бот
@@ -247,9 +231,6 @@ class EchoBot(ToxCore):
         self.tox_self_set_status_message(self.options.status_message)
 
         self.debug("Get self ToxID: {0}".format(self.tox_self_get_address()))
-
-        # список активных файловых операций { friend_id: { file_id: EchoBotFile } }
-        self.files = {}
 
 
     def debug(self, message):
@@ -317,7 +298,7 @@ class EchoBot(ToxCore):
         self.debug("Save data to file: {0}".format(self.options.save_tmp_file))
 
         with open(self.options.save_tmp_file, "wb") as f:
-            f.write(self.tox_get_savedata());
+            f.write(self.tox_get_savedata())
 
         self.debug("Move data to file: {0}".format(self.options.save_file))
         os.rename(self.options.save_tmp_file, self.options.save_file)
@@ -336,26 +317,7 @@ class EchoBot(ToxCore):
         friend_name = self.tox_friend_get_name(friend_number)
         self.verbose("Send avatar to {0}/{1}".format(friend_name, friend_number))
 
-        f = EchoBotFile()
-
-        f.kind = ToxCore.TOX_FILE_KIND_AVATAR
-        f.size = os.path.getsize(self.options.avatar)
-        f.read = True
-        f.path = self.options.avatar
-        f.fd   = open(f.path, "rb")
-
-        data = f.fd.read()
-        f.fd.seek(0, 0)
-
-        f.id   = ToxCore.tox_hash(data)
-        f.name = f.id
-
-        file_number = self.tox_file_send(friend_number, ToxCore.TOX_FILE_KIND_AVATAR, f.size, f.id, f.name)
-
-        if friend_number not in self.files:
-            self.files[friend_number] = {}
-
-        self.files[friend_number][file_number] = f
+        self.tox_sendfile(friend_number, ToxCore.TOX_FILE_KIND_AVATAR, self.options.avatar, "", 60)
 
 
     def send_file(self, friend_number, path, name = None):
@@ -372,31 +334,15 @@ class EchoBot(ToxCore):
 
         friend_name = self.tox_friend_get_name(friend_number)
 
-        if name is not None:
+        if name:
             self.verbose("Send file {0} as {1} to {2}/{3}".format(path, name, friend_name, friend_number))
         else:
             self.verbose("Send file {0} to {1}/{2}".format(path, friend_name, friend_number))
 
-        f = EchoBotFile()
+        if not name:
+            name = os.path.basename(path)
 
-        f.kind = ToxCore.TOX_FILE_KIND_DATA
-        f.size = os.path.getsize(path)
-        f.read = True
-        f.path = path
-        f.fd   = open(f.path, "rb")
-        f.name = name
-
-        if f.name is None:
-            f.name = os.path.basename(f.path)
-
-        file_number = self.tox_file_send(friend_number, ToxCore.TOX_FILE_KIND_DATA, f.size, None, f.name)
-
-        f.id = self.tox_file_get_file_id(friend_number, file_number)
-
-        if friend_number not in self.files:
-            self.files[friend_number] = {}
-
-        self.files[friend_number][file_number] = f
+        self.tox_sendfile(friend_number, ToxCore.TOX_FILE_KIND_DATA, path, name, 60)
 
 
     def tox_self_connection_status_cb(self, connection_status):
@@ -441,10 +387,6 @@ class EchoBot(ToxCore):
 
         if connection_status == ToxCore.TOX_CONNECTION_NONE:
             self.verbose("Friend {0}/{1} is offline".format(friend_name, friend_number))
-            if friend_number in self.files:
-                for f in itervalues(self.files[friend_number]):
-                    f.fd.close()
-                del self.files[friend_number]
         elif connection_status == ToxCore.TOX_CONNECTION_TCP:
             self.verbose("Friend {0}/{1} connected via TCP".format(friend_name, friend_number))
         elif connection_status == ToxCore.TOX_CONNECTION_UDP:
@@ -546,10 +488,6 @@ class EchoBot(ToxCore):
         if file_size <= 0:
             return False
 
-        # ограничение количества отдновременных файлов до 10 в обе стороны
-        if friend_number in self.files and len(self.files[friend_number]) >= 20:
-            return False
-
         if kind == ToxCore.TOX_FILE_KIND_DATA:
             return (
                 self.options.accept_files and
@@ -583,6 +521,7 @@ class EchoBot(ToxCore):
             file_id = self.tox_file_get_file_id(friend_number, file_number)
             self.verbose("File from {0}/{1}: number = {2}, size = {3}, id = {4}, name = {5}".format(friend_name, friend_number, file_number, file_size, file_id, filename))
         elif kind == ToxCore.TOX_FILE_KIND_AVATAR:
+            filename = ""
             if file_size != 0:
                 file_id = self.tox_file_get_file_id(friend_number, file_number)
                 self.verbose("Avatar from {0}/{1}: number = {2}, size = {3}, id = {4}".format(friend_name, friend_number, file_number, file_size, file_id))
@@ -592,27 +531,12 @@ class EchoBot(ToxCore):
             raise NotImplementedError("Unknown kind: {0}".format(kind))
 
         if self.can_accept_file(friend_number, file_number, kind, file_size, filename):
-            f = EchoBotFile()
+            if kind == ToxCore.TOX_FILE_KIND_DATA:
+                path = self.options.files_path + "/" + file_id
+            elif kind == ToxCore.TOX_FILE_KIND_AVATAR:
+                path = self.options.avatars_path + "/" + file_id
 
-            f.kind  = kind
-            f.size  = file_size
-            f.write = True
-            f.name  = filename
-            f.id    = file_id
-
-            if f.kind == ToxCore.TOX_FILE_KIND_DATA:
-                f.path = self.options.files_path + "/" + f.id
-            elif f.kind == ToxCore.TOX_FILE_KIND_AVATAR:
-                f.path = self.options.avatars_path + "/" + f.id
-
-            f.fd = open(f.path, "wb")
-
-            if friend_number not in self.files:
-                self.files[friend_number] = {}
-
-            self.files[friend_number][file_number] = f
-
-            self.tox_file_control(friend_number, file_number, ToxCore.TOX_FILE_CONTROL_RESUME)
+            self.tox_recvfile(friend_number, file_number, file_size, path, filename, 60)
         else:
             self.tox_file_control(friend_number, file_number, ToxCore.TOX_FILE_CONTROL_CANCEL)
 
@@ -635,92 +559,35 @@ class EchoBot(ToxCore):
             self.verbose("File paused from {0}/{1}: number = {2}".format(friend_name, friend_number, file_number))
         elif control == ToxCore.TOX_FILE_CONTROL_CANCEL:
             self.verbose("File canceled from {0}/{1}: number = {2}".format(friend_name, friend_number, file_number))
-            if friend_number in self.files and file_number in self.files[friend_number]:
-                self.files[friend_number][file_number].fd.close()
-                del self.files[friend_number][file_number]
         else:
             raise NotImplementedError("Unknown control: {0}".format(control))
 
 
-    def tox_file_recv_chunk_cb(self, friend_number, file_number, position, data):
+    def tox_recvfile_cb(self, friend_number, file_number, path, filename, status):
         """
-        Получение чанка данных при приеме
-        (см. tox_file_recv_chunk_cb)
+        Контроль выполнения tox_recvfile
 
         Аргументы:
             friend_number (int) -- Номер друга
             file_number   (int) -- Номер файла (случайный номер в рамках передачи)
-            position      (int) -- Номер позиции
-            data          (str) -- Данные
+            status        (int) -- Статус получения файла
         """
-        if friend_number not in self.files:
-            return
-        if file_number not in self.files[friend_number]:
-            return
+        friend_name = self.tox_friend_get_name(friend_number)
 
-        f = self.files[friend_number][file_number]
+        if status == ToxCore.TOX_RECVFILE_COMPLETED:
+            self.verbose("recvfile completed to {0}/{1}: number = {2}".format(friend_name, friend_number, file_number))
 
-        if f.write == False:
-            return
+            file_id = self.tox_file_get_file_id(friend_number, file_number)
+            path = self.options.files_path + "/" + file_id
+            if os.path.isfile(path):
+                self.tox_sendfile(friend_number, ToxCore.TOX_FILE_KIND_DATA, path, filename, 60)
 
-        if f.position != position:
-            f.fd.seek(position, 0)
-            f.position = position
-
-        if data is not None:
-            f.fd.write(data)
-
-            length = len(data)
-            f.position += length
+        elif status == ToxCore.TOX_RECVFILE_TIMEOUT:
+            self.verbose("recvfile timeout to {0}/{1}: number = {2}".format(friend_name, friend_number, file_number))
+        elif status == ToxCore.TOX_RECVFILE_ERROR:
+            self.verbose("recvfile error to {0}/{1}: number = {2}".format(friend_name, friend_number, file_number))
         else:
-            length = 0
-
-        if length == 0 or f.position > f.size:
-            f.fd.close()
-            del self.files[friend_number][file_number]
-
-            if f.kind == ToxCore.TOX_FILE_KIND_DATA:
-                self.send_file(friend_number, f.path, f.name)
-        else:
-            self.files[friend_number][file_number] = f
-
-
-    def tox_file_chunk_request_cb(self, friend_number, file_number, position, length):
-        """
-        Запрос чанка данных для передачи
-        (см. tox_file_chunk_request_cb)
-
-        Аргументы:
-            friend_number (int) -- Номер друга
-            file_number   (int) -- Номер файла (случайный номер в рамках передачи)
-            position      (int) -- Номер позиции
-            length        (str) -- Требуемая длина чанка
-        """
-        if friend_number not in self.files:
-            return
-        if file_number not in self.files[friend_number]:
-            return
-
-        f = self.files[friend_number][file_number]
-
-        if f.read == False:
-            return
-
-        if length == 0:
-            f.fd.close()
-            del self.files[friend_number][file_number]
-            return
-
-        if f.position != position:
-            f.fd.seek(position, 0)
-            f.position = position
-
-        data = f.fd.read(length)
-        f.position += len(data)
-
-        self.files[friend_number][file_number] = f
-
-        self.tox_file_send_chunk(friend_number, file_number, position, data)
+            raise NotImplementedError("Unknown status: {0}".format(status))
 
 
 if __name__ == "__main__":
