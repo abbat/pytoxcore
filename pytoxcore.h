@@ -24,6 +24,10 @@
 //----------------------------------------------------------------------------------------------
 typedef struct {
     int      fd;
+    char*    path;
+    size_t   path_len;
+    uint8_t* filename;
+    size_t   filename_len;
     uint64_t offset;
     uint64_t size;
     time_t   checkpoint;

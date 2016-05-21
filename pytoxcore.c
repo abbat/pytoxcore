@@ -52,7 +52,7 @@ static void* syserror(int err)
 }
 //----------------------------------------------------------------------------------------------
 
-static ToxFile* toxfile_alloc(int* err)
+static ToxFile* toxfile_alloc(const char* path, size_t path_len, const uint8_t* filename, size_t filename_len, int* err)
 {
     ToxFile* item = malloc(sizeof(ToxFile));
     if (item == NULL) {
@@ -63,7 +63,35 @@ static ToxFile* toxfile_alloc(int* err)
     memset(item, 0, sizeof(ToxFile));
     item->fd = -1;
 
+    item->path = malloc(path_len + 1);
+    if (item->path == NULL) {
+        *err = errno;
+        goto ERROR;
+    }
+
+    memcpy(item->path, path, path_len);
+    item->path[path_len] = 0;
+    item->path_len = path_len;
+
+    item->filename = malloc(filename_len + 1);
+    if (item->filename == NULL) {
+        *err = errno;
+        goto ERROR;
+    }
+
+    memcpy(item->filename, filename, filename_len);
+    item->filename[filename_len] = 0;
+    item->filename_len = filename_len;
+
     return item;
+
+ERROR:
+
+    free(item->path);
+    free(item->filename);
+    free(item);
+
+    return NULL;
 }
 //----------------------------------------------------------------------------------------------
 
@@ -73,6 +101,8 @@ static void toxfile_free(ToxFile* item)
         if (item->fd != -1)
             close(item->fd);
 
+        free(item->path);
+        free(item->filename);
         free(item);
     }
 }
@@ -228,10 +258,10 @@ static void toxfile_purge_timeout_bucket(ToxCore* self, TOX_FILE_BUCKET file_buc
 
             switch (file_bucket) {
                 case TOX_FILE_BUCKET_SEND:
-                    PyObject_CallMethod((PyObject*)self, "tox_sendfile_cb", "III", item->friend_number, item->file_number, TOX_SENDFILE_TIMEOUT);
+                    PyObject_CallMethod((PyObject*)self, "tox_sendfile_cb", "IIs#s#I", item->friend_number, item->file_number, item->path, item->path_len, item->filename, item->filename_len, TOX_SENDFILE_TIMEOUT);
                     break;
                 case TOX_FILE_BUCKET_RECV:
-                    PyObject_CallMethod((PyObject*)self, "tox_recvfile_cb", "III", item->friend_number, item->file_number, TOX_RECVFILE_TIMEOUT);
+                    PyObject_CallMethod((PyObject*)self, "tox_recvfile_cb", "IIs#s#I", item->friend_number, item->file_number, item->path, item->path_len, item->filename, item->filename_len, TOX_RECVFILE_TIMEOUT);
                     break;
             }
 
@@ -417,17 +447,17 @@ ERROR:
 
     free(data);
 
-    toxfile_remove(self, TOX_FILE_BUCKET_SEND, index);
-
     if (length != 0)
         tox_file_control(tox, friend_number, file_number, TOX_FILE_CONTROL_CANCEL, NULL);
 
     PyGILState_STATE gil = PyGILState_Ensure();
     if (length == 0)
-        PyObject_CallMethod((PyObject*)self, "tox_sendfile_cb", "III", friend_number, file_number, TOX_SENDFILE_COMPLETED);
+        PyObject_CallMethod((PyObject*)self, "tox_sendfile_cb", "IIs#s#I", friend_number, file_number, item->path, item->path_len, item->filename, item->filename_len, TOX_SENDFILE_COMPLETED);
     else
-        PyObject_CallMethod((PyObject*)self, "tox_sendfile_cb", "III", friend_number, file_number, TOX_SENDFILE_ERROR);
+        PyObject_CallMethod((PyObject*)self, "tox_sendfile_cb", "IIs#s#I", friend_number, file_number, item->path, item->path_len, item->filename, item->filename_len, TOX_SENDFILE_ERROR);
     PyGILState_Release(gil);
+
+    toxfile_remove(self, TOX_FILE_BUCKET_SEND, index);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -505,17 +535,17 @@ static void callback_file_recv_chunk(Tox* tox, uint32_t friend_number, uint32_t 
 
 ERROR:
 
-    toxfile_remove(self, TOX_FILE_BUCKET_RECV, index);
-
     if (length != 0)
         tox_file_control(tox, friend_number, file_number, TOX_FILE_CONTROL_CANCEL, NULL);
 
     PyGILState_STATE gil = PyGILState_Ensure();
     if (length == 0)
-        PyObject_CallMethod((PyObject*)self, "tox_recvfile_cb", "III", friend_number, file_number, TOX_RECVFILE_COMPLETED);
+        PyObject_CallMethod((PyObject*)self, "tox_recvfile_cb", "IIs#s#I", friend_number, file_number, item->path, item->path_len, item->filename, item->filename_len, TOX_RECVFILE_COMPLETED);
     else
-        PyObject_CallMethod((PyObject*)self, "tox_recvfile_cb", "III", friend_number, file_number, TOX_RECVFILE_ERROR);
+        PyObject_CallMethod((PyObject*)self, "tox_recvfile_cb", "IIs#s#I", friend_number, file_number, item->path, item->path_len, item->filename, item->filename_len, TOX_RECVFILE_ERROR);
     PyGILState_Release(gil);
+
+    toxfile_remove(self, TOX_FILE_BUCKET_RECV, index);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -2165,7 +2195,7 @@ static PyObject* ToxCore_tox_sendfile(ToxCore* self, PyObject* args)
         return NULL;
     }
 
-    item = toxfile_alloc(&err);
+    item = toxfile_alloc(path, path_len, filename, filename_len, &err);
     if (item == NULL)
         goto ERROR;
 
@@ -2260,9 +2290,11 @@ static PyObject* ToxCore_tox_recvfile(ToxCore* self, PyObject* args)
     uint64_t   file_size;
     char*      path;
     Py_ssize_t path_len;
+    uint8_t*   filename;
+    Py_ssize_t filename_len;
     uint32_t   timeout;
 
-    if (PyArg_ParseTuple(args, "IIKs#I", &friend_number, &file_number, &file_size, &path, &path_len, &timeout) == false)
+    if (PyArg_ParseTuple(args, "IIKs#s#I", &friend_number, &file_number, &file_size, &path, &path_len, &filename, &filename_len, &timeout) == false)
         return NULL;
 
     PyThreadState* gil = PyEval_SaveThread();
@@ -2270,7 +2302,7 @@ static PyObject* ToxCore_tox_recvfile(ToxCore* self, PyObject* args)
     int      err  = 0;
     ToxFile* item = NULL;
 
-    item = toxfile_alloc(&err);
+    item = toxfile_alloc(path, path_len, filename, filename_len, &err);
     if (item == NULL)
         goto ERROR;
 
@@ -2414,12 +2446,12 @@ PyMethodDef ToxCore_methods[] = {
 
     {
         "tox_sendfile_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
-        "tox_sendfile_cb(friend_number, file_number, status)\n"
+        "tox_sendfile_cb(friend_number, file_number, path, filename, status)\n"
         "This event is triggered when tox_sendfile call finished."
     },
     {
         "tox_recvfile_cb", (PyCFunction)ToxCore_callback_stub, METH_VARARGS,
-        "tox_recvfile_cb(friend_number, file_number, status)\n"
+        "tox_recvfile_cb(friend_number, file_number, path, filename, status)\n"
         "This event is triggered when tox_recvfile call finished."
     },
 
@@ -2815,7 +2847,7 @@ PyMethodDef ToxCore_methods[] = {
     },
     {
         "tox_recvfile", (PyCFunction)ToxCore_tox_recvfile, METH_VARARGS,
-        "tox_recvfile(friend_number, file_number, file_size, path, timeout)\n"
+        "tox_recvfile(friend_number, file_number, file_size, path, filename, timeout)\n"
         "Receive file from a friend and store it to path."
     },
 

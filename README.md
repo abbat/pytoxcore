@@ -83,7 +83,7 @@ tox_sendfile(friend_number, kind, path, filename, timeout)
 This event is triggered when `tox_sendfile` call finished.
 
 ```
-tox_sendfile_cb(friend_number, file_number, status)
+tox_sendfile_cb(friend_number, file_number, path, filename, status)
 ```
 
 `status` may be one of:
@@ -97,7 +97,7 @@ tox_sendfile_cb(friend_number, file_number, status)
 Receive file from a friend and store it to `path`. Call `tox_recvfile_cb` callback (see below).
 
 ```
-tox_recvfile(friend_number, file_number, file_size, path, timeout)
+tox_recvfile(friend_number, file_number, file_size, path, filename, timeout)
 ```
 
 ##### tox_recvfile_cb
@@ -105,7 +105,7 @@ tox_recvfile(friend_number, file_number, file_size, path, timeout)
 This event is triggered when `tox_recvfile` call finished.
 
 ```
-tox_recvfile_cb(friend_number, file_number, status)
+tox_recvfile_cb(friend_number, file_number, path, filename, status)
 ```
 
 `status` may be one of:

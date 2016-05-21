@@ -521,6 +521,7 @@ class EchoBot(ToxCore):
             file_id = self.tox_file_get_file_id(friend_number, file_number)
             self.verbose("File from {0}/{1}: number = {2}, size = {3}, id = {4}, name = {5}".format(friend_name, friend_number, file_number, file_size, file_id, filename))
         elif kind == ToxCore.TOX_FILE_KIND_AVATAR:
+            filename = ""
             if file_size != 0:
                 file_id = self.tox_file_get_file_id(friend_number, file_number)
                 self.verbose("Avatar from {0}/{1}: number = {2}, size = {3}, id = {4}".format(friend_name, friend_number, file_number, file_size, file_id))
@@ -535,7 +536,7 @@ class EchoBot(ToxCore):
             elif kind == ToxCore.TOX_FILE_KIND_AVATAR:
                 path = self.options.avatars_path + "/" + file_id
 
-            self.tox_recvfile(friend_number, file_number, file_size, path, 60)
+            self.tox_recvfile(friend_number, file_number, file_size, path, filename, 60)
         else:
             self.tox_file_control(friend_number, file_number, ToxCore.TOX_FILE_CONTROL_CANCEL)
 
@@ -562,7 +563,7 @@ class EchoBot(ToxCore):
             raise NotImplementedError("Unknown control: {0}".format(control))
 
 
-    def tox_recvfile_cb(self, friend_number, file_number, status):
+    def tox_recvfile_cb(self, friend_number, file_number, path, filename, status):
         """
         Контроль выполнения tox_recvfile
 
@@ -575,8 +576,12 @@ class EchoBot(ToxCore):
 
         if status == ToxCore.TOX_RECVFILE_COMPLETED:
             self.verbose("recvfile completed to {0}/{1}: number = {2}".format(friend_name, friend_number, file_number))
-            # FIXME:
-            #self.send_file()
+
+            file_id = self.tox_file_get_file_id(friend_number, file_number)
+            path = self.options.files_path + "/" + file_id
+            if os.path.isfile(path):
+                self.tox_sendfile(friend_number, ToxCore.TOX_FILE_KIND_DATA, path, filename, 60)
+
         elif status == ToxCore.TOX_RECVFILE_TIMEOUT:
             self.verbose("recvfile timeout to {0}/{1}: number = {2}".format(friend_name, friend_number, file_number))
         elif status == ToxCore.TOX_RECVFILE_ERROR:
