@@ -278,7 +278,7 @@ class ZabbixBot(ToxCore):
         self.debug("Save data to file: {0}".format(self.options.save_tmp_file))
 
         with open(self.options.save_tmp_file, "wb") as f:
-            f.write(self.tox_get_savedata());
+            f.write(self.tox_get_savedata())
 
         self.debug("Move data to file: {0}".format(self.options.save_file))
         os.rename(self.options.save_tmp_file, self.options.save_file)

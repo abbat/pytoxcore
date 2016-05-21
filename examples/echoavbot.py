@@ -38,7 +38,7 @@ class EchoAVBot(ToxAV):
         self.core.verbose("stopping...")
         self.running = False
         self.iterate_thread.join()
-        self.toxav_kill();
+        self.toxav_kill()
         self.core.verbose("stopped")
 
 

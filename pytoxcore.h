@@ -23,8 +23,26 @@
 #include "pytox.h"
 //----------------------------------------------------------------------------------------------
 typedef struct {
+    int      fd;
+    uint64_t offset;
+    uint64_t size;
+    time_t   checkpoint;
+    time_t   timeout;
+    uint32_t friend_number;
+    uint32_t file_number;
+} ToxFile;
+//----------------------------------------------------------------------------------------------
+typedef struct {
+    ToxFile** files;
+    size_t    index;
+    size_t    count;
+} ToxFileBucket;
+//----------------------------------------------------------------------------------------------
+typedef struct {
     PyObject_HEAD
-    Tox* tox;
+    Tox*          tox;
+    ToxFileBucket send_files;
+    ToxFileBucket recv_files;
 } ToxCore;
 //----------------------------------------------------------------------------------------------
 extern PyTypeObject ToxCoreType;
