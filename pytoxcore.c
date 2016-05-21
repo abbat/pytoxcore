@@ -2177,7 +2177,7 @@ static PyObject* ToxCore_tox_sendfile(ToxCore* self, PyObject* args)
     }
 
     if (kind == TOX_FILE_KIND_AVATAR) {
-        uint8_t* data = malloc(info.st_size);
+        data = malloc(info.st_size);
         if (data == NULL) {
             err = errno;
             goto ERROR;
