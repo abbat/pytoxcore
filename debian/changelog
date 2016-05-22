@@ -1,3 +1,9 @@
+python-toxcore (0.2.2) unstable; urgency=low
+
+  * Fix memory corruption in tox_sendfile / tox_recvfile.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sun, 22 May 2016 18:21:12 +0300
+
 python-toxcore (0.2.1) unstable; urgency=low
 
   * Fix memleak in tox_sendfile;

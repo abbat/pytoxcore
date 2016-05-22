@@ -226,6 +226,7 @@ static void toxfile_purge_bucket(ToxCore* self, TOX_FILE_BUCKET file_bucket, uin
         ToxFile* item = bucket->files[i];
         if (item != NULL && item->friend_number == friend_number) {
             toxfile_free(item);
+            bucket->files[i] = NULL;
             need_compact = true;
         }
     }
@@ -266,7 +267,7 @@ static void toxfile_purge_timeout_bucket(ToxCore* self, TOX_FILE_BUCKET file_buc
             }
 
             toxfile_free(item);
-
+            bucket->files[i] = NULL;
             need_compact = true;
         }
     }
