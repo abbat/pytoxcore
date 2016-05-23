@@ -350,6 +350,6 @@ if __name__ == "__main__":
 
     bot = ZabbixBot(options)
 
-    app.run(host = options.bind, port = options.port, debug = options.debug)
+    app.run(host = options.bind, port = options.port, debug = options.debug, use_reloader = False)
 
     bot.stop()
