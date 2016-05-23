@@ -193,7 +193,7 @@ class ZabbixBot(ToxCore):
                 tox_opts["savedata_type"] = ToxCore.TOX_SAVEDATA_TYPE_TOX_SAVE
                 tox_opts["savedata_data"] = f.read()
 
-        super(ZabbixBot, self).__init__()
+        super(ZabbixBot, self).__init__(tox_opts)
 
         self.debug("Set self name: {0}".format(self.options.name))
         self.tox_self_set_name(self.options.name)
