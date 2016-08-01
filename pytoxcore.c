@@ -1615,7 +1615,7 @@ static PyObject* ToxCore_tox_self_get_friend_list(ToxCore* self, PyObject* args)
 
     size_t i = 0;
     for (i = 0; i < count; i++)
-        if (PyList_Append(plist, PyLong_FromUnsignedLong(list[i])) != 0) {
+        if (PyList_SetItem(plist, i, PyLong_FromUnsignedLong(list[i])) != 0) {
             free(list);
             Py_DECREF(plist);
             return NULL;

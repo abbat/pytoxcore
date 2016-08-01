@@ -20,7 +20,8 @@ PORT = "32445"
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
-        print("Usage: {0} <address> <subject> <message>\n".format(sys.argv[0]))
+        print("Usage: {0} <address> <subject> <message>".format(sys.argv[0]))
+        sys.exit(1)
 
     address = str(sys.argv[1])
     subject = str(sys.argv[2])
