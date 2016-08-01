@@ -1486,7 +1486,7 @@ static PyObject* ToxCore_tox_self_get_friend_list(ToxCore* self, PyObject* args)
 
     tox_self_get_friend_list(self->tox, list);
 
-    PyObject* plist = PyTuple_New(count);
+    PyObject* plist = PyList_New(count);
     if (plist == NULL) {
         free(list);
         PyErr_SetString(ToxCoreException, "Can not allocate memory.");
@@ -1495,7 +1495,7 @@ static PyObject* ToxCore_tox_self_get_friend_list(ToxCore* self, PyObject* args)
 
     size_t i = 0;
     for (i = 0; i < count; i++)
-        if (PyTuple_SetItem(plist, i, PyLong_FromUnsignedLong(list[i])) != 0) {
+        if (PyList_SetItem(plist, i, PyLong_FromUnsignedLong(list[i])) != 0) {
             free(list);
             Py_DECREF(plist);
             return NULL;
