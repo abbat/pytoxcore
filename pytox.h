@@ -35,6 +35,14 @@
 #include <arpa/inet.h>
 #include <vpx/vpx_image.h>
 //----------------------------------------------------------------------------------------------
+// https://github.com/abbat/pytoxcore/pull/7
+// https://github.com/abbat/pytoxcore/issues/11
+#ifdef TOX_TOKTOK
+    #if TOX_VERSION_IS_API_COMPATIBLE(0, 0, 1)
+        #define TOX_TOKTOK_STATELESS_CALLBACKS
+    #endif
+#endif
+//----------------------------------------------------------------------------------------------
 #if PY_MAJOR_VERSION < 3
     #define BUF_TCS "s#"
 #else

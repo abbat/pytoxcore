@@ -1910,7 +1910,13 @@ static PyObject* ToxCore_tox_iterate(ToxCore* self, PyObject* args)
     CHECK_TOX(self);
 
     PyThreadState* gil = PyEval_SaveThread();
+
+#ifdef TOX_TOKTOK_STATELESS_CALLBACKS
+    tox_iterate(self->tox, self);
+#else
     tox_iterate(self->tox);
+#endif
+
     PyEval_RestoreThread(gil);
 
     if (PyErr_Occurred() != NULL)
@@ -3139,6 +3145,23 @@ static int init_helper(ToxCore* self, PyObject* args)
     if (tox == NULL || success == false)
         return -1;
 
+#ifdef TOX_TOKTOK_STATELESS_CALLBACKS
+    tox_callback_self_connection_status(tox, callback_self_connection_status);
+    tox_callback_friend_request(tox, callback_friend_request);
+    tox_callback_friend_message(tox, callback_friend_message);
+    tox_callback_friend_name(tox, callback_friend_name);
+    tox_callback_friend_status_message(tox, callback_friend_status_message);
+    tox_callback_friend_status(tox, callback_friend_status);
+    tox_callback_friend_read_receipt(tox, callback_friend_read_receipt);
+    tox_callback_friend_connection_status(tox, callback_friend_connection_status);
+    tox_callback_friend_typing(tox, callback_friend_typing);
+    tox_callback_file_chunk_request(tox, callback_file_chunk_request);
+    tox_callback_file_recv_control(tox, callback_file_recv_control);
+    tox_callback_file_recv(tox, callback_file_recv);
+    tox_callback_file_recv_chunk(tox, callback_file_recv_chunk);
+    tox_callback_friend_lossy_packet(tox, callback_friend_lossy_packet);
+    tox_callback_friend_lossless_packet(tox, callback_friend_lossless_packet);
+#else
     tox_callback_self_connection_status(tox, callback_self_connection_status, self);
     tox_callback_friend_request(tox, callback_friend_request, self);
     tox_callback_friend_message(tox, callback_friend_message, self);
@@ -3154,6 +3177,7 @@ static int init_helper(ToxCore* self, PyObject* args)
     tox_callback_file_recv_chunk(tox, callback_file_recv_chunk, self);
     tox_callback_friend_lossy_packet(tox, callback_friend_lossy_packet, self);
     tox_callback_friend_lossless_packet(tox, callback_friend_lossless_packet, self);
+#endif
 
     self->tox = tox;
 
