@@ -17,6 +17,12 @@ $ python setup.py build
 $ python setup.py install
 ```
 
+To compile with [TokTok](https://github.com/TokTok/toxcore) toxcore implementation:
+
+```
+$ CFLAGS="-DTOX_TOKTOK" python setup.py build
+```
+
 ### Usage
 
 See [Echo Bot Example](https://github.com/abbat/pytoxcore/tree/master/examples).
