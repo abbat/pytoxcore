@@ -1,3 +1,7 @@
+:warning: This project is abandoned due no any progress in libtoxcore for a year - unfortunately seems Tox project is dead :(
+
+---
+
 ## pytoxcore
 
 [![Build Status](https://secure.travis-ci.org/abbat/pytoxcore.png?branch=master)](http://travis-ci.org/abbat/pytoxcore) [![Coverity status](https://scan.coverity.com/projects/6250/badge.svg)](https://scan.coverity.com/projects/abbat-pytoxcore)
